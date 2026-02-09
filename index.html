@@ -1157,7 +1157,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAPICbQrWgARovGaebUYYP-WwohxQAYtuw",
@@ -1435,13 +1435,39 @@ function setMsg(txt){ $("loginMsg").textContent = txt || ""; }
     }
 
     async function getUserConfig(uid){
-      const ref = doc(db, `users/${uid}/profile/config`);
-      const snap = await getDoc(ref);
-      if(!snap.exists()){
-        throw new Error("Config Firestore manquante : users/{uid}/profile/config");
-      }
-      return snap.data();
-    }
+  const ref = doc(db, `users/${uid}/profile/config`);
+  const snap = await getDoc(ref);
+
+  // Auto-setup: if the user has no config yet, create a safe default pack.
+  // This prevents "Config Firestore manquante" on first signup / first login.
+  if(!snap.exists()){
+    const email = currentUser?.email || "";
+    const displayName = email.includes("@") ? email.split("@")[0] : (email || "Utilisateur");
+    const defaultCfg = {
+      displayName,
+      sessionsFile: "./sessions.js",
+      sessionsVar: "SESSIONS",
+    };
+    await setDoc(ref, defaultCfg, { merge: true });
+    return defaultCfg;
+  }
+
+  const cfg = snap.data() || {};
+  // Hardening: fill missing fields with defaults (non-breaking).
+  if(!cfg.sessionsFile || !cfg.sessionsVar){
+    const email = currentUser?.email || "";
+    const displayName = cfg.displayName || (email.includes("@") ? email.split("@")[0] : (email || "Utilisateur"));
+    const patched = {
+      displayName,
+      sessionsFile: cfg.sessionsFile || "./sessions.js",
+      sessionsVar: cfg.sessionsVar || "SESSIONS",
+    };
+    await setDoc(ref, patched, { merge: true });
+    return patched;
+  }
+
+  return cfg;
+}
 
     window.SESSIONS = null;
 
