@@ -3332,5 +3332,48 @@ $("btnBackHome").addEventListener("click", ()=>{
   </div>
 </div>
 
+
+<!-- A2-FULL: Read custom sessions from Firestore and merge into SESSIONS (read-only) -->
+<script type="module">
+  import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  async function loadCustomSessionsForUser(uid) {
+    try {
+      const snap = await getDocs(collection(db, "users", uid, "customSessions"));
+      const custom = {};
+      snap.forEach(doc => {
+        const d = doc.data() || {};
+        const key = `CUSTOM_${doc.id}`;
+        custom[key] = {
+          name: d.name || "Séance personnalisée",
+          warmup: Array.isArray(d.warmup) ? d.warmup : [],
+          items: Array.isArray(d.items) ? d.items : [],
+          cooldown: Array.isArray(d.cooldown) ? d.cooldown : [],
+          estimatedMinutes: d.estimatedMinutes || null,
+          source: "custom"
+        };
+      });
+      return custom;
+    } catch (e) {
+      console.warn("Custom sessions load failed:", e);
+      return {};
+    }
+  }
+
+  if (typeof auth !== "undefined" && auth.onAuthStateChanged) {
+    auth.onAuthStateChanged(async (user) => {
+      if (!user || !window.SESSIONS) return;
+      const custom = await loadCustomSessionsForUser(user.uid);
+      if (Object.keys(custom).length) {
+        window.SESSIONS = { ...custom, ...window.SESSIONS };
+        if (typeof window.refreshSessionsList === "function") {
+          window.refreshSessionsList();
+        }
+        console.log("Custom sessions merged:", Object.keys(custom).length);
+      }
+    });
+  }
+</script>
+
 </body>
 </html>
