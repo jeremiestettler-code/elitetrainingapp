@@ -891,23 +891,6 @@
       font-size: 14px;
     }
 
-
-    /* ===== AUTH (Login/Signup) ===== */
-    .authTabs{ display:flex; gap:10px; margin-top:12px; }
-    .authTab{
-      flex:1;
-      padding:10px 12px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.06);
-      color: var(--text);
-      font-weight: 700;
-    }
-    .authTab.active{
-      background: linear-gradient(180deg, rgba(74,161,255,.30), rgba(74,161,255,.10));
-      border-color: rgba(74,161,255,.35);
-    }
-
 </style>
 
   <!-- Favicon -->
@@ -940,19 +923,9 @@
         <div class="muted small">Charge automatiquement le pack de séances via Firestore (Option B).</div>
         <div style="height:12px"></div>
         <div class="stack">
-          <div class="authTabs" role="tablist" aria-label="Connexion ou création de compte">
-            <button type="button" class="authTab active" id="tabLogin" role="tab" aria-selected="true">Se connecter</button>
-            <button type="button" class="authTab" id="tabSignup" role="tab" aria-selected="false">Créer un compte</button>
-          </div>
-
-          <input id="signupName" type="text" autocomplete="given-name" placeholder="Prénom" style="display:none" />
-
           <input id="loginEmail" type="email" autocomplete="username" placeholder="Email" />
           <input id="loginPass" type="password" autocomplete="current-password" placeholder="Mot de passe" />
-
           <button class="btn primary wide" id="btnLogin">Se connecter</button>
-          <button class="btn primary wide" id="btnSignup" style="display:none">Créer le compte</button>
-
           <div class="muted small" id="loginMsg"></div>
         </div>
       </div>
@@ -1181,17 +1154,20 @@
   <script src="./images.js"></script>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    // Firebase (Auth + Firestore)
+    // Note: apiKey Firebase n'est pas un secret. La sécurité se fait via Auth + Rules.
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
+    // ✅ Projet Firebase: elitetraining-77406
     const firebaseConfig = {
-      apiKey: "AIzaSyAPICbQrWgARovGaebUYYP-WwohxQAYtuw",
-      authDomain: "programme-force.firebaseapp.com",
-      projectId: "programme-force",
-      storageBucket: "programme-force.firebasestorage.app",
-      messagingSenderId: "1070910165788",
-      appId: "1:1070910165788:web:8212aec95671abfbdb60d9"
+      apiKey: "AIzaSyBNUTNpnUmO2Lx7L9oin9KR0ANYQ8fPdMo",
+      authDomain: "elitetraining-77406.firebaseapp.com",
+      projectId: "elitetraining-77406",
+      storageBucket: "elitetraining-77406.firebasestorage.app",
+      messagingSenderId: "947194892607",
+      appId: "1:947194892607:web:97472828880db11056438a"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -1201,7 +1177,6 @@
     const $ = (id)=>document.getElementById(id);
 
     const APP_TITLE = "EliteTraining";
-    const ELITE_LAST_EMAIL = "elite_last_email";
 
     /***********************
      * Fin de séance (aléatoire)
@@ -1332,14 +1307,7 @@
       const sb = $("btnSettings");
       if(sb) sb.style.display = (name === "workout" || name === "history") ? "none" : "inline-flex";
     }
-    
-
-// Prefill email (UX)
-try{
-  const last = localStorage.getItem(ELITE_LAST_EMAIL);
-  if(last && $("loginEmail")) $("loginEmail").value = last;
-}catch(e){}
-function setMsg(txt){ $("loginMsg").textContent = txt || ""; }
+    function setMsg(txt){ $("loginMsg").textContent = txt || ""; }
 
     const THEME_KEY = "coach_theme";
     function applyTheme(t){
@@ -1386,142 +1354,6 @@ function setMsg(txt){ $("loginMsg").textContent = txt || ""; }
         });
       }
     })();
-
-
-    // ===== Profil utilisateur (Firestore: users/{uid}/profile/main) =====
-    (function(){
-      const modal = $("profileModal");
-      const openBtn = $("openProfileBtn");
-      const closeBtn = $("closeProfile");
-      const btnSave = $("profileSave");
-      const btnReset = $("profileReset");
-
-      const elGoal = $("profileGoal");
-      const elLevel = $("profileLevel");
-      const elDays = $("profileDays");
-      const elMin = $("profileMinutes");
-      const elNotes = $("profileNotes");
-
-      function setProfileMsg(t){
-        const el = $("profileMsg");
-        if(el) el.textContent = t || "";
-      }
-
-      function defaults(){
-        const email = currentUser?.email || "";
-        const baseName = (email.split("@")[0] || "Utilisateur").slice(0, 20);
-        return {
-          goal: "force",
-          level: "intermediaire",
-          daysPerWeek: 3,
-          sessionMinutes: 30,
-          equipment: ["halteres", "banc"],
-          constraints: [],
-          notes: "",
-          preferences: { coachVoice: true, language: "fr", focus: [] },
-          displayName: baseName,
-          updatedAt: new Date()
-        };
-      }
-
-      function getChecked(selector){
-        return Array.from(document.querySelectorAll(selector))
-          .filter(x => x && x.checked)
-          .map(x => x.value);
-      }
-      function setChecked(selector, values){
-        const set = new Set(values || []);
-        Array.from(document.querySelectorAll(selector)).forEach(x=>{
-          if(x) x.checked = set.has(x.value);
-        });
-      }
-
-      function fillForm(p){
-        if(!p) return;
-        if(elGoal) elGoal.value = p.goal || "force";
-        if(elLevel) elLevel.value = p.level || "intermediaire";
-        if(elDays) elDays.value = Number(p.daysPerWeek || 3);
-        if(elMin) elMin.value = Number(p.sessionMinutes || 30);
-        if(elNotes) elNotes.value = p.notes || "";
-        setChecked(".profileEquip", p.equipment || []);
-        setChecked(".profileConstraint", p.constraints || []);
-      }
-
-      function readForm(){
-        const p = defaults();
-        p.goal = elGoal ? elGoal.value : p.goal;
-        p.level = elLevel ? elLevel.value : p.level;
-        p.daysPerWeek = elDays ? Math.max(1, Math.min(7, Number(elDays.value || p.daysPerWeek))) : p.daysPerWeek;
-        p.sessionMinutes = elMin ? Math.max(10, Math.min(120, Number(elMin.value || p.sessionMinutes))) : p.sessionMinutes;
-        p.notes = elNotes ? (elNotes.value || "") : "";
-        p.equipment = getChecked(".profileEquip");
-        p.constraints = getChecked(".profileConstraint");
-        p.updatedAt = new Date();
-        return p;
-      }
-
-      async function loadProfile(){
-        if(!currentUser) throw new Error("Non connecté");
-        const ref = doc(db, "users", currentUser.uid, "profile", "main");
-        const snap = await getDoc(ref);
-        if(!snap.exists()){
-          const def = defaults();
-          await setDoc(ref, def, { merge: true });
-          return def;
-        }
-        return snap.data();
-      }
-
-      async function saveProfile(){
-        if(!currentUser) throw new Error("Non connecté");
-        const ref = doc(db, "users", currentUser.uid, "profile", "main");
-        const data = readForm();
-        await setDoc(ref, data, { merge: true });
-      }
-
-      function openModal(){
-        if(!modal) return;
-        setProfileMsg("Chargement...");
-        modal.classList.remove("hidden");
-        (async ()=>{
-          try{
-            const p = await loadProfile();
-            fillForm(p);
-            setProfileMsg(" ");
-          }catch(e){
-            setProfileMsg("Erreur : " + (e?.message || e));
-          }
-        })();
-      }
-      function closeModal(){
-        if(!modal) return;
-        modal.classList.add("hidden");
-      }
-
-      if(openBtn) openBtn.addEventListener("click", ()=>{
-        // ferme réglages si ouvert
-        try{ $("settingsModal")?.classList.add("hidden"); }catch(e){}
-        openModal();
-      });
-      if(closeBtn) closeBtn.addEventListener("click", closeModal);
-      if(modal) modal.addEventListener("click", (e)=>{ if(e.target === modal) closeModal(); });
-
-      if(btnSave) btnSave.addEventListener("click", async ()=>{
-        try{
-          setProfileMsg("Enregistrement...");
-          await saveProfile();
-          setProfileMsg("Enregistré ✅");
-        }catch(e){
-          setProfileMsg("Erreur : " + (e?.message || e));
-        }
-      });
-
-      if(btnReset) btnReset.addEventListener("click", ()=>{
-        fillForm(defaults());
-        setProfileMsg("Réinitialisé (pense à Enregistrer).");
-      });
-    })();
-
 
     let coachMode = (localStorage.getItem("coachMode") === "0") ? false : true;
     let __endSpoken = false;
@@ -1597,43 +1429,13 @@ function setMsg(txt){ $("loginMsg").textContent = txt || ""; }
     }
 
     async function getUserConfig(uid){
-  const ref = doc(db, `users/${uid}/profile/config`);
-  const snap = await getDoc(ref);
-
-  // Auto-setup: if the user has no config yet, create a safe default pack.
-  // This prevents "Config Firestore manquante" on first signup / first login.
-  if(!snap.exists()){
-    const email = currentUser?.email || "";
-    const displayName = (currentUser?.displayName && String(currentUser.displayName).trim())
-      ? String(currentUser.displayName).trim()
-      : (email.includes("@") ? email.split("@")[0] : (email || "Utilisateur"));
-    const defaultCfg = {
-      displayName,
-      sessionsFile: "./sessions.js",
-      sessionsVar: "SESSIONS",
-    };
-    await setDoc(ref, defaultCfg, { merge: true });
-    return defaultCfg;
-  }
-
-  const cfg = snap.data() || {};
-  // Hardening: fill missing fields with defaults (non-breaking).
-  if(!cfg.sessionsFile || !cfg.sessionsVar){
-    const email = currentUser?.email || "";
-    const displayName = cfg.displayName
-      || ((currentUser?.displayName && String(currentUser.displayName).trim()) ? String(currentUser.displayName).trim() : "")
-      || (email.includes("@") ? email.split("@")[0] : (email || "Utilisateur"));
-    const patched = {
-      displayName,
-      sessionsFile: cfg.sessionsFile || "./sessions.js",
-      sessionsVar: cfg.sessionsVar || "SESSIONS",
-    };
-    await setDoc(ref, patched, { merge: true });
-    return patched;
-  }
-
-  return cfg;
-}
+      const ref = doc(db, `users/${uid}/profile/config`);
+      const snap = await getDoc(ref);
+      if(!snap.exists()){
+        throw new Error("Config Firestore manquante : users/{uid}/profile/config");
+      }
+      return snap.data();
+    }
 
     window.SESSIONS = null;
 
@@ -1653,7 +1455,32 @@ function setMsg(txt){ $("loginMsg").textContent = txt || ""; }
       if(!screens.workout.classList.contains("active")) $("userLine").textContent = topbarUserText;
     }
 
-    function escapeHtml(s){ return (s||"").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m])); }
+    
+async function loadCustomSessions(uid){
+  try{
+    const snap = await getDocs(collection(db, "users", uid, "customSessions"));
+    const custom = {};
+    snap.forEach((d)=>{
+      const s = d.data() || {};
+      const key = "CUSTOM_" + d.id;
+      custom[key] = {
+        name: s.name || "Séance personnalisée",
+        warmup: Array.isArray(s.warmup) ? s.warmup : [],
+        items: Array.isArray(s.items) ? s.items : [],
+        cooldown: Array.isArray(s.cooldown) ? s.cooldown : [],
+        source: "custom",
+        estimatedMinutes: s.estimatedMinutes || null,
+        _customId: d.id
+      };
+    });
+    return custom;
+  }catch(e){
+    // Si Firestore est vide / accès refusé, on ne casse pas l'app.
+    return {};
+  }
+}
+
+function escapeHtml(s){ return (s||"").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m])); }
 
     function renderHome(){
       const sessions = window.SESSIONS || {};
@@ -1674,13 +1501,17 @@ function setMsg(txt){ $("loginMsg").textContent = txt || ""; }
       const isRunning = (k, s) => /^RUN[_-]/i.test(k) || /course|running/i.test(String(s?.name||""));
       const isHockey  = (k, s) => /^HOC[_-]/i.test(k) || /hockey/i.test(String(s?.name||""));
 
+      const isCustom  = (k, s) => (String(k).startsWith("CUSTOM_") || String(s?.source||"") === "custom");
+
+      const custom = [];
       const complete = [];
       const running = [];
       const hockey = [];
 
       allKeys.forEach((k)=>{
         const s = sessions[k];
-        if(isHockey(k, s)) hockey.push(k);
+        if(isCustom(k, s)) custom.push(k);
+        else if(isHockey(k, s)) hockey.push(k);
         else if(isRunning(k, s)) running.push(k);
         else complete.push(k);
       });
@@ -1702,6 +1533,7 @@ function setMsg(txt){ $("loginMsg").textContent = txt || ""; }
         return String(a).localeCompare(String(b));
       }
 
+      custom.sort((a,b)=>String((sessions[a]?.name)||a).localeCompare(String((sessions[b]?.name)||b)));
       complete.sort(sortComplete);
       running.sort((a,b)=>String(a).localeCompare(String(b)));
       hockey.sort((a,b)=>String(a).localeCompare(String(b)));
@@ -1807,6 +1639,17 @@ function setMsg(txt){ $("loginMsg").textContent = txt || ""; }
       window.addEventListener("resize", ()=>{ updateOpenSectionsHeight(); }, { passive:true });
 
       // Render
+      if(custom.length){
+        addSection("Mes séances", custom, { id:"custom", defaultOpen:true });
+      }else{
+        // Placeholder discret (pas de bouton ici : on fera l’UI de création ensuite)
+        const ph = document.createElement("div");
+        ph.className = "muted small";
+        ph.style.margin = "8px 2px 12px";
+        ph.textContent = "Aucune séance personnalisée pour l’instant.";
+        host.appendChild(ph);
+      }
+
       if(complete.length){
         addSection("Séances complètes", complete, { id:"complete", defaultOpen:false });
       }
@@ -3001,44 +2844,6 @@ $("btnBackHome").addEventListener("click", ()=>{
       $("overlayNext").setAttribute("aria-hidden", "true");
     }
 
-    // ----- Auth UI (Login / Signup) -----
-    let authMode = "login"; // "login" | "signup"
-
-    function setAuthMode(mode){
-      authMode = (mode === "signup") ? "signup" : "login";
-
-      const isSignup = authMode === "signup";
-      $("tabLogin")?.classList.toggle("active", !isSignup);
-      $("tabSignup")?.classList.toggle("active", isSignup);
-      $("tabLogin")?.setAttribute("aria-selected", (!isSignup).toString());
-      $("tabSignup")?.setAttribute("aria-selected", (isSignup).toString());
-
-      $("signupName").style.display = isSignup ? "block" : "none";
-      $("btnLogin").style.display = isSignup ? "none" : "inline-flex";
-      $("btnSignup").style.display = isSignup ? "inline-flex" : "none";
-
-      const pass = $("loginPass");
-      pass.setAttribute("autocomplete", isSignup ? "new-password" : "current-password");
-
-      // Clear message when switching mode
-      setMsg("");
-    }
-
-    $("tabLogin")?.addEventListener("click", ()=>setAuthMode("login"));
-    $("tabSignup")?.addEventListener("click", ()=>setAuthMode("signup"));
-
-    function friendlyAuthError(e){
-      const code = e?.code || "";
-      if(code === "auth/email-already-in-use") return "Ce compte existe déjà. Passe sur « Se connecter ».";
-      if(code === "auth/invalid-email") return "Email invalide.";
-      if(code === "auth/weak-password") return "Mot de passe trop court (minimum 6 caractères).";
-      if(code === "auth/missing-password") return "Entre un mot de passe.";
-      if(code === "auth/wrong-password") return "Mot de passe incorrect.";
-      if(code === "auth/user-not-found") return "Compte introuvable. Essaie « Créer un compte ».";
-      if(code === "auth/too-many-requests") return "Trop de tentatives. Réessaie dans quelques minutes.";
-      return (e?.message || String(e || "Erreur inconnue."));
-    }
-
     $("btnLogin").addEventListener("click", async ()=>{
       setMsg("");
       const email = $("loginEmail").value.trim();
@@ -3048,52 +2853,12 @@ $("btnBackHome").addEventListener("click", ()=>{
         return;
       }
       try{
-        try{ localStorage.setItem(ELITE_LAST_EMAIL, email); }catch(e){}
         await signInWithEmailAndPassword(auth, email, pass);
       }catch(e){
-        setMsg("Connexion impossible : " + friendlyAuthError(e));
+        setMsg("Connexion impossible : " + (e?.message || e));
       }
     });
 
-    $("btnSignup").addEventListener("click", async ()=>{
-      setMsg("");
-      const name  = ($("signupName").value || "").trim();
-      const email = $("loginEmail").value.trim();
-      const pass  = $("loginPass").value;
-
-      if(!name){
-        setMsg("Entre ton prénom.");
-        return;
-      }
-      if(!email || !pass){
-        setMsg("Entre email + mot de passe.");
-        return;
-      }
-
-      try{
-        try{ localStorage.setItem(ELITE_LAST_EMAIL, email); }catch(e){}
-        const cred = await createUserWithEmailAndPassword(auth, email, pass);
-
-        // Set Auth displayName
-        try{ await updateProfile(cred.user, { displayName: name }); }catch(e){}
-
-        // Ensure Firestore config gets the displayName immediately (so topbar uses it)
-        try{
-          const cfgRef = doc(db, `users/${cred.user.uid}/profile/config`);
-          await setDoc(cfgRef, { displayName: name, sessionsFile: "./sessions.js", sessionsVar: "SESSIONS" }, { merge: true });
-        }catch(e){}
-
-        // Ensure profile/main also stores displayName (useful later)
-        try{
-          const profRef = doc(db, `users/${cred.user.uid}/profile/main`);
-          await setDoc(profRef, { displayName: name }, { merge: true });
-        }catch(e){}
-
-        setMsg("Compte créé ✅ (connecté)");
-      }catch(e){
-        setMsg("Création impossible : " + friendlyAuthError(e));
-      }
-    });
     $("btnLogout").addEventListener("click", async ()=>{
       try{ await signOut(auth); }catch(e){}
     });
@@ -3116,6 +2881,11 @@ $("btnBackHome").addEventListener("click", ()=>{
       try{
         try{ migrateTrophyStorage(user.uid); }catch(e){}
         await loadUserSessions(user.uid);
+        // 🔥 Ajout: charge les séances personnalisées Firestore (lecture seule)
+        const custom = await loadCustomSessions(user.uid);
+        if(custom && Object.keys(custom).length){
+          window.SESSIONS = { ...custom, ...(window.SESSIONS || {}) };
+        }
         loadCoachMode();
         renderHome();
         showScreen("home");
@@ -3203,87 +2973,6 @@ $("btnBackHome").addEventListener("click", ()=>{
         <input type="checkbox" id="coachToggleModal">
         <span class="slider"></span>
       </label>
-    </div>
-
-    <div class="setting-row">
-      <span>Profil</span>
-      <button class="btn secondary" id="openProfileBtn" type="button">Ouvrir</button>
-    </div>
-
-  </div>
-</div>
-
-
-
-<div id="profileModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
-  <div class="modal-content">
-    <div class="modal-header">
-      <div class="h2" id="profileTitle">Profil</div>
-      <button id="closeProfile" class="icon-btn" aria-label="Fermer">✕</button>
-    </div>
-
-    <div class="setting-row" style="align-items:flex-start;">
-      <span>Objectif</span>
-      <select id="profileGoal" class="input" style="max-width: 220px;">
-        <option value="force">Force</option>
-        <option value="hypertrophie">Hypertrophie</option>
-        <option value="perte_poids">Perte de poids</option>
-        <option value="reprise">Reprise</option>
-        <option value="sport">Sport</option>
-      </select>
-    </div>
-
-    <div class="setting-row" style="align-items:flex-start;">
-      <span>Niveau</span>
-      <select id="profileLevel" class="input" style="max-width: 220px;">
-        <option value="debutant">Débutant</option>
-        <option value="intermediaire">Intermédiaire</option>
-        <option value="avance">Avancé</option>
-      </select>
-    </div>
-
-    <div class="setting-row" style="align-items:flex-start;">
-      <span>Jours / semaine</span>
-      <input id="profileDays" class="input" type="number" min="1" max="7" step="1" value="3" style="max-width:120px;">
-    </div>
-
-    <div class="setting-row" style="align-items:flex-start;">
-      <span>Durée (min)</span>
-      <input id="profileMinutes" class="input" type="number" min="10" max="120" step="5" value="30" style="max-width:120px;">
-    </div>
-
-    <div class="setting-row" style="align-items:flex-start;">
-      <span>Matériel</span>
-      <div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end;">
-        <label class="chip"><input type="checkbox" value="halteres" class="profileEquip"> Haltères</label>
-        <label class="chip"><input type="checkbox" value="barre" class="profileEquip"> Barre</label>
-        <label class="chip"><input type="checkbox" value="banc" class="profileEquip"> Banc</label>
-        <label class="chip"><input type="checkbox" value="poulie" class="profileEquip"> Poulie</label>
-        <label class="chip"><input type="checkbox" value="elastiques" class="profileEquip"> Élastiques</label>
-        <label class="chip"><input type="checkbox" value="kettlebell" class="profileEquip"> Kettlebell</label>
-      </div>
-    </div>
-
-    <div class="setting-row" style="align-items:flex-start;">
-      <span>Contraintes</span>
-      <div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end;">
-        <label class="chip"><input type="checkbox" value="genou" class="profileConstraint"> Genou</label>
-        <label class="chip"><input type="checkbox" value="epaule" class="profileConstraint"> Épaule</label>
-        <label class="chip"><input type="checkbox" value="dos" class="profileConstraint"> Dos</label>
-        <label class="chip"><input type="checkbox" value="poignet" class="profileConstraint"> Poignet</label>
-      </div>
-    </div>
-
-    <div class="setting-row" style="align-items:flex-start;">
-      <span>Notes</span>
-      <textarea id="profileNotes" class="input" rows="3" placeholder="Ex: éviter les rotations genou, douleur épaule..." style="width:220px; resize:vertical;"></textarea>
-    </div>
-
-    <div id="profileMsg" class="mini" style="opacity:.85; margin-top:6px;"></div>
-
-    <div style="display:flex; gap:10px; margin-top:12px;">
-      <button class="btn secondary" id="profileReset" type="button">Réinitialiser</button>
-      <button class="btn primary" id="profileSave" type="button" style="flex:1;">Enregistrer</button>
     </div>
   </div>
 </div>
