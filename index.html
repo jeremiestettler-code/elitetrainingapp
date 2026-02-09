@@ -1592,9 +1592,7 @@ function setMsg(txt){ $("loginMsg").textContent = txt || ""; }
       const p = defaultProfile();
       cachedProfile = p;
       fillProfileForm(p);
-      setProfileMsg("Réinitialisé (pense à Enregistrer).
-");
-    }
+      setProfileMsg("Réinitialisé (pense à Enregistrer).");
 
     $("btnOpenProfile")?.addEventListener("click", ()=>{
       $("settingsModal")?.classList.add("hidden");
