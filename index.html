@@ -179,49 +179,6 @@
       font-size:15px;
     }
 
-    textarea{
-      width:100%;
-      border:0; outline:none;
-      background:var(--btn2);
-      color:var(--text);
-      padding:12px 14px;
-      border-radius:16px;
-      font-size:15px;
-      min-height: 90px;
-      resize: vertical;
-    }
-    .formGrid{display:grid; grid-template-columns:1fr; gap:12px}
-    .formRow{display:flex; flex-direction:column; gap:6px}
-    .formRow label{font-size:12px; color:var(--muted); font-weight:700; letter-spacing:.2px}
-    .select{
-      width:100%;
-      border:0; outline:none;
-      background:var(--btn2);
-      color:var(--text);
-      padding:12px 14px;
-      border-radius:16px;
-      font-size:15px;
-      appearance:none;
-    }
-    .chipWrap{display:flex; flex-wrap:wrap; gap:8px}
-    .chipCheck{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:10px 12px;
-      border-radius:999px;
-      background: rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.10);
-      font-size:13px;
-      color:var(--text);
-      user-select:none;
-    }
-    [data-theme="light"] .chipCheck{
-      background: rgba(10,20,40,.06);
-      border-color: rgba(10,20,40,.10);
-    }
-    .chipCheck input{ width:16px; height:16px; margin:0; accent-color: var(--accent); }
-    .profileActions{display:flex; gap:10px}
-    .profileActions .btn{flex:1}
-
     .timerBox{
       display:flex; flex-direction:column; gap:10px;
       align-items:center; justify-content:center;
@@ -1024,91 +981,7 @@
     </section>
 
     
-    
-    <!-- PROFILE -->
-    <section class="screen" id="screenProfile">
-      <div class="card">
-        <div class="row">
-          <div class="grow">
-            <div class="h1">Profil</div>
-            <div class="muted small">Objectif, matériel et contraintes. (Stocké sur ton compte)</div>
-          </div>
-          <button id="btnBackFromProfile" class="btn secondary icon" aria-label="Retour" title="Retour">←</button>
-        </div>
-
-        <div style="height:12px"></div>
-
-        <div class="formGrid">
-          <div class="formRow">
-            <label for="pfGoal">Objectif</label>
-            <select id="pfGoal" class="select">
-              <option value="force">Force</option>
-              <option value="hypertrophie">Hypertrophie</option>
-              <option value="perte_poids">Perte de poids</option>
-              <option value="reprise">Reprise</option>
-              <option value="sport">Sport (perf)</option>
-            </select>
-          </div>
-
-          <div class="formRow">
-            <label for="pfLevel">Niveau</label>
-            <select id="pfLevel" class="select">
-              <option value="debutant">Débutant</option>
-              <option value="intermediaire">Intermédiaire</option>
-              <option value="avance">Avancé</option>
-            </select>
-          </div>
-
-          <div class="row">
-            <div class="grow formRow">
-              <label for="pfDays">Jours / semaine</label>
-              <input id="pfDays" inputmode="numeric" type="number" min="1" max="7" step="1" />
-            </div>
-            <div class="grow formRow">
-              <label for="pfMinutes">Durée (min)</label>
-              <input id="pfMinutes" inputmode="numeric" type="number" min="10" max="120" step="5" />
-            </div>
-          </div>
-
-          <div class="formRow">
-            <label>Matériel dispo</label>
-            <div class="chipWrap" id="pfEquipWrap">
-              <label class="chipCheck"><input type="checkbox" value="halteres">Haltères</label>
-              <label class="chipCheck"><input type="checkbox" value="barre">Barre</label>
-              <label class="chipCheck"><input type="checkbox" value="banc">Banc</label>
-              <label class="chipCheck"><input type="checkbox" value="poulie">Poulie</label>
-              <label class="chipCheck"><input type="checkbox" value="elastiques">Élastiques</label>
-              <label class="chipCheck"><input type="checkbox" value="kettlebell">Kettlebell</label>
-            </div>
-          </div>
-
-          <div class="formRow">
-            <label>Contraintes / blessures</label>
-            <div class="chipWrap" id="pfConstraintsWrap">
-              <label class="chipCheck"><input type="checkbox" value="genou">Genou</label>
-              <label class="chipCheck"><input type="checkbox" value="epaule">Épaule</label>
-              <label class="chipCheck"><input type="checkbox" value="dos">Dos</label>
-              <label class="chipCheck"><input type="checkbox" value="poignet">Poignet</label>
-              <label class="chipCheck"><input type="checkbox" value="hanche">Hanche</label>
-            </div>
-          </div>
-
-          <div class="formRow">
-            <label for="pfNotes">Notes (optionnel)</label>
-            <textarea id="pfNotes" placeholder="Ex: éviter les rotations, douleur fin de journée, etc."></textarea>
-          </div>
-
-          <div class="profileActions">
-            <button class="btn secondary" id="btnProfileReset">Réinitialiser</button>
-            <button class="btn primary" id="btnProfileSave">Enregistrer</button>
-          </div>
-
-          <div class="muted small" id="profileMsg"></div>
-        </div>
-      </div>
-    </section>
-
-<!-- HISTORY -->
+    <!-- HISTORY -->
     <section class="screen" id="screenHistory">
       <div class="card">
         <div class="row">
@@ -1284,7 +1157,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAPICbQrWgARovGaebUYYP-WwohxQAYtuw",
@@ -1343,7 +1216,7 @@
     }
 
     let topbarUserText = "Non connecté";
-    const screens = { login:$("screenLogin"), home:$("screenHome"), profile:$("screenProfile"), history:$("screenHistory"), workout:$("screenWorkout") };
+    const screens = { login:$("screenLogin"), home:$("screenHome"), history:$("screenHistory"), workout:$("screenWorkout") };
 
     let currentUser = null;
     function ukey(suffix){
@@ -1431,7 +1304,7 @@
       if(lo) lo.style.display = (name === "workout") ? "none" : (currentUser ? "inline-flex" : "none");
 
       const sb = $("btnSettings");
-      if(sb) sb.style.display = (name === "workout" || name === "history" || name === "profile") ? "none" : "inline-flex";
+      if(sb) sb.style.display = (name === "workout" || name === "history") ? "none" : "inline-flex";
     }
     
 
@@ -1486,123 +1359,143 @@ function setMsg(txt){ $("loginMsg").textContent = txt || ""; }
           localStorage.setItem("coachMode", coachMode ? "1" : "0");
         });
       }
-
-
-    // --- Profil utilisateur (Firestore) ---
-    const PROFILE_PATH = (uid)=>`users/${uid}/profile/main`;
-
-    function defaultProfile(){
-      return {
-        goal: "force",
-        level: "intermediaire",
-        daysPerWeek: 4,
-        sessionMinutes: 35,
-        equipment: ["halteres","banc"],
-        constraints: [],
-        notes: "",
-      };
-    }
-
-    function setProfileMsg(txt){
-      const el = $("profileMsg");
-      if(el) el.textContent = txt || "";
-    }
-
-    function getCheckedValues(containerId){
-      const wrap = $(containerId);
-      if(!wrap) return [];
-      return Array.from(wrap.querySelectorAll('input[type="checkbox"]'))
-        .filter(i=>i.checked)
-        .map(i=>i.value);
-    }
-    function setCheckedValues(containerId, values){
-      const set = new Set(Array.isArray(values) ? values : []);
-      const wrap = $(containerId);
-      if(!wrap) return;
-      wrap.querySelectorAll('input[type="checkbox"]').forEach(i=>{ i.checked = set.has(i.value); });
-    }
-
-    async function getOrCreateProfile(uid){
-      const ref = doc(db, PROFILE_PATH(uid));
-      const snap = await getDoc(ref);
-      if(snap.exists()){
-        const data = snap.data() || {};
-        return { ...defaultProfile(), ...data };
-      }
-      const base = defaultProfile();
-      await setDoc(ref, { ...base, createdAt: serverTimestamp(), updatedAt: serverTimestamp() }, { merge:true });
-      return base;
-    }
-
-    function fillProfileForm(p){
-      $("pfGoal").value = p.goal || "force";
-      $("pfLevel").value = p.level || "intermediaire";
-      $("pfDays").value = Number.isFinite(p.daysPerWeek) ? p.daysPerWeek : 4;
-      $("pfMinutes").value = Number.isFinite(p.sessionMinutes) ? p.sessionMinutes : 35;
-      setCheckedValues("pfEquipWrap", p.equipment || []);
-      setCheckedValues("pfConstraintsWrap", p.constraints || []);
-      $("pfNotes").value = p.notes || "";
-    }
-
-    function readProfileForm(){
-      const goal = $("pfGoal").value || "force";
-      const level = $("pfLevel").value || "intermediaire";
-      const daysPerWeek = Math.max(1, Math.min(7, parseInt($("pfDays").value || "4", 10)));
-      const sessionMinutes = Math.max(10, Math.min(120, parseInt($("pfMinutes").value || "35", 10)));
-      const equipment = getCheckedValues("pfEquipWrap");
-      const constraints = getCheckedValues("pfConstraintsWrap");
-      const notes = ($("pfNotes").value || "").trim();
-      return { goal, level, daysPerWeek, sessionMinutes, equipment, constraints, notes };
-    }
-
-    let cachedProfile = null;
-
-    async function openProfileScreen(){
-      if(!currentUser){
-        setProfileMsg("Tu dois être connecté.");
-        showScreen("login");
-        return;
-      }
-      setProfileMsg("Chargement…");
-      showScreen("profile");
-      try{
-        cachedProfile = await getOrCreateProfile(currentUser.uid);
-        fillProfileForm(cachedProfile);
-        setProfileMsg("");
-      }catch(e){
-        setProfileMsg("Impossible de charger le profil : " + (e?.message || e));
-      }
-    }
-
-    async function saveProfile(){
-      if(!currentUser) return;
-      setProfileMsg("Enregistrement…");
-      const payload = readProfileForm();
-      try{
-        const ref = doc(db, PROFILE_PATH(currentUser.uid));
-        await setDoc(ref, { ...payload, updatedAt: serverTimestamp() }, { merge:true });
-        cachedProfile = { ...(cachedProfile||{}), ...payload };
-        setProfileMsg("Profil mis à jour ✅");
-      }catch(e){
-        setProfileMsg("Erreur sauvegarde : " + (e?.message || e));
-      }
-    }
-
-    function resetProfile(){
-      const p = defaultProfile();
-      cachedProfile = p;
-      fillProfileForm(p);
-      setProfileMsg("Réinitialisé (pense à Enregistrer).");
-
-    $("btnOpenProfile")?.addEventListener("click", ()=>{
-      $("settingsModal")?.classList.add("hidden");
-      openProfileScreen();
-    });
-    $("btnBackFromProfile")?.addEventListener("click", ()=>showScreen("home"));
-    $("btnProfileSave")?.addEventListener("click", saveProfile);
-    $("btnProfileReset")?.addEventListener("click", resetProfile);
-
     })();
+
+
+    // ===== Profil utilisateur (Firestore: users/{uid}/profile/main) =====
+    (function(){
+      const modal = $("profileModal");
+      const openBtn = $("openProfileBtn");
+      const closeBtn = $("closeProfile");
+      const btnSave = $("profileSave");
+      const btnReset = $("profileReset");
+
+      const elGoal = $("profileGoal");
+      const elLevel = $("profileLevel");
+      const elDays = $("profileDays");
+      const elMin = $("profileMinutes");
+      const elNotes = $("profileNotes");
+
+      function setProfileMsg(t){
+        const el = $("profileMsg");
+        if(el) el.textContent = t || "";
+      }
+
+      function defaults(){
+        const email = currentUser?.email || "";
+        const baseName = (email.split("@")[0] || "Utilisateur").slice(0, 20);
+        return {
+          goal: "force",
+          level: "intermediaire",
+          daysPerWeek: 3,
+          sessionMinutes: 30,
+          equipment: ["halteres", "banc"],
+          constraints: [],
+          notes: "",
+          preferences: { coachVoice: true, language: "fr", focus: [] },
+          displayName: baseName,
+          updatedAt: new Date()
+        };
+      }
+
+      function getChecked(selector){
+        return Array.from(document.querySelectorAll(selector))
+          .filter(x => x && x.checked)
+          .map(x => x.value);
+      }
+      function setChecked(selector, values){
+        const set = new Set(values || []);
+        Array.from(document.querySelectorAll(selector)).forEach(x=>{
+          if(x) x.checked = set.has(x.value);
+        });
+      }
+
+      function fillForm(p){
+        if(!p) return;
+        if(elGoal) elGoal.value = p.goal || "force";
+        if(elLevel) elLevel.value = p.level || "intermediaire";
+        if(elDays) elDays.value = Number(p.daysPerWeek || 3);
+        if(elMin) elMin.value = Number(p.sessionMinutes || 30);
+        if(elNotes) elNotes.value = p.notes || "";
+        setChecked(".profileEquip", p.equipment || []);
+        setChecked(".profileConstraint", p.constraints || []);
+      }
+
+      function readForm(){
+        const p = defaults();
+        p.goal = elGoal ? elGoal.value : p.goal;
+        p.level = elLevel ? elLevel.value : p.level;
+        p.daysPerWeek = elDays ? Math.max(1, Math.min(7, Number(elDays.value || p.daysPerWeek))) : p.daysPerWeek;
+        p.sessionMinutes = elMin ? Math.max(10, Math.min(120, Number(elMin.value || p.sessionMinutes))) : p.sessionMinutes;
+        p.notes = elNotes ? (elNotes.value || "") : "";
+        p.equipment = getChecked(".profileEquip");
+        p.constraints = getChecked(".profileConstraint");
+        p.updatedAt = new Date();
+        return p;
+      }
+
+      async function loadProfile(){
+        if(!currentUser) throw new Error("Non connecté");
+        const ref = doc(db, "users", currentUser.uid, "profile", "main");
+        const snap = await getDoc(ref);
+        if(!snap.exists()){
+          const def = defaults();
+          await setDoc(ref, def, { merge: true });
+          return def;
+        }
+        return snap.data();
+      }
+
+      async function saveProfile(){
+        if(!currentUser) throw new Error("Non connecté");
+        const ref = doc(db, "users", currentUser.uid, "profile", "main");
+        const data = readForm();
+        await setDoc(ref, data, { merge: true });
+      }
+
+      function openModal(){
+        if(!modal) return;
+        setProfileMsg("Chargement...");
+        modal.classList.remove("hidden");
+        (async ()=>{
+          try{
+            const p = await loadProfile();
+            fillForm(p);
+            setProfileMsg(" ");
+          }catch(e){
+            setProfileMsg("Erreur : " + (e?.message || e));
+          }
+        })();
+      }
+      function closeModal(){
+        if(!modal) return;
+        modal.classList.add("hidden");
+      }
+
+      if(openBtn) openBtn.addEventListener("click", ()=>{
+        // ferme réglages si ouvert
+        try{ $("settingsModal")?.classList.add("hidden"); }catch(e){}
+        openModal();
+      });
+      if(closeBtn) closeBtn.addEventListener("click", closeModal);
+      if(modal) modal.addEventListener("click", (e)=>{ if(e.target === modal) closeModal(); });
+
+      if(btnSave) btnSave.addEventListener("click", async ()=>{
+        try{
+          setProfileMsg("Enregistrement...");
+          await saveProfile();
+          setProfileMsg("Enregistré ✅");
+        }catch(e){
+          setProfileMsg("Erreur : " + (e?.message || e));
+        }
+      });
+
+      if(btnReset) btnReset.addEventListener("click", ()=>{
+        fillForm(defaults());
+        setProfileMsg("Réinitialisé (pense à Enregistrer).");
+      });
+    })();
+
 
     let coachMode = (localStorage.getItem("coachMode") === "0") ? false : true;
     let __endSpoken = false;
@@ -3135,7 +3028,6 @@ $("btnBackHome").addEventListener("click", ()=>{
       try{
         try{ migrateTrophyStorage(user.uid); }catch(e){}
         await loadUserSessions(user.uid);
-        try{ await getOrCreateProfile(user.uid); }catch(e){}
         loadCoachMode();
         renderHome();
         showScreen("home");
@@ -3225,9 +3117,86 @@ $("btnBackHome").addEventListener("click", ()=>{
       </label>
     </div>
 
+    <div class="setting-row">
+      <span>Profil</span>
+      <button class="btn secondary" id="openProfileBtn" type="button">Ouvrir</button>
+    </div>
 
-    <div style="height:10px"></div>
-    <button class="btn wide secondary" id="btnOpenProfile">👤 Profil</button>
+  </div>
+</div>
+
+
+
+<div id="profileModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="h2" id="profileTitle">Profil</div>
+      <button id="closeProfile" class="icon-btn" aria-label="Fermer">✕</button>
+    </div>
+
+    <div class="setting-row" style="align-items:flex-start;">
+      <span>Objectif</span>
+      <select id="profileGoal" class="input" style="max-width: 220px;">
+        <option value="force">Force</option>
+        <option value="hypertrophie">Hypertrophie</option>
+        <option value="perte_poids">Perte de poids</option>
+        <option value="reprise">Reprise</option>
+        <option value="sport">Sport</option>
+      </select>
+    </div>
+
+    <div class="setting-row" style="align-items:flex-start;">
+      <span>Niveau</span>
+      <select id="profileLevel" class="input" style="max-width: 220px;">
+        <option value="debutant">Débutant</option>
+        <option value="intermediaire">Intermédiaire</option>
+        <option value="avance">Avancé</option>
+      </select>
+    </div>
+
+    <div class="setting-row" style="align-items:flex-start;">
+      <span>Jours / semaine</span>
+      <input id="profileDays" class="input" type="number" min="1" max="7" step="1" value="3" style="max-width:120px;">
+    </div>
+
+    <div class="setting-row" style="align-items:flex-start;">
+      <span>Durée (min)</span>
+      <input id="profileMinutes" class="input" type="number" min="10" max="120" step="5" value="30" style="max-width:120px;">
+    </div>
+
+    <div class="setting-row" style="align-items:flex-start;">
+      <span>Matériel</span>
+      <div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end;">
+        <label class="chip"><input type="checkbox" value="halteres" class="profileEquip"> Haltères</label>
+        <label class="chip"><input type="checkbox" value="barre" class="profileEquip"> Barre</label>
+        <label class="chip"><input type="checkbox" value="banc" class="profileEquip"> Banc</label>
+        <label class="chip"><input type="checkbox" value="poulie" class="profileEquip"> Poulie</label>
+        <label class="chip"><input type="checkbox" value="elastiques" class="profileEquip"> Élastiques</label>
+        <label class="chip"><input type="checkbox" value="kettlebell" class="profileEquip"> Kettlebell</label>
+      </div>
+    </div>
+
+    <div class="setting-row" style="align-items:flex-start;">
+      <span>Contraintes</span>
+      <div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end;">
+        <label class="chip"><input type="checkbox" value="genou" class="profileConstraint"> Genou</label>
+        <label class="chip"><input type="checkbox" value="epaule" class="profileConstraint"> Épaule</label>
+        <label class="chip"><input type="checkbox" value="dos" class="profileConstraint"> Dos</label>
+        <label class="chip"><input type="checkbox" value="poignet" class="profileConstraint"> Poignet</label>
+      </div>
+    </div>
+
+    <div class="setting-row" style="align-items:flex-start;">
+      <span>Notes</span>
+      <textarea id="profileNotes" class="input" rows="3" placeholder="Ex: éviter les rotations genou, douleur épaule..." style="width:220px; resize:vertical;"></textarea>
+    </div>
+
+    <div id="profileMsg" class="mini" style="opacity:.85; margin-top:6px;"></div>
+
+    <div style="display:flex; gap:10px; margin-top:12px;">
+      <button class="btn secondary" id="profileReset" type="button">Réinitialiser</button>
+      <button class="btn primary" id="profileSave" type="button" style="flex:1;">Enregistrer</button>
+    </div>
   </div>
 </div>
 
