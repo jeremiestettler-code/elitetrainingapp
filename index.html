@@ -891,6 +891,23 @@
       font-size: 14px;
     }
 
+
+    /* ===== AUTH (Login/Signup) ===== */
+    .authTabs{ display:flex; gap:10px; margin-top:12px; }
+    .authTab{
+      flex:1;
+      padding:10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      font-weight: 700;
+    }
+    .authTab.active{
+      background: linear-gradient(180deg, rgba(74,161,255,.30), rgba(74,161,255,.10));
+      border-color: rgba(74,161,255,.35);
+    }
+
 </style>
 
   <!-- Favicon -->
@@ -923,10 +940,19 @@
         <div class="muted small">Charge automatiquement le pack de séances via Firestore (Option B).</div>
         <div style="height:12px"></div>
         <div class="stack">
+          <div class="authTabs" role="tablist" aria-label="Connexion ou création de compte">
+            <button type="button" class="authTab active" id="tabLogin" role="tab" aria-selected="true">Se connecter</button>
+            <button type="button" class="authTab" id="tabSignup" role="tab" aria-selected="false">Créer un compte</button>
+          </div>
+
+          <input id="signupName" type="text" autocomplete="given-name" placeholder="Prénom" style="display:none" />
+
           <input id="loginEmail" type="email" autocomplete="username" placeholder="Email" />
           <input id="loginPass" type="password" autocomplete="current-password" placeholder="Mot de passe" />
+
           <button class="btn primary wide" id="btnLogin">Se connecter</button>
-          <button class="btn wide" id="btnSignup">Créer un compte</button>
+          <button class="btn primary wide" id="btnSignup" style="display:none">Créer le compte</button>
+
           <div class="muted small" id="loginMsg"></div>
         </div>
       </div>
@@ -1156,7 +1182,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -1578,7 +1604,9 @@ function setMsg(txt){ $("loginMsg").textContent = txt || ""; }
   // This prevents "Config Firestore manquante" on first signup / first login.
   if(!snap.exists()){
     const email = currentUser?.email || "";
-    const displayName = email.includes("@") ? email.split("@")[0] : (email || "Utilisateur");
+    const displayName = (currentUser?.displayName && String(currentUser.displayName).trim())
+      ? String(currentUser.displayName).trim()
+      : (email.includes("@") ? email.split("@")[0] : (email || "Utilisateur"));
     const defaultCfg = {
       displayName,
       sessionsFile: "./sessions.js",
@@ -1592,7 +1620,9 @@ function setMsg(txt){ $("loginMsg").textContent = txt || ""; }
   // Hardening: fill missing fields with defaults (non-breaking).
   if(!cfg.sessionsFile || !cfg.sessionsVar){
     const email = currentUser?.email || "";
-    const displayName = cfg.displayName || (email.includes("@") ? email.split("@")[0] : (email || "Utilisateur"));
+    const displayName = cfg.displayName
+      || ((currentUser?.displayName && String(currentUser.displayName).trim()) ? String(currentUser.displayName).trim() : "")
+      || (email.includes("@") ? email.split("@")[0] : (email || "Utilisateur"));
     const patched = {
       displayName,
       sessionsFile: cfg.sessionsFile || "./sessions.js",
@@ -2971,6 +3001,44 @@ $("btnBackHome").addEventListener("click", ()=>{
       $("overlayNext").setAttribute("aria-hidden", "true");
     }
 
+    // ----- Auth UI (Login / Signup) -----
+    let authMode = "login"; // "login" | "signup"
+
+    function setAuthMode(mode){
+      authMode = (mode === "signup") ? "signup" : "login";
+
+      const isSignup = authMode === "signup";
+      $("tabLogin")?.classList.toggle("active", !isSignup);
+      $("tabSignup")?.classList.toggle("active", isSignup);
+      $("tabLogin")?.setAttribute("aria-selected", (!isSignup).toString());
+      $("tabSignup")?.setAttribute("aria-selected", (isSignup).toString());
+
+      $("signupName").style.display = isSignup ? "block" : "none";
+      $("btnLogin").style.display = isSignup ? "none" : "inline-flex";
+      $("btnSignup").style.display = isSignup ? "inline-flex" : "none";
+
+      const pass = $("loginPass");
+      pass.setAttribute("autocomplete", isSignup ? "new-password" : "current-password");
+
+      // Clear message when switching mode
+      setMsg("");
+    }
+
+    $("tabLogin")?.addEventListener("click", ()=>setAuthMode("login"));
+    $("tabSignup")?.addEventListener("click", ()=>setAuthMode("signup"));
+
+    function friendlyAuthError(e){
+      const code = e?.code || "";
+      if(code === "auth/email-already-in-use") return "Ce compte existe déjà. Passe sur « Se connecter ».";
+      if(code === "auth/invalid-email") return "Email invalide.";
+      if(code === "auth/weak-password") return "Mot de passe trop court (minimum 6 caractères).";
+      if(code === "auth/missing-password") return "Entre un mot de passe.";
+      if(code === "auth/wrong-password") return "Mot de passe incorrect.";
+      if(code === "auth/user-not-found") return "Compte introuvable. Essaie « Créer un compte ».";
+      if(code === "auth/too-many-requests") return "Trop de tentatives. Réessaie dans quelques minutes.";
+      return (e?.message || String(e || "Erreur inconnue."));
+    }
+
     $("btnLogin").addEventListener("click", async ()=>{
       setMsg("");
       const email = $("loginEmail").value.trim();
@@ -2983,27 +3051,47 @@ $("btnBackHome").addEventListener("click", ()=>{
         try{ localStorage.setItem(ELITE_LAST_EMAIL, email); }catch(e){}
         await signInWithEmailAndPassword(auth, email, pass);
       }catch(e){
-        setMsg("Connexion impossible : " + (e?.message || e));
+        setMsg("Connexion impossible : " + friendlyAuthError(e));
       }
     });
 
-
-
     $("btnSignup").addEventListener("click", async ()=>{
       setMsg("");
+      const name  = ($("signupName").value || "").trim();
       const email = $("loginEmail").value.trim();
       const pass  = $("loginPass").value;
+
+      if(!name){
+        setMsg("Entre ton prénom.");
+        return;
+      }
       if(!email || !pass){
         setMsg("Entre email + mot de passe.");
         return;
       }
+
       try{
         try{ localStorage.setItem(ELITE_LAST_EMAIL, email); }catch(e){}
-        await createUserWithEmailAndPassword(auth, email, pass);
+        const cred = await createUserWithEmailAndPassword(auth, email, pass);
+
+        // Set Auth displayName
+        try{ await updateProfile(cred.user, { displayName: name }); }catch(e){}
+
+        // Ensure Firestore config gets the displayName immediately (so topbar uses it)
+        try{
+          const cfgRef = doc(db, `users/${cred.user.uid}/profile/config`);
+          await setDoc(cfgRef, { displayName: name, sessionsFile: "./sessions.js", sessionsVar: "SESSIONS" }, { merge: true });
+        }catch(e){}
+
+        // Ensure profile/main also stores displayName (useful later)
+        try{
+          const profRef = doc(db, `users/${cred.user.uid}/profile/main`);
+          await setDoc(profRef, { displayName: name }, { merge: true });
+        }catch(e){}
+
         setMsg("Compte créé ✅ (connecté)");
       }catch(e){
-        // messages fréquents: auth/email-already-in-use, auth/weak-password
-        setMsg("Création impossible : " + (e?.message || e));
+        setMsg("Création impossible : " + friendlyAuthError(e));
       }
     });
     $("btnLogout").addEventListener("click", async ()=>{
