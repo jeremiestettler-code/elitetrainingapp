@@ -926,6 +926,7 @@
           <input id="loginEmail" type="email" autocomplete="username" placeholder="Email" />
           <input id="loginPass" type="password" autocomplete="current-password" placeholder="Mot de passe" />
           <button class="btn primary wide" id="btnLogin">Se connecter</button>
+          <button class="btn wide" id="btnSignup">Créer un compte</button>
           <div class="muted small" id="loginMsg"></div>
         </div>
       </div>
@@ -1154,20 +1155,17 @@
   <script src="./images.js"></script>
 
   <script type="module">
-    // Firebase (Auth + Firestore)
-    // Note: apiKey Firebase n'est pas un secret. La sécurité se fait via Auth + Rules.
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // ✅ Projet Firebase: elitetraining-77406
     const firebaseConfig = {
-      apiKey: "AIzaSyBNUTNpnUmO2Lx7L9oin9KR0ANYQ8fPdMo",
-      authDomain: "elitetraining-77406.firebaseapp.com",
-      projectId: "elitetraining-77406",
-      storageBucket: "elitetraining-77406.firebasestorage.app",
-      messagingSenderId: "947194892607",
-      appId: "1:947194892607:web:97472828880db11056438a"
+      apiKey: "AIzaSyAPICbQrWgARovGaebUYYP-WwohxQAYtuw",
+      authDomain: "programme-force.firebaseapp.com",
+      projectId: "programme-force",
+      storageBucket: "programme-force.firebasestorage.app",
+      messagingSenderId: "1070910165788",
+      appId: "1:1070910165788:web:8212aec95671abfbdb60d9"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -1177,6 +1175,7 @@
     const $ = (id)=>document.getElementById(id);
 
     const APP_TITLE = "EliteTraining";
+    const ELITE_LAST_EMAIL = "elite_last_email";
 
     /***********************
      * Fin de séance (aléatoire)
@@ -1307,7 +1306,14 @@
       const sb = $("btnSettings");
       if(sb) sb.style.display = (name === "workout" || name === "history") ? "none" : "inline-flex";
     }
-    function setMsg(txt){ $("loginMsg").textContent = txt || ""; }
+    
+
+// Prefill email (UX)
+try{
+  const last = localStorage.getItem(ELITE_LAST_EMAIL);
+  if(last && $("loginEmail")) $("loginEmail").value = last;
+}catch(e){}
+function setMsg(txt){ $("loginMsg").textContent = txt || ""; }
 
     const THEME_KEY = "coach_theme";
     function applyTheme(t){
@@ -2812,6 +2818,7 @@ $("btnBackHome").addEventListener("click", ()=>{
         return;
       }
       try{
+        try{ localStorage.setItem(ELITE_LAST_EMAIL, email); }catch(e){}
         await signInWithEmailAndPassword(auth, email, pass);
       }catch(e){
         setMsg("Connexion impossible : " + (e?.message || e));
