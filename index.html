@@ -2825,6 +2825,25 @@ $("btnBackHome").addEventListener("click", ()=>{
       }
     });
 
+
+
+    $("btnSignup").addEventListener("click", async ()=>{
+      setMsg("");
+      const email = $("loginEmail").value.trim();
+      const pass  = $("loginPass").value;
+      if(!email || !pass){
+        setMsg("Entre email + mot de passe.");
+        return;
+      }
+      try{
+        try{ localStorage.setItem(ELITE_LAST_EMAIL, email); }catch(e){}
+        await createUserWithEmailAndPassword(auth, email, pass);
+        setMsg("Compte créé ✅ (connecté)");
+      }catch(e){
+        // messages fréquents: auth/email-already-in-use, auth/weak-password
+        setMsg("Création impossible : " + (e?.message || e));
+      }
+    });
     $("btnLogout").addEventListener("click", async ()=>{
       try{ await signOut(auth); }catch(e){}
     });
