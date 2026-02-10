@@ -908,6 +908,15 @@
       border-color: rgba(74,161,255,.35);
     }
 
+/* =========================
+   B2.0-2-SAFE — Custom session editor styles
+========================= */
+.csList{ display:flex; flex-direction:column; gap:8px; margin:8px 0; }
+.csRow{ display:flex; gap:8px; align-items:center; }
+.csRow .input{ flex: 1; }
+.csRow .mini{ width: 92px; }
+.csRow .danger{ min-width:44px; }
+
 </style>
 
   <!-- Favicon -->
@@ -3285,6 +3294,207 @@ try{
       lastTouchEnd = now;
     }, { passive:false });
 
+/* =========================
+   B2.0-2-SAFE — Custom session editor (UI only, no Firestore yet)
+========================= */
+
+let CS_DRAFT = null;   // objet en cours d'édition
+let CS_EDIT_ID = null; // pour plus tard (édition), null = création
+
+function $(id){ return document.getElementById(id); } // si tu as déjà $, SUPPRIME cette ligne
+
+function openCustomSessionEditor(sessionIdOrNull){
+  // création (pour l'instant)
+  CS_EDIT_ID = sessionIdOrNull;
+  CS_DRAFT = {
+    name: "",
+    estimatedMinutes: 35,
+    warmup: [],
+    items: [],
+    cooldown: []
+  };
+
+  $("customSessionTitle").textContent = CS_EDIT_ID ? "Modifier une séance" : "Créer une séance";
+  $("cs_name").value = CS_DRAFT.name;
+  $("cs_minutes").value = CS_DRAFT.estimatedMinutes;
+
+  renderCSEditor();
+  showModal("customSessionModal");
+}
+
+function closeCustomSessionEditor(){
+  hideModal("customSessionModal");
+  CS_DRAFT = null;
+  CS_EDIT_ID = null;
+}
+
+function showModal(id){
+  const el = $(id);
+  if(!el) return;
+  el.classList.remove("hidden");
+}
+
+function hideModal(id){
+  const el = $(id);
+  if(!el) return;
+  el.classList.add("hidden");
+}
+
+function renderCSEditor(){
+  renderWarmupList();
+  renderItemsList();
+  renderCooldownList();
+}
+
+function renderWarmupList(){
+  const host = $("cs_warmupList");
+  host.innerHTML = "";
+  CS_DRAFT.warmup.forEach((w, idx) => {
+    const row = document.createElement("div");
+    row.className = "csRow";
+
+    const name = document.createElement("input");
+    name.className = "input";
+    name.placeholder = "Nom (ex: Mobilité épaules)";
+    name.value = w.name || "";
+    name.oninput = () => { w.name = name.value; };
+
+    const sec = document.createElement("input");
+    sec.className = "input mini";
+    sec.type = "number";
+    sec.min = "10";
+    sec.step = "5";
+    sec.placeholder = "sec";
+    sec.value = w.seconds || 60;
+    sec.oninput = () => { w.seconds = Number(sec.value || 0); };
+
+    const del = document.createElement("button");
+    del.className = "btn danger";
+    del.textContent = "🗑️";
+    del.onclick = () => { CS_DRAFT.warmup.splice(idx, 1); renderWarmupList(); };
+
+    row.appendChild(name);
+    row.appendChild(sec);
+    row.appendChild(del);
+    host.appendChild(row);
+  });
+}
+
+function renderItemsList(){
+  const host = $("cs_itemsList");
+  host.innerHTML = "";
+  CS_DRAFT.items.forEach((it, idx) => {
+    const row = document.createElement("div");
+    row.className = "csRow";
+
+    const name = document.createElement("input");
+    name.className = "input";
+    name.placeholder = "Exercice (ex: Rowing haltère)";
+    name.value = it.name || "";
+    name.oninput = () => { it.name = name.value; };
+
+    const sets = document.createElement("input");
+    sets.className = "input mini";
+    sets.type = "number";
+    sets.min = "1";
+    sets.step = "1";
+    sets.placeholder = "sets";
+    sets.value = it.sets || 3;
+    sets.oninput = () => { it.sets = Number(sets.value || 0); };
+
+    const reps = document.createElement("input");
+    reps.className = "input mini";
+    reps.placeholder = "reps";
+    reps.value = it.reps || "8–10";
+    reps.oninput = () => { it.reps = reps.value; };
+
+    const del = document.createElement("button");
+    del.className = "btn danger";
+    del.textContent = "🗑️";
+    del.onclick = () => { CS_DRAFT.items.splice(idx, 1); renderItemsList(); };
+
+    row.appendChild(name);
+    row.appendChild(sets);
+    row.appendChild(reps);
+    row.appendChild(del);
+    host.appendChild(row);
+  });
+}
+
+function renderCooldownList(){
+  const host = $("cs_cooldownList");
+  host.innerHTML = "";
+  CS_DRAFT.cooldown.forEach((c, idx) => {
+    const row = document.createElement("div");
+    row.className = "csRow";
+
+    const name = document.createElement("input");
+    name.className = "input";
+    name.placeholder = "Nom (ex: Étirement dorsaux)";
+    name.value = c.name || "";
+    name.oninput = () => { c.name = name.value; };
+
+    const sec = document.createElement("input");
+    sec.className = "input mini";
+    sec.type = "number";
+    sec.min = "10";
+    sec.step = "5";
+    sec.placeholder = "sec";
+    sec.value = c.seconds || 60;
+    sec.oninput = () => { c.seconds = Number(sec.value || 0); };
+
+    const del = document.createElement("button");
+    del.className = "btn danger";
+    del.textContent = "🗑️";
+    del.onclick = () => { CS_DRAFT.cooldown.splice(idx, 1); renderCooldownList(); };
+
+    row.appendChild(name);
+    row.appendChild(sec);
+    row.appendChild(del);
+    host.appendChild(row);
+  });
+}
+
+/* Buttons wiring */
+(function bindCSEditor(){
+  const closeBtn = $("customSessionClose");
+  const cancelBtn = $("cs_cancel");
+  const addW = $("cs_addWarmup");
+  const addI = $("cs_addItem");
+  const addC = $("cs_addCooldown");
+  const saveBtn = $("cs_save");
+
+  if(closeBtn) closeBtn.onclick = closeCustomSessionEditor;
+  if(cancelBtn) cancelBtn.onclick = closeCustomSessionEditor;
+
+  if(addW) addW.onclick = () => {
+    CS_DRAFT.warmup.push({ id: `WU-${Date.now()}`, name:"", icon:"", seconds:60 });
+    renderWarmupList();
+  };
+
+  if(addI) addI.onclick = () => {
+    CS_DRAFT.items.push({ id: `IT-${Date.now()}`, name:"", icon:"", sets:3, reps:"8–10", work:45, rest:90 });
+    renderItemsList();
+  };
+
+  if(addC) addC.onclick = () => {
+    CS_DRAFT.cooldown.push({ id: `CD-${Date.now()}`, name:"", icon:"", seconds:60 });
+    renderCooldownList();
+  };
+
+  if(saveBtn) saveBtn.onclick = () => {
+    // PAS ENCORE Firestore à cette étape
+    CS_DRAFT.name = $("cs_name").value.trim();
+    CS_DRAFT.estimatedMinutes = Number($("cs_minutes").value || 0);
+
+    console.log("[B2.0-2] Draft ready (not saved yet):", CS_DRAFT);
+    alert("B2.0-2 OK ✅ (pas encore sauvegardé). Prochaine étape = Firestore.");
+    closeCustomSessionEditor();
+  };
+})();
+ 
+/* ===== FIN B2.0-2-SAFE ===== */
+
   </script>
 
 <div id="settingsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
@@ -3293,6 +3503,53 @@ try{
       <div class="h2" id="settingsTitle">Réglages</div>
       <button id="closeSettings" class="icon-btn" aria-label="Fermer">✕</button>
     </div>
+
+<!-- =========================
+     B2.0-2-SAFE — MODAL CREATE/EDIT CUSTOM SESSION
+     À COLLER : après tes autres modals
+========================= -->
+<div id="customSessionModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="customSessionTitle">
+  <div class="modalCard">
+    <div class="modalHeader" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+      <div id="customSessionTitle" class="h2" style="margin:0;">Créer une séance</div>
+      <button class="btn" type="button" id="customSessionClose" style="min-width:44px;">✕</button>
+    </div>
+
+    <div class="modalBody" style="margin-top:10px;">
+      <div class="muted small">Nom</div>
+      <input id="cs_name" class="input" placeholder="Ex: Haut du corps 30 min" />
+
+      <div style="height:10px;"></div>
+
+      <div class="muted small">Durée estimée (minutes)</div>
+      <input id="cs_minutes" class="input" type="number" min="5" max="180" step="5" value="35" />
+
+      <div style="height:16px;"></div>
+
+      <div class="h2" style="font-size:14px; margin:0 0 6px;">Warmup</div>
+      <div id="cs_warmupList" class="csList"></div>
+      <button id="cs_addWarmup" class="btn" type="button" style="width:100%;">+ Ajouter un échauffement</button>
+
+      <div style="height:16px;"></div>
+
+      <div class="h2" style="font-size:14px; margin:0 0 6px;">Exercices</div>
+      <div id="cs_itemsList" class="csList"></div>
+      <button id="cs_addItem" class="btn" type="button" style="width:100%;">+ Ajouter un exercice</button>
+
+      <div style="height:16px;"></div>
+
+      <div class="h2" style="font-size:14px; margin:0 0 6px;">Cooldown</div>
+      <div id="cs_cooldownList" class="csList"></div>
+      <button id="cs_addCooldown" class="btn" type="button" style="width:100%;">+ Ajouter un cooldown</button>
+    </div>
+
+    <div class="modalFooter" style="display:flex; gap:10px; margin-top:14px;">
+      <button class="btn" type="button" id="cs_cancel" style="flex:1;">Annuler</button>
+      <button class="btn" type="button" id="cs_save" style="flex:1;">Enregistrer</button>
+    </div>
+  </div>
+</div>
+<!-- ===== FIN B2.0-2-SAFE ===== -->
 
     <div class="setting-row">
       <span>Thème clair / sombre</span>
