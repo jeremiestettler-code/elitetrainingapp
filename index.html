@@ -1662,6 +1662,27 @@ function setMsg(txt){ $("loginMsg").textContent = txt || ""; }
       const host = $("sessionList");
       host.innerHTML = "";
 
+/* =========================
+   B1-SAFE — HOME: Section séparée "Mes séances" + "Séances complètes"
+   À COLLER JUSTE APRÈS : host.innerHTML = "";
+========================= */
+
+const allEntries = Object.entries(sessions);
+
+// custom = clés CUSTOM_ (ou source:"custom" si présent)
+const customEntries = allEntries.filter(([k,v]) => k.startsWith("CUSTOM_") || (v && v.source === "custom"));
+const coreEntries   = allEntries.filter(([k,v]) => !k.startsWith("CUSTOM_") && !(v && v.source === "custom"));
+
+function addSectionTitle(title){
+  const h = document.createElement("div");
+  h.style.cssText = "margin:10px 4px 8px; font-weight:800; opacity:.95;";
+  h.textContent = title;
+  host.appendChild(h);
+}
+
+/* ===== FIN B1-SAFE (partie 1/2) ===== */
+
+
       if(allKeys.length === 0){
         host.innerHTML = `<div class="muted small">Aucune séance trouvée dans ton pack.</div>`;
         return;
@@ -1673,17 +1694,29 @@ function setMsg(txt){ $("loginMsg").textContent = txt || ""; }
       // (Prévu plus tard) Hockey : clés type HOC_* ou nom contenant "hockey"
       const isRunning = (k, s) => /^RUN[_-]/i.test(k) || /course|running/i.test(String(s?.name||""));
       const isHockey  = (k, s) => /^HOC[_-]/i.test(k) || /hockey/i.test(String(s?.name||""));
-
+/* =========================
+   B1-SAFE — Groupe "Mes séances" (custom)
+   À COLLER JUSTE AVANT : const complete = [];
+========================= */
+	const isCustom = (k, s) => k.startsWith("CUSTOM_") || (s && s.source === "custom");
+	const custom = [];
+/* ===== FIN B1-SAFE ===== */
       const complete = [];
       const running = [];
       const hockey = [];
 
-      allKeys.forEach((k)=>{
-        const s = sessions[k];
-        if(isHockey(k, s)) hockey.push(k);
-        else if(isRunning(k, s)) running.push(k);
-        else complete.push(k);
-      });
+/* =========================
+   B1-SAFE — Répartition avec custom en premier
+========================= */
+allKeys.forEach((k)=>{
+  const s = sessions[k];
+
+  if(isCustom(k, s)) custom.push(k);
+  else if(isHockey(k, s)) hockey.push(k);
+  else if(isRunning(k, s)) running.push(k);
+  else complete.push(k);
+});
+/* ===== FIN B1-SAFE ===== */
 
       const letterOrder = { A:0, B:1, C:2, D:3 };
       function sortComplete(a, b){
@@ -1807,7 +1840,17 @@ function setMsg(txt){ $("loginMsg").textContent = txt || ""; }
       window.addEventListener("resize", ()=>{ updateOpenSectionsHeight(); }, { passive:true });
 
       // Render
-      if(complete.length){
+      
+/* =========================
+   B1-SAFE — Render section "Mes séances"
+   À COLLER JUSTE AVANT : if(complete.length){ ... }
+========================= */
+if(custom.length){
+  addSection("Mes séances", custom, { id:"custom", defaultOpen:true });
+}
+/* ===== FIN B1-SAFE ===== */
+
+if(complete.length){
         addSection("Séances complètes", complete, { id:"complete", defaultOpen:false });
       }
 
