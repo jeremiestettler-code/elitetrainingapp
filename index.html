@@ -1293,6 +1293,30 @@
         `coach_trophies_pending`,
       ];
 
+// =====================
+// B2.0-2-SAFE: Portal modal to <body> (évite overflow/stacking context)
+// =====================
+function portalModalToBody(modalId){
+  const el = document.getElementById(modalId);
+  if(!el) return null;
+
+  // Si le modal est dans un container avec overflow/transform, il peut être invisible/clippé.
+  // On le remonte directement dans <body>.
+  if(el.parentElement !== document.body){
+    document.body.appendChild(el);
+  }
+
+  // Force overlay style
+  el.style.position = "fixed";
+  el.style.inset = "0";
+  el.style.zIndex = "99999";
+  el.style.pointerEvents = "auto";
+
+  return el;
+}
+
+
+
       function readObj(key){
         try{
           const v = localStorage.getItem(key);
@@ -3316,6 +3340,19 @@ let CS_EDIT_ID = null; // pour plus tard (édition), null = création
 function openCustomSessionEditor(sessionIdOrNull){
   // création (pour l'instant)
 // B2.0-2-SAFE: si le panneau Réglages est ouvert, on le ferme
+
+
+// B2.0-2-SAFE: assure que le modal est au-dessus et pas clippé
+portalModalToBody("customSessionModal");
+const m = document.getElementById("customSessionModal");
+if(m){
+  m.classList.remove("hidden");
+  m.style.display = "block"; // ou "flex" si ton layout est flex
+}
+const settings = document.getElementById("settingsModal");
+if(settings) settings.classList.add("hidden");
+
+
 try {
   const settings = document.getElementById("settingsModal");
   if (settings && !settings.classList.contains("hidden")) {
