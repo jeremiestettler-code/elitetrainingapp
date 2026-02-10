@@ -917,6 +917,17 @@
 .csRow .mini{ width: 92px; }
 .csRow .danger{ min-width:44px; }
 
+/* B2.0-2-SAFE: le modal custom doit passer AU-DESSUS des réglages */
+#customSessionModal { 
+  z-index: 99999 !important; 
+}
+#customSessionModal .backdrop,
+#customSessionModal::before {
+  z-index: 99998 !important;
+}
+
+
+
 </style>
 
   <!-- Favicon -->
@@ -3304,6 +3315,13 @@ let CS_EDIT_ID = null; // pour plus tard (édition), null = création
 
 function openCustomSessionEditor(sessionIdOrNull){
   // création (pour l'instant)
+// B2.0-2-SAFE: si le panneau Réglages est ouvert, on le ferme
+try {
+  const settings = document.getElementById("settingsModal");
+  if (settings && !settings.classList.contains("hidden")) {
+    settings.classList.add("hidden");
+  }
+} catch(e){}
   CS_EDIT_ID = sessionIdOrNull;
   CS_DRAFT = {
     name: "",
