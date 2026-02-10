@@ -1765,9 +1765,36 @@ allKeys.forEach((k)=>{
         btn.setAttribute("aria-expanded", defaultOpen ? "true" : "false");
         btn.textContent = String(keys.length);
 
-        header.appendChild(t);
-        header.appendChild(btn);
-        host.appendChild(header);
+      /* =========================
+   B2.0-SAFE — Header actions (count + add button for custom)
+   REMPLACE : header.appendChild(t); header.appendChild(btn); host.appendChild(header);
+========================= */
+
+const actions = document.createElement("div");
+actions.style.display = "flex";
+actions.style.alignItems = "center";
+actions.style.gap = "8px";
+
+// Bouton ➕ uniquement pour la section "custom"
+if(options.id === "custom"){
+  const addBtn = document.createElement("button");
+  addBtn.className = "btn";
+  addBtn.style.padding = "8px 10px";
+  addBtn.style.minWidth = "44px";
+  addBtn.title = "Créer une séance";
+  addBtn.textContent = "➕";
+  addBtn.onclick = () => openCustomSessionEditor(null); // (fonction ajoutée à l'étape B2.0-2)
+  actions.appendChild(addBtn);
+}
+
+// Compteur (on garde ton bouton tel quel)
+actions.appendChild(btn);
+
+header.appendChild(t);
+header.appendChild(actions);
+host.appendChild(header);
+
+/* ===== FIN B2.0-SAFE ===== */
 
         // Container
         const container = document.createElement("div");
