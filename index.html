@@ -1183,7 +1183,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+   import { getFirestore, doc, getDoc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAPICbQrWgARovGaebUYYP-WwohxQAYtuw",
@@ -3116,6 +3116,41 @@ $("btnBackHome").addEventListener("click", ()=>{
       try{
         try{ migrateTrophyStorage(user.uid); }catch(e){}
         await loadUserSessions(user.uid);
+/* =========================
+   A2-SAFE — CUSTOM SESSIONS (Firestore, read-only)
+   À COLLER JUSTE APRÈS : await loadUserSessions(user.uid);
+   Et JUSTE AVANT : loadCoachMode();
+========================= */
+try{
+  // On utilise le même Firestore que le reste du fichier (db)
+  // et on lit les séances custom de l'utilisateur connecté.
+  const snapCustom = await getDocs(collection(db, "users", user.uid, "customSessions"));
+
+  const custom = {};
+  snapCustom.forEach((d)=>{
+    const data = d.data() || {};
+    const key = `CUSTOM_${d.id}`;
+    custom[key] = {
+      name: data.name || "Séance personnalisée",
+      warmup: Array.isArray(data.warmup) ? data.warmup : [],
+      items: Array.isArray(data.items) ? data.items : [],
+      cooldown: Array.isArray(data.cooldown) ? data.cooldown : [],
+      estimatedMinutes: (typeof data.estimatedMinutes === "number") ? data.estimatedMinutes : null,
+      source: "custom"
+    };
+  });
+
+  // Fusion : les custom d'abord, puis les séances du pack
+  if(Object.keys(custom).length){
+    window.SESSIONS = { ...custom, ...(window.SESSIONS || {}) };
+    console.log("[A2-SAFE] Custom sessions merged:", Object.keys(custom).length);
+  }else{
+    console.log("[A2-SAFE] No custom sessions found.");
+  }
+}catch(e){
+  console.warn("[A2-SAFE] Custom sessions load failed:", e);
+}
+/* ===== FIN A2-SAFE ===== */
         loadCoachMode();
         renderHome();
         showScreen("home");
