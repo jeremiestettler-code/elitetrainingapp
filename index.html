@@ -3338,20 +3338,12 @@ let CS_EDIT_ID = null; // pour plus tard (édition), null = création
 
 
 function openCustomSessionEditor(sessionIdOrNull){
-  // =====================
-  // B2.0-2-SAFE: éviter conflit overlay + clipping
-  // =====================
 
-  // 1) Ferme Réglages si ouvert
+  // B2.0-2-SAFE: ferme Réglages si ouvert
   const settings = document.getElementById("settingsModal");
   if(settings) settings.classList.add("hidden");
 
-  // 2) Remonte le modal sous <body> pour éviter overflow/stacking context
-  portalModalToBody("customSessionModal");
-
-  // =====================
-  // Logique existante
-  // =====================
+  // ---- logique existante ----
   CS_EDIT_ID = sessionIdOrNull;
   CS_DRAFT = {
     name: "",
@@ -3361,13 +3353,13 @@ function openCustomSessionEditor(sessionIdOrNull){
     cooldown: []
   };
 
-  $("customSessionTitle").textContent = CS_EDIT_ID ? "Modifier une séance" : "Créer une séance";
+  $("customSessionTitle").textContent =
+    CS_EDIT_ID ? "Modifier une séance" : "Créer une séance";
+
   $("cs_name").value = CS_DRAFT.name;
   $("cs_minutes").value = CS_DRAFT.estimatedMinutes;
 
   renderCSEditor();
-
-  // 3) Une seule ouverture (celle de ton app)
   showModal("customSessionModal");
 }
 
