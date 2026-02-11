@@ -1203,7 +1203,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-   import { getFirestore, doc, getDoc, setDoc, collection, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAPICbQrWgARovGaebUYYP-WwohxQAYtuw",
@@ -1898,7 +1898,10 @@ function addSessionCard(k, mount){
         <div class="muted small">${nWarmup} échauffement • ${nItems} exercices${nCooldown ? ` • ${nCooldown} étirements` : ""}</div>
       </div>
 
-      ${isCustom ? `<button class="btn" data-action="edit" title="Modifier" style="min-width:44px;">✏️</button>` : ""}
+      ${isCustom ? `
+  <button class="btn" data-action="edit" title="Modifier" style="min-width:44px;">✏️</button>
+  <button class="btn" data-action="delete" title="Supprimer" style="min-width:44px;">🗑</button>
+` : ""}
 
       <button class="btn primary" data-action="start">Démarrer</button>
     </div>
@@ -1907,14 +1910,42 @@ function addSessionCard(k, mount){
   // Start
   card.querySelector('[data-action="start"]').addEventListener("click", ()=>startSession(k));
 
-  // Edit (custom only)
-  if(isCustom){
-    card.querySelector('[data-action="edit"]').addEventListener("click", (e)=>{
+// Edit + Delete (custom only)
+if(isCustom){
+
+  // EDIT
+  card.querySelector('[data-action="edit"]').addEventListener("click", (e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    openCustomSessionEditor(k);
+  });
+
+  // DELETE
+  const delBtn = card.querySelector('[data-action="delete"]');
+  if(delBtn){
+    delBtn.addEventListener("click", async (e)=>{
       e.preventDefault();
       e.stopPropagation();
-      openCustomSessionEditor(k); // on passe l’ID Firestore (ex: "CUSTOM_xxx")
+
+      const ok = confirm(`Supprimer la séance "${name}" ?\n\nCette action est définitive.`);
+      if(!ok) return;
+
+      try{
+        const docId = String(k).replace(/^CUSTOM_/, "");
+        const ref = doc(db, "users", currentUser.uid, "customSessions", docId);
+        await deleteDoc(ref);
+
+        await reloadCustomSessionsIntoSESSIONS();
+        renderHome();
+
+        alert("Séance supprimée ✅");
+      }catch(err){
+        console.warn(err);
+        alert("Erreur suppression : " + (err?.message || err));
+      }
     });
   }
+}
 
   mount.appendChild(card);
 }
@@ -3471,6 +3502,46 @@ await setDoc(ref, payloadClean, { merge: true });
   console.log("[B2.0-3] Saved custom session:", sessionId, payload);
   return sessionId;
 }
+
+
+/* =========================
+   B2.0-5-SAFE — helpers reload + purge custom
+========================= */
+function purgeCustomFromSessions(){
+  const prev = window.SESSIONS || {};
+  const cleaned = {};
+  for(const [k,v] of Object.entries(prev)){
+    if(!String(k).startsWith("CUSTOM_")) cleaned[k] = v;
+  }
+  window.SESSIONS = cleaned;
+}
+
+async function reloadCustomSessionsIntoSESSIONS(){
+  if(!currentUser?.uid) return;
+
+  const snapCustom = await getDocs(collection(db, "users", currentUser.uid, "customSessions"));
+  const custom = {};
+
+  snapCustom.forEach((d)=>{
+    const data = d.data() || {};
+    const key = `CUSTOM_${d.id}`;
+    custom[key] = {
+      name: data.name || "Séance personnalisée",
+      warmup: Array.isArray(data.warmup) ? data.warmup : [],
+      items: Array.isArray(data.items) ? data.items : [],
+      cooldown: Array.isArray(data.cooldown) ? data.cooldown : [],
+      estimatedMinutes: (typeof data.estimatedMinutes === "number") ? data.estimatedMinutes : null,
+      source: "custom"
+    };
+  });
+
+  // IMPORTANT: on purge d’abord toutes les anciennes CUSTOM_ (sinon deletions invisibles)
+  purgeCustomFromSessions();
+
+  // Puis on remonte les custom actuelles
+  window.SESSIONS = { ...(window.SESSIONS || {}), ...custom };
+}
+
 /* ===== FIN B2.0-3-SAFE ===== */
 
 
