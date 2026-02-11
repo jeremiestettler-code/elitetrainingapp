@@ -1699,12 +1699,134 @@ function setMsg(txt){ $("loginMsg").textContent = txt || ""; }
 
     function escapeHtml(s){ return (s||"").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m])); }
 
+/* =========================
+   A-SAFE — EXERCISE_LIBRARY (catalogue unique)
+   Source: window.SESSIONS (natives + custom)
+   But: Mode éditeur (dropdown) + Mode IA (choix contrôlé)
+========================= */
+window.EXERCISE_LIBRARY = window.EXERCISE_LIBRARY || {
+  warmup: [],
+  items: [],
+  cooldown: [],
+  byId: {} // index rapide: id -> entry
+};
+
+function buildExerciseLibraryFromSessions(sessions){
+  const lib = {
+    warmup: [],
+    items: [],
+    cooldown: [],
+    byId: {}
+  };
+
+  // clé unique par type + id/name
+  const seen = new Set();
+
+  const cleanStr = (v) => (v === undefined || v === null) ? "" : String(v).trim();
+  const cleanNum = (v, fallback=0) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : fallback;
+  };
+
+  function makeKey(type, entry){
+    const id = cleanStr(entry?.id);
+    const name = cleanStr(entry?.name);
+    return `${type}__${id || name}`.toLowerCase();
+  }
+
+  function add(type, raw){
+    if(!raw) return;
+
+    // normalise minimal
+    const e = {
+      type,
+      id: cleanStr(raw.id || raw.name || ""),   // on préfère un id stable
+      name: cleanStr(raw.name || raw.id || ""),
+      icon: cleanStr(raw.icon || ""),
+    };
+
+    if(!e.name) return; // ignore entrées vides
+
+    // champs selon type
+    if(type === "warmup" || type === "cooldown"){
+      e.seconds = cleanNum(raw.seconds, 0);
+      if(raw.desc) e.desc = cleanStr(raw.desc);
+      if(raw.todo) e.todo = cleanStr(raw.todo);
+    }else if(type === "items"){
+      e.sets = cleanNum(raw.sets, 0);
+      e.reps = (raw.reps !== undefined && raw.reps !== null) ? cleanStr(raw.reps) : "";
+      e.work = cleanNum(raw.work, 0);
+      e.rest = cleanNum(raw.rest, 0);
+      if(raw.muscle) e.muscle = cleanStr(raw.muscle);
+      if(raw.desc) e.desc = cleanStr(raw.desc);
+      if(Array.isArray(raw.steps)) e.steps = raw.steps.map(s=>cleanStr(s)).filter(Boolean);
+      if(Array.isArray(raw.mistakes)) e.mistakes = raw.mistakes.map(s=>cleanStr(s)).filter(Boolean);
+    }
+
+    // dédup
+    const key = makeKey(type, e);
+    if(seen.has(key)){
+      // option: si on retombe sur la même entrée mais avec icon manquante, on enrichit
+      const existing = lib.byId[e.id] || null;
+      if(existing && !existing.icon && e.icon) existing.icon = e.icon;
+      return;
+    }
+    seen.add(key);
+
+    // push + index
+    if(type === "warmup") lib.warmup.push(e);
+    if(type === "items") lib.items.push(e);
+    if(type === "cooldown") lib.cooldown.push(e);
+
+    if(e.id) lib.byId[e.id] = e;
+  }
+
+  // scan sessions
+  const entries = Object.values(sessions || {});
+  entries.forEach((s)=>{
+    (s?.warmup || []).forEach(w => add("warmup", w));
+    (s?.items || []).forEach(it => add("items", it));
+    (s?.cooldown || []).forEach(c => add("cooldown", c));
+  });
+
+  // tri simple pour dropdowns (alpha)
+  const byName = (a,b)=>String(a.name).localeCompare(String(b.name), "fr", { sensitivity:"base" });
+  lib.warmup.sort(byName);
+  lib.items.sort(byName);
+  lib.cooldown.sort(byName);
+
+  // store global
+  window.EXERCISE_LIBRARY = lib;
+
+  return lib;
+}
+/* ===== FIN A-SAFE EXERCISE_LIBRARY ===== */
+
+
     function renderHome(){
       const sessions = window.SESSIONS || {};
       const allKeys = Object.keys(sessions);
 
       const host = $("sessionList");
       host.innerHTML = "";
+
+/* =========================
+   A-SAFE — Build EXERCISE_LIBRARY + debug compteur
+   À COLLER JUSTE APRÈS: host.innerHTML = "";
+========================= */
+const lib = buildExerciseLibraryFromSessions(sessions);
+
+// petit debug (visible mais discret)
+let dbg = document.getElementById("exerciseLibraryDebug");
+if(!dbg){
+  dbg = document.createElement("div");
+  dbg.id = "exerciseLibraryDebug";
+  dbg.className = "muted small";
+  dbg.style.margin = "6px 4px 10px";
+  host.appendChild(dbg);
+}
+dbg.textContent = `Catalogue: ${lib.warmup.length} échauffements • ${lib.items.length} exercices • ${lib.cooldown.length} étirements`;
+/* ===== FIN A-SAFE debug ===== */
 
 /* =========================
    B1-SAFE — HOME: Section séparée "Mes séances" + "Séances complètes"
