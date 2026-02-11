@@ -1801,6 +1801,184 @@ function buildExerciseLibraryFromSessions(sessions){
   return lib;
 }
 
+
+/* =========================
+   C1-SAFE — AI Provider abstraction (mock now, API later)
+   - generateSessionWithAI(...) returns a session doc compatible Firestore
+   - validateAISessionAgainstLibrary(...) ensures ONLY known exercises are used
+========================= */
+
+function validateAISessionAgainstLibrary(session, lib){
+  const errors = [];
+  if(!session || typeof session !== "object") errors.push("Session invalide (objet attendu).");
+  if(!session.name) errors.push("Session.name manquant.");
+  if(!Number.isFinite(Number(session.estimatedMinutes))) errors.push("Session.estimatedMinutes invalide.");
+
+  const checkArr = (arr, label)=>{
+    if(!Array.isArray(arr)) { errors.push(`${label} doit être un tableau.`); return; }
+    arr.forEach((e, i)=>{
+      if(!e || typeof e !== "object") { errors.push(`${label}[${i}] invalide.`); return; }
+      if(!e.id) errors.push(`${label}[${i}].id manquant.`);
+      if(e.id && !lib.byId[e.id]) errors.push(`${label}[${i}].id inconnu: ${e.id}`);
+    });
+  };
+
+  checkArr(session.warmup, "warmup");
+  checkArr(session.items, "items");
+  checkArr(session.cooldown, "cooldown");
+
+  return { ok: errors.length === 0, errors };
+}
+
+/* -------- MOCK GENERATOR (local) --------
+   Heuristique simple basée sur tags/equipment/kneeImpact
+   (remplacera plus tard par appel backend/OpenAI)
+---------------------------------------- */
+function pickMany(arr, n){
+  const copy = [...arr];
+  const out = [];
+  while(copy.length && out.length < n){
+    const idx = Math.floor(Math.random()*copy.length);
+    out.push(copy.splice(idx,1)[0]);
+  }
+  return out;
+}
+
+function scoreExerciseForGoal(e, goal){
+  const g = String(goal||"").toLowerCase();
+  const tags = Array.isArray(e.tags) ? e.tags : [];
+  const has = (t)=>tags.includes(t);
+
+  let score = 0;
+  if(g.includes("abdos") || g.includes("core")) score += has("core") ? 5 : 0;
+  if(g.includes("dos") || g.includes("back")) score += (has("pull") || has("back")) ? 5 : 0;
+  if(g.includes("pec") || g.includes("chest")) score += (has("push") || has("chest")) ? 5 : 0;
+  if(g.includes("épaul") || g.includes("shoulder")) score += has("shoulders") ? 5 : 0;
+  if(g.includes("jamb") || g.includes("leg") || g.includes("fess")) score += (has("legs") || has("glutes")) ? 5 : 0;
+  if(g.includes("cardio")) score += has("cardio") ? 4 : 0;
+  if(g.includes("mobilité") || g.includes("mobility")) score += has("mobility") ? 4 : 0;
+
+  // contraintes “genou”
+  if(g.includes("genou") || g.includes("knee")){
+    if(e.kneeImpact === "high") score -= 8;
+    if(e.kneeImpact === "medium") score -= 3;
+  }
+
+  return score;
+}
+
+function mockGenerateSession(goalText, minutes, constraints){
+  const lib = window.EXERCISE_LIBRARY;
+  if(!lib || !lib.items?.length) throw new Error("EXERCISE_LIBRARY non prête.");
+
+  const goal = String(goalText||"").trim();
+  const est = Number(minutes||20);
+
+  // 1) Warmup: plutôt mobilité + warmup
+  const warmCandidates = lib.warmup
+    .map(e=>({e, s: scoreExerciseForGoal(e, goal) + (e.tags?.includes("mobility")?2:0)}))
+    .sort((a,b)=>b.s-a.s)
+    .map(x=>x.e);
+  const warmup = pickMany(warmCandidates.slice(0, 20), 3).map(e=>({
+    id: e.id,
+    name: e.name,
+    icon: e.icon,
+    seconds: e.seconds || 60,
+    desc: e.desc,
+    todo: e.todo
+  }));
+
+  // 2) Items: score selon goal + contraintes
+  const itemCandidates = lib.items
+    .map(e=>({e, s: scoreExerciseForGoal(e, goal)}))
+    .sort((a,b)=>b.s-a.s)
+    .map(x=>x.e);
+
+  // taille selon minutes (simple)
+  const nItems = est <= 15 ? 4 : est <= 25 ? 6 : 8;
+
+  const itemsPicked = pickMany(itemCandidates.slice(0, 40), nItems);
+
+  const items = itemsPicked.map(e=>({
+    id: e.id,
+    name: e.name,
+    icon: e.icon,
+    sets: (typeof e.sets === "number" && e.sets>0) ? e.sets : 3,
+    reps: (e.reps !== undefined && e.reps !== null) ? String(e.reps) : "8–12",
+    work: (typeof e.work === "number" && e.work>0) ? e.work : 45,
+    rest: (typeof e.rest === "number" && e.rest>=0) ? e.rest : 75,
+    muscle: e.muscle,
+    desc: e.desc,
+    steps: e.steps,
+    mistakes: e.mistakes
+  }));
+
+  // 3) Cooldown: plutôt stretch/mobility
+  const coolCandidates = lib.cooldown
+    .map(e=>({e, s: scoreExerciseForGoal(e, goal) + (e.tags?.includes("stretch")?2:0)}))
+    .sort((a,b)=>b.s-a.s)
+    .map(x=>x.e);
+  const cooldown = pickMany(coolCandidates.slice(0, 20), 2).map(e=>({
+    id: e.id,
+    name: e.name,
+    icon: e.icon,
+    seconds: e.seconds || 90,
+    desc: e.desc,
+    todo: e.todo
+  }));
+
+  return {
+    name: goal ? `IA — ${goal}` : "Séance IA",
+    estimatedMinutes: est,
+    warmup,
+    items,
+    cooldown
+  };
+}
+
+/* Provider unique: remplaçable plus tard */
+async function generateSessionWithAI({ goalText, minutes, constraints }){
+  // C1 = mock local (propre architecture)
+  // C2+ = brancher un backend/endpoint ici
+  return mockGenerateSession(goalText, minutes, constraints);
+}
+
+/* Helper: injecte une session générée dans l’éditeur custom */
+async function openGeneratedSessionInEditor(goalText, minutes, constraints){
+  const lib = window.EXERCISE_LIBRARY;
+  const session = await generateSessionWithAI({ goalText, minutes, constraints });
+
+  const check = validateAISessionAgainstLibrary(session, lib);
+  if(!check.ok){
+    console.warn("[C1] IA validation errors:", check.errors);
+    alert("La séance IA est invalide :\n- " + check.errors.join("\n- "));
+    return;
+  }
+
+  // Ouvre l’éditeur en mode création
+  await openCustomSessionEditor(null);
+
+  // Injecte draft
+  CS_DRAFT.name = session.name;
+  CS_DRAFT.estimatedMinutes = session.estimatedMinutes;
+  CS_DRAFT.warmup = session.warmup;
+  CS_DRAFT.items = session.items;
+  CS_DRAFT.cooldown = session.cooldown;
+
+  // Push UI
+  $("cs_name").value = CS_DRAFT.name;
+  $("cs_minutes").value = CS_DRAFT.estimatedMinutes;
+
+  renderCSEditor();
+}
+
+/* Debug console (C1 test) */
+window.__AI = {
+  generate: (goal="dos + abdos 20 min sans genou", minutes=20)=>openGeneratedSessionInEditor(goal, minutes, {})
+};
+
+
+
 /* =========================
    B-SAFE — Enrich EXERCISE_LIBRARY (tags/equipment/kneeImpact)
    Objectif: rendre le catalogue exploitable par Mode IA + éditeur intelligent
