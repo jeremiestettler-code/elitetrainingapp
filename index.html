@@ -3336,6 +3336,97 @@ try{
 let CS_DRAFT = null;   // objet en cours d'édition
 let CS_EDIT_ID = null; // pour plus tard (édition), null = création
 
+/* =========================
+   B2.0-3-SAFE — Firestore save helpers (customSessions)
+   Objectif: sauver CS_DRAFT dans users/{uid}/customSessions/{sessionId}
+   + timestamps serveur
+========================= */
+
+function csMakeId(prefix){
+  try{
+    if(crypto && typeof crypto.randomUUID === "function"){
+      return `${prefix}_${crypto.randomUUID()}`;
+    }
+  }catch(e){}
+  return `${prefix}_${Date.now()}_${Math.floor(Math.random()*100000)}`;
+}
+
+function csCleanWarmBlock(x, fallbackPrefix){
+  const id = String(x?.id || csMakeId(fallbackPrefix));
+  return {
+    id,
+    name: String(x?.name || "").trim(),
+    icon: String(x?.icon || ""),     // on laisse vide pour l’instant (UI ne gère pas encore)
+    seconds: Number(x?.seconds || 0),
+    desc: (x?.desc ? String(x.desc) : undefined),
+    todo: (x?.todo ? String(x.todo) : undefined),
+  };
+}
+
+function csCleanItem(x){
+  const id = String(x?.id || csMakeId("IT"));
+  return {
+    id,
+    name: String(x?.name || "").trim(),
+    icon: String(x?.icon || ""),
+    sets: Number(x?.sets || 0),
+    reps: (x?.reps !== undefined ? String(x.reps) : ""),
+    work: Number(x?.work || 0),
+    rest: Number(x?.rest || 0),
+    muscle: (x?.muscle ? String(x.muscle) : undefined),
+    desc: (x?.desc ? String(x.desc) : undefined),
+    steps: (Array.isArray(x?.steps) ? x.steps.map(String) : undefined),
+    mistakes: (Array.isArray(x?.mistakes) ? x.mistakes.map(String) : undefined),
+  };
+}
+
+async function saveCustomSessionToFirestore(){
+  if(!currentUser?.uid) throw new Error("Utilisateur non connecté.");
+
+  // 1) Lire UI -> draft
+  CS_DRAFT.name = $("cs_name").value.trim();
+  CS_DRAFT.estimatedMinutes = Number($("cs_minutes").value || 0);
+
+  // 2) Mini validation SAFE (pas bloquant, juste protection)
+  if(!CS_DRAFT.name){
+    alert("Donne un nom à ta séance 🙂");
+    return null;
+  }
+
+  // 3) Construire le doc Firestore (format demandé)
+  const warmup = (CS_DRAFT.warmup || []).map(w => csCleanWarmBlock(w, "WU"));
+  const items = (CS_DRAFT.items || []).map(it => csCleanItem(it));
+  const cooldown = (CS_DRAFT.cooldown || []).map(c => csCleanWarmBlock(c, "CD"));
+
+  const isEdit = !!CS_EDIT_ID;
+  const sessionId = isEdit ? CS_EDIT_ID : csMakeId("cs");
+
+  const payloadBase = {
+    name: CS_DRAFT.name,
+    estimatedMinutes: Number.isFinite(CS_DRAFT.estimatedMinutes) ? CS_DRAFT.estimatedMinutes : 0,
+    warmup,
+    items,
+    cooldown,
+    updatedAt: serverTimestamp(),
+  };
+
+  // createdAt seulement à la création (sinon on ne le touche pas)
+  const payload = isEdit
+    ? payloadBase
+    : { ...payloadBase, createdAt: serverTimestamp() };
+
+  // 4) Écriture Firestore
+  const ref = doc(db, "users", currentUser.uid, "customSessions", sessionId);
+
+  // merge:true => si édition plus tard, on n’écrase pas tout bêtement
+  await setDoc(ref, payload, { merge: true });
+
+  console.log("[B2.0-3] Saved custom session:", sessionId, payload);
+  return sessionId;
+}
+/* ===== FIN B2.0-3-SAFE ===== */
+
+
 
 function openCustomSessionEditor(sessionIdOrNull){
 
@@ -3523,15 +3614,46 @@ function renderCooldownList(){
     renderCooldownList();
   };
 
-  if(saveBtn) saveBtn.onclick = () => {
-    // PAS ENCORE Firestore à cette étape
-    CS_DRAFT.name = $("cs_name").value.trim();
-    CS_DRAFT.estimatedMinutes = Number($("cs_minutes").value || 0);
+if(saveBtn) saveBtn.onclick = async () => {
+  try{
+    const savedId = await saveCustomSessionToFirestore();
+    if(!savedId) return; // ex: pas de nom
 
-    console.log("[B2.0-2] Draft ready (not saved yet):", CS_DRAFT);
-    alert("B2.0-2 OK ✅ (pas encore sauvegardé). Prochaine étape = Firestore.");
+    // Recharge Firestore custom sessions (on réutilise ton code A2-SAFE en version “mini”)
+    try{
+      const snapCustom = await getDocs(collection(db, "users", currentUser.uid, "customSessions"));
+
+      const custom = {};
+      snapCustom.forEach((d)=>{
+        const data = d.data() || {};
+        const key = `CUSTOM_${d.id}`;
+        custom[key] = {
+          name: data.name || "Séance personnalisée",
+          warmup: Array.isArray(data.warmup) ? data.warmup : [],
+          items: Array.isArray(data.items) ? data.items : [],
+          cooldown: Array.isArray(data.cooldown) ? data.cooldown : [],
+          estimatedMinutes: (typeof data.estimatedMinutes === "number") ? data.estimatedMinutes : null,
+          source: "custom"
+        };
+      });
+
+      if(Object.keys(custom).length){
+        window.SESSIONS = { ...custom, ...(window.SESSIONS || {}) };
+      }
+      console.log("[B2.0-3] Reloaded custom sessions:", Object.keys(custom).length);
+    }catch(e){
+      console.warn("[B2.0-3] Reload custom failed:", e);
+    }
+
+    renderHome(); // => la séance apparaît tout de suite dans “Mes séances”
     closeCustomSessionEditor();
-  };
+    alert("Séance sauvegardée ✅");
+
+  }catch(e){
+    console.warn("[B2.0-3] Save failed:", e);
+    alert("Erreur sauvegarde : " + (e?.message || e));
+  }
+};
 })();
  
 /* ===== FIN B2.0-2-SAFE ===== */
