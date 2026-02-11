@@ -3441,8 +3441,9 @@ async function saveCustomSessionToFirestore(){
   const items = (CS_DRAFT.items || []).map(it => csCleanItem(it));
   const cooldown = (CS_DRAFT.cooldown || []).map(c => csCleanWarmBlock(c, "CD"));
 
-  const isEdit = !!CS_EDIT_ID;
-  const sessionId = isEdit ? CS_EDIT_ID : csMakeId("cs");
+ const isEdit = !!CS_EDIT_ID;
+// IMPORTANT: CS_EDIT_ID = "CUSTOM_<docId>" côté UI, Firestore veut juste "<docId>"
+const sessionId = isEdit ? String(CS_EDIT_ID).replace(/^CUSTOM_/, "") : csMakeId("cs");
 
   const payloadBase = {
     name: CS_DRAFT.name,
@@ -3474,14 +3475,15 @@ await setDoc(ref, payloadClean, { merge: true });
 
 
 
-function openCustomSessionEditor(sessionIdOrNull){
+async function openCustomSessionEditor(sessionIdOrNull){
 
   // B2.0-2-SAFE: ferme Réglages si ouvert
   const settings = document.getElementById("settingsModal");
   if(settings) settings.classList.add("hidden");
 
-  // ---- logique existante ----
+  // ---- init ----
   CS_EDIT_ID = sessionIdOrNull;
+
   CS_DRAFT = {
     name: "",
     estimatedMinutes: 35,
@@ -3490,14 +3492,54 @@ function openCustomSessionEditor(sessionIdOrNull){
     cooldown: []
   };
 
+  // UI base
   $("customSessionTitle").textContent =
     CS_EDIT_ID ? "Modifier une séance" : "Créer une séance";
 
   $("cs_name").value = CS_DRAFT.name;
   $("cs_minutes").value = CS_DRAFT.estimatedMinutes;
 
-  renderCSEditor();
+  // Ouvre le modal tout de suite (meilleure UX), puis charge si édition
   showModal("customSessionModal");
+
+  // ---- si édition : charger Firestore ----
+  if(CS_EDIT_ID){
+    try{
+      // Ta clé stockée est "CUSTOM_<docId>"
+      const docId = String(CS_EDIT_ID).replace(/^CUSTOM_/, "");
+
+      $("customSessionTitle").textContent = "Chargement...";
+
+      const ref = doc(db, "users", currentUser.uid, "customSessions", docId);
+      const snap = await getDoc(ref);
+
+      if(!snap.exists()){
+        alert("Séance introuvable dans Firestore.");
+      }else{
+        const data = snap.data() || {};
+        CS_DRAFT = {
+          name: data.name || "",
+          estimatedMinutes: (typeof data.estimatedMinutes === "number") ? data.estimatedMinutes : 35,
+          warmup: Array.isArray(data.warmup) ? data.warmup : [],
+          items: Array.isArray(data.items) ? data.items : [],
+          cooldown: Array.isArray(data.cooldown) ? data.cooldown : []
+        };
+
+        // IMPORTANT: pour l’update, on garde CS_EDIT_ID tel quel (CUSTOM_<id>)
+        $("cs_name").value = CS_DRAFT.name;
+        $("cs_minutes").value = CS_DRAFT.estimatedMinutes;
+      }
+
+      $("customSessionTitle").textContent = "Modifier une séance";
+    }catch(e){
+      console.warn("[B2.0-4] Load custom session failed:", e);
+      alert("Erreur chargement séance : " + (e?.message || e));
+      $("customSessionTitle").textContent = "Modifier une séance";
+    }
+  }
+
+  // Render final (création ou après load)
+  renderCSEditor();
 }
 
 function closeCustomSessionEditor(){
