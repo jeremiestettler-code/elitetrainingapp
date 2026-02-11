@@ -1800,6 +1800,85 @@ function buildExerciseLibraryFromSessions(sessions){
 
   return lib;
 }
+
+/* =========================
+   B-SAFE — Enrich EXERCISE_LIBRARY (tags/equipment/kneeImpact)
+   Objectif: rendre le catalogue exploitable par Mode IA + éditeur intelligent
+========================= */
+
+// Dictionnaire simple (tu enrichiras au fil du temps)
+const EX_META = {
+  // clés = id si possible (mieux), sinon on matchera au nom
+  // Exemple (à adapter/compléter progressivement):
+  // "Jumping jacks": { tags:["cardio","warmup"], equipment:["bodyweight"], kneeImpact:"medium" },
+};
+
+// Helpers: déduction légère depuis le nom (fallback)
+function inferMetaFromName(name, type){
+  const n = String(name||"").toLowerCase();
+  const tags = [];
+  const equipment = [];
+  let kneeImpact = "low";
+
+  // tags génériques
+  if(type === "warmup") tags.push("warmup");
+  if(type === "cooldown") tags.push("cooldown");
+  if(n.includes("mobilité") || n.includes("mobility")) tags.push("mobility");
+  if(n.includes("étirement") || n.includes("stretch")) tags.push("stretch");
+  if(n.includes("abdos") || n.includes("core")) tags.push("core");
+  if(n.includes("cardio") || n.includes("jumping") || n.includes("burpee")) tags.push("cardio");
+
+  // équipement
+  if(n.includes("élastique") || n.includes("band")) equipment.push("band");
+  if(n.includes("haltère") || n.includes("dumbbell")) equipment.push("dumbbell");
+  if(n.includes("barre") || n.includes("barbell")) equipment.push("barbell");
+  if(n.includes("poids du corps") || n.includes("bodyweight")) equipment.push("bodyweight");
+
+  // impact genou (heuristique simple)
+  if(n.includes("squat") || n.includes("fente") || n.includes("jump") || n.includes("burpee")) kneeImpact = "high";
+  if(n.includes("montées de genoux") || n.includes("jumping jacks")) kneeImpact = "medium";
+
+  // dédup
+  const uniq = (arr)=>Array.from(new Set(arr)).filter(Boolean);
+
+  return { tags: uniq(tags), equipment: uniq(equipment), kneeImpact };
+}
+
+function enrichExerciseLibrary(lib){
+  if(!lib) return lib;
+
+  const apply = (e)=>{
+    const keyId = e.id ? String(e.id) : "";
+    const keyName = e.name ? String(e.name) : "";
+    const direct = (keyId && EX_META[keyId]) ? EX_META[keyId]
+                 : (keyName && EX_META[keyName]) ? EX_META[keyName]
+                 : null;
+
+    const inferred = inferMetaFromName(e.name, e.type);
+
+    e.tags = Array.isArray(direct?.tags) ? direct.tags : inferred.tags;
+    e.equipment = Array.isArray(direct?.equipment) ? direct.equipment : inferred.equipment;
+    e.kneeImpact = direct?.kneeImpact || inferred.kneeImpact;
+
+    return e;
+  };
+
+  lib.warmup = lib.warmup.map(apply);
+  lib.items = lib.items.map(apply);
+  lib.cooldown = lib.cooldown.map(apply);
+
+  // refresh byId index (inclut les champs enrichis)
+  lib.byId = lib.byId || {};
+  [...lib.warmup, ...lib.items, ...lib.cooldown].forEach(e=>{
+    if(e.id) lib.byId[e.id] = e;
+  });
+
+  return lib;
+}
+/* ===== FIN B-SAFE enrich ===== */
+
+
+
 /* ===== FIN A-SAFE EXERCISE_LIBRARY ===== */
 
 
@@ -1814,7 +1893,8 @@ function buildExerciseLibraryFromSessions(sessions){
    A-SAFE — Build EXERCISE_LIBRARY + debug compteur
    À COLLER JUSTE APRÈS: host.innerHTML = "";
 ========================= */
-const lib = buildExerciseLibraryFromSessions(sessions);
+let lib = buildExerciseLibraryFromSessions(sessions);
+lib = enrichExerciseLibrary(lib);
 
 // petit debug (visible mais discret)
 let dbg = document.getElementById("exerciseLibraryDebug");
