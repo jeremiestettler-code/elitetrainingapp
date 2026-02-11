@@ -3736,6 +3736,7 @@ async function openCustomSessionEditor(sessionIdOrNull){
 }
 
 function closeCustomSessionEditor(){
+  try{ closeExercisePicker(); }catch(e){}
   hideModal("customSessionModal");
   CS_DRAFT = null;
   CS_EDIT_ID = null;
@@ -3964,8 +3965,15 @@ function renderExercisePickerList(filterText){
   if(cancelBtn) cancelBtn.onclick = closeCustomSessionEditor;
 
 if(addW) addW.onclick = () => {
-  openExercisePicker("warmup", (e)=>{
-    CS_DRAFT.warmup.push({
+openExercisePicker("warmup", (e)=>{
+  if(!CS_DRAFT){
+    console.warn("[picker] CS_DRAFT null -> abort");
+    closeExercisePicker();
+    return;
+  }
+  if(!Array.isArray(CS_DRAFT.warmup)) CS_DRAFT.warmup = [];
+
+  CS_DRAFT.warmup.push({
       id: e.id || `WU-${Date.now()}`,
       name: e.name || "",
       icon: e.icon || "",
@@ -4136,8 +4144,8 @@ if(Object.keys(custom).length){
 <!-- =========================
      A-SAFE — Exercise Picker Modal
 ========================= -->
-<div id="exercisePickerModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="pickerTitle">
-  <div class="modalCard">
+<div id="exercisePickerModal" class="modal hidden" style="z-index:9999;" role="dialog" aria-modal="true" aria-labelledby="pickerTitle">  
+    <div class="modalCard">
     <div class="modalHeader" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
       <div id="pickerTitle" class="h2" style="margin:0;">Choisir</div>
       <button class="btn" type="button" id="pickerClose" style="min-width:44px;">✕</button>
