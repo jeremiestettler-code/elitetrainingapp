@@ -3868,6 +3868,89 @@ function renderCooldownList(){
   });
 }
 
+
+/* =========================
+   A-SAFE — Exercise Picker (UI)
+========================= */
+let __pickerType = null;
+let __pickerOnPick = null;
+
+function openExercisePicker(type, onPick){
+  __pickerType = type;
+  __pickerOnPick = onPick;
+
+  $("pickerTitle").textContent =
+    (type === "warmup") ? "Choisir un échauffement"
+    : (type === "cooldown") ? "Choisir un étirement"
+    : "Choisir un exercice";
+
+  const search = $("pickerSearch");
+  if(search) search.value = "";
+
+  renderExercisePickerList("");
+  showModal("exercisePickerModal");
+  setTimeout(()=>{ try{ $("pickerSearch").focus(); }catch(e){} }, 50);
+}
+
+function closeExercisePicker(){
+  const m = $("exercisePickerModal");
+  if(m) m.classList.add("hidden");
+  __pickerType = null;
+  __pickerOnPick = null;
+}
+
+function renderExercisePickerList(filterText){
+  const list = $("pickerList");
+  if(!list) return;
+  list.innerHTML = "";
+
+  const lib = window.EXERCISE_LIBRARY || { warmup:[], items:[], cooldown:[] };
+  const arr = (__pickerType === "warmup") ? lib.warmup
+            : (__pickerType === "cooldown") ? lib.cooldown
+            : lib.items;
+
+  const q = String(filterText || "").trim().toLowerCase();
+  const filtered = !q ? arr : arr.filter(e => String(e.name||"").toLowerCase().includes(q));
+
+  if(filtered.length === 0){
+    const empty = document.createElement("div");
+    empty.className = "muted small";
+    empty.textContent = "Aucun résultat.";
+    list.appendChild(empty);
+    return;
+  }
+
+  filtered.slice(0, 80).forEach((e)=>{
+    const btn = document.createElement("button");
+    btn.className = "btn";
+    btn.type = "button";
+    btn.style.textAlign = "left";
+    btn.textContent = e.name;
+    btn.onclick = ()=>{
+      if(typeof __pickerOnPick === "function") __pickerOnPick(e);
+      closeExercisePicker();
+    };
+    list.appendChild(btn);
+  });
+}
+
+// wiring picker
+(function bindExercisePicker(){
+  const closeBtn = document.getElementById("pickerClose");
+  const cancelBtn = document.getElementById("pickerCancel");
+  const modal = document.getElementById("exercisePickerModal");
+  const search = document.getElementById("pickerSearch");
+
+  if(closeBtn) closeBtn.onclick = closeExercisePicker;
+  if(cancelBtn) cancelBtn.onclick = closeExercisePicker;
+  if(modal) modal.addEventListener("click", (e)=>{ if(e.target === modal) closeExercisePicker(); });
+
+  if(search){
+    search.addEventListener("input", ()=>renderExercisePickerList(search.value));
+  }
+})();
+
+
 /* Buttons wiring */
 (function bindCSEditor(){
   const closeBtn = $("customSessionClose");
@@ -3880,20 +3963,48 @@ function renderCooldownList(){
   if(closeBtn) closeBtn.onclick = closeCustomSessionEditor;
   if(cancelBtn) cancelBtn.onclick = closeCustomSessionEditor;
 
-  if(addW) addW.onclick = () => {
-    CS_DRAFT.warmup.push({ id: `WU-${Date.now()}`, name:"", icon:"", seconds:60 });
+if(addW) addW.onclick = () => {
+  openExercisePicker("warmup", (e)=>{
+    CS_DRAFT.warmup.push({
+      id: e.id || `WU-${Date.now()}`,
+      name: e.name || "",
+      icon: e.icon || "",
+      seconds: (typeof e.seconds === "number") ? e.seconds : 60
+    });
     renderWarmupList();
-  };
+  });
+};
 
-  if(addI) addI.onclick = () => {
-    CS_DRAFT.items.push({ id: `IT-${Date.now()}`, name:"", icon:"", sets:3, reps:"8–10", work:45, rest:90 });
+if(addI) addI.onclick = () => {
+  openExercisePicker("items", (e)=>{
+    CS_DRAFT.items.push({
+      id: e.id || `IT-${Date.now()}`,
+      name: e.name || "",
+      icon: e.icon || "",
+      sets: (typeof e.sets === "number") ? e.sets : 3,
+      reps: (e.reps !== undefined && e.reps !== null) ? String(e.reps) : "8–10",
+      work: (typeof e.work === "number") ? e.work : 45,
+      rest: (typeof e.rest === "number") ? e.rest : 90,
+      muscle: e.muscle || undefined,
+      desc: e.desc || undefined,
+      steps: Array.isArray(e.steps) ? e.steps : undefined,
+      mistakes: Array.isArray(e.mistakes) ? e.mistakes : undefined,
+    });
     renderItemsList();
-  };
+  });
+};
 
-  if(addC) addC.onclick = () => {
-    CS_DRAFT.cooldown.push({ id: `CD-${Date.now()}`, name:"", icon:"", seconds:60 });
+if(addC) addC.onclick = () => {
+  openExercisePicker("cooldown", (e)=>{
+    CS_DRAFT.cooldown.push({
+      id: e.id || `CD-${Date.now()}`,
+      name: e.name || "",
+      icon: e.icon || "",
+      seconds: (typeof e.seconds === "number") ? e.seconds : 60
+    });
     renderCooldownList();
-  };
+  });
+};
 
 if(saveBtn) saveBtn.onclick = async () => {
   try{
@@ -4021,6 +4132,29 @@ if(Object.keys(custom).length){
     </div>
   </div>
 </div>
+
+<!-- =========================
+     A-SAFE — Exercise Picker Modal
+========================= -->
+<div id="exercisePickerModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="pickerTitle">
+  <div class="modalCard">
+    <div class="modalHeader" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+      <div id="pickerTitle" class="h2" style="margin:0;">Choisir</div>
+      <button class="btn" type="button" id="pickerClose" style="min-width:44px;">✕</button>
+    </div>
+
+    <div style="padding:10px;">
+      <input id="pickerSearch" class="input" placeholder="Rechercher..." />
+      <div id="pickerList" style="margin-top:10px; display:flex; flex-direction:column; gap:8px;"></div>
+    </div>
+
+    <div style="display:flex; gap:10px; justify-content:flex-end; padding:10px;">
+      <button class="btn" id="pickerCancel" type="button">Annuler</button>
+    </div>
+  </div>
+</div>
+<!-- ===== FIN Exercise Picker Modal ===== -->
+
 
 <div id="profileModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
   <div class="modal-content">
@@ -4181,6 +4315,7 @@ if(Object.keys(custom).length){
     });
   }
 </script>
+
 
 </body>
 </html>
