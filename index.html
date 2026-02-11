@@ -3380,6 +3380,33 @@ function csCleanItem(x){
   };
 }
 
+/* =========================
+   SAFE — Firestore: remove undefined recursively
+   Firestore interdit les valeurs undefined.
+========================= */
+function stripUndefinedDeep(value){
+  if(value === undefined) return undefined;
+  if(value === null) return null;
+
+  if(Array.isArray(value)){
+    const arr = value
+      .map(stripUndefinedDeep)
+      .filter(v => v !== undefined); // enlève éléments undefined
+    return arr;
+  }
+
+  if(typeof value === "object"){
+    const out = {};
+    for(const [k, v] of Object.entries(value)){
+      const cleaned = stripUndefinedDeep(v);
+      if(cleaned !== undefined) out[k] = cleaned; // supprime clés undefined
+    }
+    return out;
+  }
+
+  return value; // string/number/boolean
+}
+
 async function saveCustomSessionToFirestore(){
   if(!currentUser?.uid) throw new Error("Utilisateur non connecté.");
 
@@ -3419,7 +3446,10 @@ async function saveCustomSessionToFirestore(){
   const ref = doc(db, "users", currentUser.uid, "customSessions", sessionId);
 
   // merge:true => si édition plus tard, on n’écrase pas tout bêtement
-  await setDoc(ref, payload, { merge: true });
+ // SAFE: Firestore refuse undefined, on nettoie le payload
+const payloadClean = stripUndefinedDeep(payload);
+
+await setDoc(ref, payloadClean, { merge: true });
 
   console.log("[B2.0-3] Saved custom session:", sessionId, payload);
   return sessionId;
