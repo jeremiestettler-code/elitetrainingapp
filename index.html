@@ -3725,9 +3725,10 @@ if(saveBtn) saveBtn.onclick = async () => {
         };
       });
 
-      if(Object.keys(custom).length){
-        window.SESSIONS = { ...custom, ...(window.SESSIONS || {}) };
-      }
+if(Object.keys(custom).length){
+  // IMPORTANT: custom doit écraser l’existant (sinon on garde les anciennes valeurs en front)
+  window.SESSIONS = { ...(window.SESSIONS || {}), ...custom };
+}
       console.log("[B2.0-3] Reloaded custom sessions:", Object.keys(custom).length);
     }catch(e){
       console.warn("[B2.0-3] Reload custom failed:", e);
