@@ -1880,28 +1880,44 @@ host.appendChild(header);
         }
       }
 
-      function addSessionCard(k, mount){
-        const s = sessions[k];
-        const name = s?.name || k;
-        const nWarmup = (s?.warmup||[]).length;
-        const nCooldown = (s?.cooldown||[]).length;
-        const nItems = (s?.items||[]).length;
+function addSessionCard(k, mount){
+  const s = sessions[k];
+  const name = s?.name || k;
+  const nWarmup = (s?.warmup||[]).length;
+  const nCooldown = (s?.cooldown||[]).length;
+  const nItems = (s?.items||[]).length;
 
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `
-          <div class="sessionItem">
-            <div class="grow">
-              <div class="h2">${escapeHtml(name)}</div>
-              <div class="muted small">${nWarmup} échauffement • ${nItems} exercices${nCooldown ? ` • ${nCooldown} étirements` : ""}</div>
-            </div>
-            <button class="btn primary">Démarrer</button>
-          </div>
-        `;
-        card.querySelector("button").addEventListener("click", ()=>startSession(k));
-        mount.appendChild(card);
-      }
+  const isCustom = k.startsWith("CUSTOM_") || (s && s.source === "custom");
 
+  const card = document.createElement("div");
+  card.className = "card";
+  card.innerHTML = `
+    <div class="sessionItem">
+      <div class="grow">
+        <div class="h2">${escapeHtml(name)}</div>
+        <div class="muted small">${nWarmup} échauffement • ${nItems} exercices${nCooldown ? ` • ${nCooldown} étirements` : ""}</div>
+      </div>
+
+      ${isCustom ? `<button class="btn" data-action="edit" title="Modifier" style="min-width:44px;">✏️</button>` : ""}
+
+      <button class="btn primary" data-action="start">Démarrer</button>
+    </div>
+  `;
+
+  // Start
+  card.querySelector('[data-action="start"]').addEventListener("click", ()=>startSession(k));
+
+  // Edit (custom only)
+  if(isCustom){
+    card.querySelector('[data-action="edit"]').addEventListener("click", (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      openCustomSessionEditor(k); // on passe l’ID Firestore (ex: "CUSTOM_xxx")
+    });
+  }
+
+  mount.appendChild(card);
+}
 
       function updateOpenSectionsHeight(){
         host.querySelectorAll(".homeSection.open").forEach(el=>{
