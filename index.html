@@ -1940,10 +1940,31 @@ function mockGenerateSession(goalText, minutes, constraints){
 
 /* Provider unique: remplaçable plus tard */
 async function generateSessionWithAI({ goalText, minutes, constraints }){
-  // C1 = mock local (propre architecture)
-  // C2+ = brancher un backend/endpoint ici
-  return mockGenerateSession(goalText, minutes, constraints);
+  if(!currentUser) throw new Error("Non connecté.");
+
+  const idToken = await currentUser.getIdToken();
+
+  const r = await fetch(window.AI_FUNCTION_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + idToken
+    },
+    body: JSON.stringify({
+      goalText,
+      minutes,
+      constraints: constraints || {}
+    })
+  });
+
+  const data = await r.json();
+  if(!r.ok || !data.ok) throw new Error(data.error || "Erreur IA");
+
+  return data.session;
 }
+
+// Expose pour debug console
+window.generateSessionWithAI = generateSessionWithAI;
 
 /* Helper: injecte une session générée dans l’éditeur custom */
 async function openGeneratedSessionInEditor(goalText, minutes, constraints){
