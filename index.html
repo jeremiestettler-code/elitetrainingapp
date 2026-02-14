@@ -1939,13 +1939,25 @@ function mockGenerateSession(goalText, minutes, constraints){
   };
 }
 
+function buildLibraryCompact(){
+  const lib = window.EXERCISE_LIBRARY;
+  const all = [...(lib.warmup||[]), ...(lib.items||[]), ...(lib.cooldown||[])];
+  return all.map(e=>({
+    id: e.id,
+    type: e.type,
+    name: e.name,
+    tags: Array.isArray(e.tags) ? e.tags : [],
+    equipment: Array.isArray(e.equipment) ? e.equipment : [],
+    kneeImpact: e.kneeImpact || "low"
+  }));
+}
 /* Provider unique: remplaçable plus tard */
 async function generateSessionWithAI({ goalText, minutes, constraints }){
   if(!currentUser) throw new Error("Non connecté.");
 
   const idToken = await currentUser.getIdToken();
 
-  const r = await fetch(window.AI_FUNCTION_URL, {
+   const r = await fetch(window.AI_FUNCTION_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -1954,10 +1966,10 @@ async function generateSessionWithAI({ goalText, minutes, constraints }){
     body: JSON.stringify({
       goalText,
       minutes,
-      constraints: constraints || {}
+      constraints: constraints || {},
+      libraryCompact: buildLibraryCompact()
     })
   });
-
   const data = await r.json();
   if(!r.ok || !data.ok) throw new Error(data.error || "Erreur IA");
 
