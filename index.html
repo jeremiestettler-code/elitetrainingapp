@@ -1977,6 +1977,30 @@ async function generateSessionWithAI({ goalText, minutes, constraints }){
 }
 
 // Expose pour debug console
+// -------- C3: compact library for AI (GLOBAL) --------
+function buildLibraryCompact(){
+  const lib = window.EXERCISE_LIBRARY;
+  if(!lib) return [];
+
+  const all = [
+    ...(lib.warmup || []),
+    ...(lib.items || []),
+    ...(lib.cooldown || [])
+  ];
+
+  return all.map(e => ({
+    id: String(e.id || ""),
+    type: String(e.type || ""),
+    name: String(e.name || ""),
+    tags: Array.isArray(e.tags) ? e.tags : [],
+    equipment: Array.isArray(e.equipment) ? e.equipment : [],
+    kneeImpact: e.kneeImpact || "low"
+  })).filter(x => x.id); // garde uniquement ceux avec id
+}
+
+// Expose pour debug console
+window.buildLibraryCompact = buildLibraryCompact;
+
 window.generateSessionWithAI = generateSessionWithAI;
 
 /* Helper: injecte une session générée dans l’éditeur custom */
