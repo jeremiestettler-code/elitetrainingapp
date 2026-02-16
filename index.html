@@ -2276,9 +2276,26 @@ async function openGeneratedSessionInEditor(goalText, minutes, constraints){
     return;
   }
 
+  // Ouvre l’éditeur en mode création
+  await openCustomSessionEditor(null);
+
+  // Injecte draft
+  CS_DRAFT.name = session.name;
+  CS_DRAFT.estimatedMinutes = session.estimatedMinutes;
+  CS_DRAFT.warmup = session.warmup;
+  CS_DRAFT.items = session.items;
+  CS_DRAFT.cooldown = session.cooldown;
+
+  // Push UI
+  $("cs_name").value = CS_DRAFT.name;
+  $("cs_minutes").value = CS_DRAFT.estimatedMinutes;
+
+  renderCSEditor();
+}
+
 /* =========================
    IA V2 — UX (analyse prompt + preview + regenerate)
-   À COLLER juste APRÈS: openGeneratedSessionInEditor(...)
+   IMPORTANT: doit être HORS de toute fonction
 ========================= */
 
 let AI_LAST_REQUEST = null;     // { goalText, minutes, constraints }
@@ -2303,19 +2320,14 @@ function aiParsePrompt(text){
   const raw = String(text || "").trim();
   const lower = raw.toLowerCase();
 
-  // Minutes : "35 min", "45 minutes"
   let minutes = null;
   const m = lower.match(/(\d{2,3})\s*(min|mins|minute|minutes)\b/);
   if(m) minutes = Math.max(10, Math.min(120, parseInt(m[1], 10)));
-
-  // Defaults SAFE si absent
   if(!minutes) minutes = 35;
 
-  // Matériel (on alimente constraints.equipment, attendu par backend) :contentReference[oaicite:6]{index=6}
   const eq = new Set();
   const has = (s)=>lower.includes(s);
 
-  // “sans matériel”
   const noEquip = has("sans materiel") || has("sans matériel") || has("no equipment");
   if(!noEquip){
     if(has("halt") || has("dumbbell") || has("haltère") || has("haltères")) eq.add("dumbbell");
@@ -2325,21 +2337,16 @@ function aiParsePrompt(text){
     if(has("machine") || has("cable") || has("poulie")) eq.add("machine");
   }
 
-  // Genou : IMPORTANT → le backend déclenche le filtrage si goalText contient "genou" ou "knee" :contentReference[oaicite:7]{index=7}
   const kneeSensitive =
-    has("genou") || has("knee") || has("sans genou") || has("genou sensible") || has("knee friendly");
+    has("genou") || has("knee") || has("genou sensible") || has("knee friendly");
 
-  // On force un mot-clé si l'utilisateur parle de “douleur genou” sans écrire "genou"
   let goalText = raw;
   if(kneeSensitive && !lower.includes("genou") && !lower.includes("knee")){
     goalText = raw + " (genou sensible)";
   }
 
-  const constraints = {
-    equipment: Array.from(eq) // si vide → pas de filtre matériel
-  };
+  const constraints = { equipment: Array.from(eq) };
 
-  // Chips UI
   const chips = [];
   chips.push(`${minutes} min`);
   if(constraints.equipment.length) chips.push("Matériel: " + constraints.equipment.join(", "));
@@ -2358,7 +2365,6 @@ function aiRenderChips(parsed){
     d.textContent = txt;
     host.appendChild(d);
   });
-
   const ml = $("aiMinutesLabel");
   if(ml) ml.textContent = `Durée : ${parsed?.minutes || "—"} min`;
 }
@@ -2435,7 +2441,6 @@ async function aiGenerate({ regen=false } = {}){
   }
 
   aiRenderChips(parsed);
-
   AI_LAST_REQUEST = { goalText: parsed.goalText, minutes: parsed.minutes, constraints: parsed.constraints };
 
   try{
@@ -2468,7 +2473,7 @@ async function aiGenerate({ regen=false } = {}){
   }
 }
 
-/* Bind UI (SAFE) */
+/* Bind UI (SAFE) — exécuté immédiatement (hors fonctions) */
 (function bindAIV2(){
   const p = $("aiPrompt");
   const gen = $("btnAIGenerate");
@@ -2479,10 +2484,8 @@ async function aiGenerate({ regen=false } = {}){
     const onChange = ()=>{
       const parsed = aiParsePrompt(p.value);
       aiRenderChips(parsed);
-      // preview visible seulement si une session existe
     };
     p.addEventListener("input", onChange, { passive:true });
-    // init
     try{ onChange(); }catch(e){}
   }
 
@@ -2490,10 +2493,8 @@ async function aiGenerate({ regen=false } = {}){
   reg?.addEventListener("click", ()=>aiGenerate({ regen:true }));
 
   open?.addEventListener("click", async ()=>{
-    if(!AI_LAST_REQUEST || !AI_LAST_SESSION) return;
+    if(!AI_LAST_SESSION) return;
 
-    // On réutilise TA mécanique existante: ouvrir éditeur + inject
-    // (mais on injecte directement la session déjà générée pour éviter une 2e requête)
     await openCustomSessionEditor(null);
 
     CS_DRAFT.name = AI_LAST_SESSION.name;
@@ -2508,23 +2509,6 @@ async function aiGenerate({ regen=false } = {}){
     renderCSEditor();
   });
 })();
-
-  // Ouvre l’éditeur en mode création
-  await openCustomSessionEditor(null);
-
-  // Injecte draft
-  CS_DRAFT.name = session.name;
-  CS_DRAFT.estimatedMinutes = session.estimatedMinutes;
-  CS_DRAFT.warmup = session.warmup;
-  CS_DRAFT.items = session.items;
-  CS_DRAFT.cooldown = session.cooldown;
-
-  // Push UI
-  $("cs_name").value = CS_DRAFT.name;
-  $("cs_minutes").value = CS_DRAFT.estimatedMinutes;
-
-  renderCSEditor();
-}
 
 /* Debug console (C1 test) */
 window.__AI = {
