@@ -1939,6 +1939,30 @@ function mockGenerateSession(goalText, minutes, constraints){
   };
 }
 
+// -------- C4.1: recent exercise ids (anti-repetition) --------
+function getRecentExerciseIds(max = 25){
+  try{
+    // Essaie de lire ton historique existant (localStorage)
+    const raw = localStorage.getItem("elite_history") || localStorage.getItem("history") || "[]";
+    const hist = JSON.parse(raw);
+    const ids = [];
+
+    // On parcourt depuis la fin (plus récent -> plus ancien)
+    for(let i = hist.length - 1; i >= 0; i--){
+      const h = hist[i] || {};
+      const items = h.items || h.exercises || [];
+      for(const it of items){
+        const id = it?.id || it?.exerciseId;
+        if(id && !ids.includes(id)) ids.push(id);
+        if(ids.length >= max) return ids;
+      }
+    }
+    return ids;
+  }catch(e){
+    return [];
+  }
+}
+
 /* Provider unique: remplaçable plus tard */
 async function generateSessionWithAI({ goalText, minutes, constraints }){
   if(!currentUser) throw new Error("Non connecté.");
@@ -1951,12 +1975,13 @@ async function generateSessionWithAI({ goalText, minutes, constraints }){
       "Content-Type": "application/json",
       "Authorization": "Bearer " + idToken
     },
-    body: JSON.stringify({
-      goalText,
-      minutes,
-      constraints: constraints || {},
-      libraryCompact: buildLibraryCompact()
-    })
+body: JSON.stringify({
+  goalText,
+  minutes,
+  constraints: constraints || {},
+  libraryCompact: buildLibraryCompact(),
+  recentIds: getRecentExerciseIds()
+})
   });
 
   const data = await r.json();
