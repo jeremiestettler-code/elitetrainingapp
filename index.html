@@ -928,7 +928,109 @@
   z-index: 99998 !important;
 }
 
+/* =========================
+   IA V2 — styles
+========================= */
+.aiCard{
+  margin-bottom: 12px;
+  padding: 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.04);
+}
+[data-theme="light"] .aiCard{
+  border-color: rgba(10,20,40,.12);
+  background: rgba(10,20,40,.03);
+}
 
+.aiMetaRow{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  justify-content:space-between;
+}
+.aiChips{ display:flex; gap:8px; flex-wrap:wrap; }
+.aiChip{
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 850;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+  opacity:.92;
+}
+[data-theme="light"] .aiChip{
+  border-color: rgba(10,20,40,.14);
+  background: rgba(10,20,40,.04);
+}
+
+.aiLoader{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.04);
+}
+[data-theme="light"] .aiLoader{
+  border-color: rgba(10,20,40,.12);
+  background: rgba(10,20,40,.03);
+}
+.spinner{
+  width:18px; height:18px;
+  border-radius:999px;
+  border: 2px solid rgba(255,255,255,.18);
+  border-top-color: rgba(255,255,255,.85);
+  animation: spin 0.9s linear infinite;
+}
+[data-theme="light"] .spinner{
+  border-color: rgba(10,20,40,.16);
+  border-top-color: rgba(10,20,40,.70);
+}
+@keyframes spin{ to{ transform: rotate(360deg); } }
+
+.aiPreview{
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+[data-theme="light"] .aiPreview{
+  border-top-color: rgba(10,20,40,.10);
+}
+.aiPreviewCols{ display:flex; flex-direction:column; gap:10px; }
+.aiBlock{
+  padding: 10px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.03);
+}
+[data-theme="light"] .aiBlock{
+  border-color: rgba(10,20,40,.12);
+  background: rgba(10,20,40,.025);
+}
+.aiList{ display:flex; flex-direction:column; gap:8px; margin-top:8px; }
+.aiRow{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  padding: 8px 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.02);
+}
+[data-theme="light"] .aiRow{
+  border-color: rgba(10,20,40,.10);
+  background: rgba(10,20,40,.02);
+}
+.aiRow img{
+  width:34px; height:34px;
+  border-radius: 12px;
+  object-fit: cover;
+  background: rgba(255,255,255,.06);
+}
+.aiRow .t1{ font-weight: 900; font-size: 14px; line-height: 1.2; }
+.aiRow .t2{ font-size: 12px; opacity: .78; margin-top:2px; }
 
 </style>
 
@@ -992,6 +1094,78 @@
         </div>
 
         <div style="height:12px"></div>
+
+<!-- =========================
+     IA V2 — HOME (preview + generate)
+     À COLLER juste AVANT: <div class="grid" id="sessionList"></div>
+========================= -->
+<div class="aiCard" id="aiCard">
+  <div class="row" style="align-items:flex-start;">
+    <div class="grow">
+      <div class="h2">Mode IA</div>
+      <div class="muted small">Décris ta séance (objectif, durée, matériel, genou…).</div>
+    </div>
+  </div>
+
+  <div style="height:10px"></div>
+
+  <textarea id="aiPrompt"
+    class="input"
+    style="min-height:84px; resize:none;"
+    placeholder="Ex: dos + abdos 35 min, haltères, genou sensible"></textarea>
+
+  <div style="height:10px"></div>
+
+  <div class="aiMetaRow">
+    <div class="aiChips" id="aiChips"></div>
+    <div class="aiMetaRight">
+      <div class="muted small" id="aiMinutesLabel">Durée : —</div>
+    </div>
+  </div>
+
+  <div style="height:10px"></div>
+
+  <div class="row" style="gap:10px;">
+    <button class="btn primary wide" id="btnAIGenerate">Générer</button>
+    <button class="btn wide" id="btnAIRegenerate" disabled>Regénérer</button>
+  </div>
+
+  <div style="height:10px"></div>
+
+  <div class="aiLoader" id="aiLoader" style="display:none;">
+    <div class="spinner" aria-hidden="true"></div>
+    <div class="muted small" id="aiLoaderTxt">Génération en cours…</div>
+  </div>
+
+  <div class="aiPreview" id="aiPreview" style="display:none;">
+    <div class="row">
+      <div class="grow">
+        <div class="h2" style="margin:0;">Aperçu</div>
+        <div class="muted small" id="aiPreviewSub">—</div>
+      </div>
+      <button class="btn" id="btnAIOpenEditor">Ouvrir dans l’éditeur</button>
+    </div>
+
+    <div style="height:10px"></div>
+
+    <div class="aiPreviewCols">
+      <div class="aiBlock">
+        <div class="muted small" style="font-weight:900; opacity:.85;">Warmup</div>
+        <div class="aiList" id="aiPrevWarmup"></div>
+      </div>
+      <div class="aiBlock">
+        <div class="muted small" style="font-weight:900; opacity:.85;">Exercices</div>
+        <div class="aiList" id="aiPrevItems"></div>
+      </div>
+      <div class="aiBlock">
+        <div class="muted small" style="font-weight:900; opacity:.85;">Cooldown</div>
+        <div class="aiList" id="aiPrevCooldown"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ===== FIN IA V2 HOME ===== -->
+
         <div class="grid" id="sessionList"></div>
       </div>
 
@@ -2101,6 +2275,239 @@ async function openGeneratedSessionInEditor(goalText, minutes, constraints){
     alert("La séance IA est invalide :\n- " + check.errors.join("\n- "));
     return;
   }
+
+/* =========================
+   IA V2 — UX (analyse prompt + preview + regenerate)
+   À COLLER juste APRÈS: openGeneratedSessionInEditor(...)
+========================= */
+
+let AI_LAST_REQUEST = null;     // { goalText, minutes, constraints }
+let AI_LAST_SESSION = null;     // session enrichie
+let AI_BUSY = false;
+
+function aiSetBusy(on, txt){
+  AI_BUSY = !!on;
+  const loader = $("aiLoader");
+  const t = $("aiLoaderTxt");
+  if(loader) loader.style.display = on ? "flex" : "none";
+  if(t && txt) t.textContent = txt;
+  const gen = $("btnAIGenerate");
+  const reg = $("btnAIRegenerate");
+  const open = $("btnAIOpenEditor");
+  if(gen) gen.disabled = on;
+  if(reg) reg.disabled = on || !AI_LAST_REQUEST;
+  if(open) open.disabled = on || !AI_LAST_SESSION;
+}
+
+function aiParsePrompt(text){
+  const raw = String(text || "").trim();
+  const lower = raw.toLowerCase();
+
+  // Minutes : "35 min", "45 minutes"
+  let minutes = null;
+  const m = lower.match(/(\d{2,3})\s*(min|mins|minute|minutes)\b/);
+  if(m) minutes = Math.max(10, Math.min(120, parseInt(m[1], 10)));
+
+  // Defaults SAFE si absent
+  if(!minutes) minutes = 35;
+
+  // Matériel (on alimente constraints.equipment, attendu par backend) :contentReference[oaicite:6]{index=6}
+  const eq = new Set();
+  const has = (s)=>lower.includes(s);
+
+  // “sans matériel”
+  const noEquip = has("sans materiel") || has("sans matériel") || has("no equipment");
+  if(!noEquip){
+    if(has("halt") || has("dumbbell") || has("haltère") || has("haltères")) eq.add("dumbbell");
+    if(has("barre") || has("barbell")) eq.add("barbell");
+    if(has("kettlebell") || has("kb")) eq.add("kettlebell");
+    if(has("élastique") || has("elastique") || has("band")) eq.add("band");
+    if(has("machine") || has("cable") || has("poulie")) eq.add("machine");
+  }
+
+  // Genou : IMPORTANT → le backend déclenche le filtrage si goalText contient "genou" ou "knee" :contentReference[oaicite:7]{index=7}
+  const kneeSensitive =
+    has("genou") || has("knee") || has("sans genou") || has("genou sensible") || has("knee friendly");
+
+  // On force un mot-clé si l'utilisateur parle de “douleur genou” sans écrire "genou"
+  let goalText = raw;
+  if(kneeSensitive && !lower.includes("genou") && !lower.includes("knee")){
+    goalText = raw + " (genou sensible)";
+  }
+
+  const constraints = {
+    equipment: Array.from(eq) // si vide → pas de filtre matériel
+  };
+
+  // Chips UI
+  const chips = [];
+  chips.push(`${minutes} min`);
+  if(constraints.equipment.length) chips.push("Matériel: " + constraints.equipment.join(", "));
+  if(kneeSensitive) chips.push("Genou: éviter impact");
+
+  return { goalText, minutes, constraints, chips };
+}
+
+function aiRenderChips(parsed){
+  const host = $("aiChips");
+  if(!host) return;
+  host.innerHTML = "";
+  (parsed?.chips || []).forEach(txt=>{
+    const d = document.createElement("div");
+    d.className = "aiChip";
+    d.textContent = txt;
+    host.appendChild(d);
+  });
+
+  const ml = $("aiMinutesLabel");
+  if(ml) ml.textContent = `Durée : ${parsed?.minutes || "—"} min`;
+}
+
+function aiRowHTML(icon, title, sub){
+  const div = document.createElement("div");
+  div.className = "aiRow";
+
+  const img = document.createElement("img");
+  img.alt = "";
+  setImg(img, icon || "");
+
+  const txt = document.createElement("div");
+  txt.style.flex = "1";
+
+  const t1 = document.createElement("div");
+  t1.className = "t1";
+  t1.textContent = title || "—";
+
+  const t2 = document.createElement("div");
+  t2.className = "t2";
+  t2.textContent = sub || "";
+
+  txt.appendChild(t1);
+  if(sub) txt.appendChild(t2);
+
+  div.appendChild(img);
+  div.appendChild(txt);
+  return div;
+}
+
+function aiRenderPreview(session, parsed){
+  const box = $("aiPreview");
+  if(!box) return;
+
+  const sub = $("aiPreviewSub");
+  if(sub){
+    const mins = session?.estimatedMinutes || parsed?.minutes || "—";
+    const eq = (parsed?.constraints?.equipment || []);
+    const eqTxt = eq.length ? ` • Matériel: ${eq.join(", ")}` : "";
+    sub.textContent = `${mins} min${eqTxt}`;
+  }
+
+  const w = $("aiPrevWarmup");
+  const it = $("aiPrevItems");
+  const c = $("aiPrevCooldown");
+  if(w) w.innerHTML = "";
+  if(it) it.innerHTML = "";
+  if(c) c.innerHTML = "";
+
+  (session?.warmup || []).forEach(e=>{
+    w?.appendChild(aiRowHTML(e.icon, e.name, e.seconds ? `${e.seconds}s` : ""));
+  });
+  (session?.items || []).forEach(e=>{
+    const sub = `${e.sets || 3}x • ${e.reps || ""} • ${e.work || 45}s / ${e.rest || 60}s`;
+    it?.appendChild(aiRowHTML(e.icon, e.name, sub));
+  });
+  (session?.cooldown || []).forEach(e=>{
+    c?.appendChild(aiRowHTML(e.icon, e.name, e.seconds ? `${e.seconds}s` : ""));
+  });
+
+  box.style.display = "block";
+}
+
+async function aiGenerate({ regen=false } = {}){
+  if(AI_BUSY) return;
+  const promptEl = $("aiPrompt");
+  const txt = promptEl ? promptEl.value : "";
+  const parsed = aiParsePrompt(txt);
+
+  if(!parsed.goalText || !parsed.goalText.trim()){
+    alert("Écris un objectif (ex: dos + abdos 35 min).");
+    return;
+  }
+
+  aiRenderChips(parsed);
+
+  AI_LAST_REQUEST = { goalText: parsed.goalText, minutes: parsed.minutes, constraints: parsed.constraints };
+
+  try{
+    aiSetBusy(true, regen ? "Regénération d’une variation…" : "Génération en cours…");
+
+    const lib = window.EXERCISE_LIBRARY;
+    const session = await generateSessionWithAI(AI_LAST_REQUEST);
+
+    const check = validateAISessionAgainstLibrary(session, lib);
+    if(!check.ok){
+      console.warn("[IA V2] validation errors:", check.errors);
+      alert("La séance IA est invalide :\n- " + check.errors.join("\n- "));
+      return;
+    }
+
+    AI_LAST_SESSION = session;
+    aiRenderPreview(session, parsed);
+
+    const reg = $("btnAIRegenerate");
+    if(reg) reg.disabled = false;
+
+    const open = $("btnAIOpenEditor");
+    if(open) open.disabled = false;
+
+  }catch(e){
+    console.warn(e);
+    alert("Erreur IA : " + (e?.message || e));
+  }finally{
+    aiSetBusy(false);
+  }
+}
+
+/* Bind UI (SAFE) */
+(function bindAIV2(){
+  const p = $("aiPrompt");
+  const gen = $("btnAIGenerate");
+  const reg = $("btnAIRegenerate");
+  const open = $("btnAIOpenEditor");
+
+  if(p){
+    const onChange = ()=>{
+      const parsed = aiParsePrompt(p.value);
+      aiRenderChips(parsed);
+      // preview visible seulement si une session existe
+    };
+    p.addEventListener("input", onChange, { passive:true });
+    // init
+    try{ onChange(); }catch(e){}
+  }
+
+  gen?.addEventListener("click", ()=>aiGenerate({ regen:false }));
+  reg?.addEventListener("click", ()=>aiGenerate({ regen:true }));
+
+  open?.addEventListener("click", async ()=>{
+    if(!AI_LAST_REQUEST || !AI_LAST_SESSION) return;
+
+    // On réutilise TA mécanique existante: ouvrir éditeur + inject
+    // (mais on injecte directement la session déjà générée pour éviter une 2e requête)
+    await openCustomSessionEditor(null);
+
+    CS_DRAFT.name = AI_LAST_SESSION.name;
+    CS_DRAFT.estimatedMinutes = AI_LAST_SESSION.estimatedMinutes;
+    CS_DRAFT.warmup = AI_LAST_SESSION.warmup;
+    CS_DRAFT.items = AI_LAST_SESSION.items;
+    CS_DRAFT.cooldown = AI_LAST_SESSION.cooldown;
+
+    $("cs_name").value = CS_DRAFT.name;
+    $("cs_minutes").value = CS_DRAFT.estimatedMinutes;
+
+    renderCSEditor();
+  });
+})();
 
   // Ouvre l’éditeur en mode création
   await openCustomSessionEditor(null);
