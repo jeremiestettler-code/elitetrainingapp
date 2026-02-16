@@ -1965,6 +1965,8 @@ function getRecentExerciseIds(max = 25){
   }
 }
 
+window.getRecentExerciseIds = getRecentExerciseIds; // SAFE: expose console + autres fonctions
+
 /* Provider unique: remplaçable plus tard */
 async function generateSessionWithAI({ goalText, minutes, constraints }){
   if(!currentUser) throw new Error("Non connecté.");
