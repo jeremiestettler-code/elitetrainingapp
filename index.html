@@ -1939,31 +1939,42 @@ function mockGenerateSession(goalText, minutes, constraints){
   };
 }
 
+f// -------- C4.1 SAFE: store/reuse last AI-picked ids --------
+const AI_RECENT_IDS_KEY = "elite_ai_recent_ids_v1";
+
 function getRecentExerciseIds(max = 25){
   try{
-    const raw =
-      localStorage.getItem("elite_history") ||
-      localStorage.getItem("history") ||
-      localStorage.getItem("ELITE_HISTORY") ||
-      "[]";
-
-    const hist = JSON.parse(raw);
-    const ids = [];
-
-    for(let i = hist.length - 1; i >= 0; i--){
-      const h = hist[i] || {};
-      const items = h.items || h.exercises || [];
-      for(const it of items){
-        const id = it?.id || it?.exerciseId;
-        if(id && !ids.includes(id)) ids.push(id);
-        if(ids.length >= max) return ids;
-      }
-    }
-    return ids;
+    const raw = localStorage.getItem(AI_RECENT_IDS_KEY) || "[]";
+    const ids = JSON.parse(raw);
+    return Array.isArray(ids) ? ids.slice(0, max) : [];
   }catch(e){
     return [];
   }
 }
+
+function rememberRecentExerciseIds(session, max = 50){
+  try{
+    const ids = [];
+    for(const w of (session?.warmup || [])) if(w?.id) ids.push(String(w.id));
+    for(const it of (session?.items || [])) if(it?.id) ids.push(String(it.id));
+    for(const c of (session?.cooldown || [])) if(c?.id) ids.push(String(c.id));
+
+    // unique, keep order
+    const uniq = [];
+    for(const id of ids){
+      if(id && !uniq.includes(id)) uniq.push(id);
+    }
+
+    const prev = getRecentExerciseIds(max);
+    const merged = [...uniq, ...prev]
+      .filter((x,i,a)=>x && a.indexOf(x)===i)
+      .slice(0, max);
+
+    localStorage.setItem(AI_RECENT_IDS_KEY, JSON.stringify(merged));
+  }catch(e){}
+}
+
+window.getRecentExerciseIds = getRecentExerciseIds;
 
 window.getRecentExerciseIds = getRecentExerciseIds; // SAFE: expose console + autres fonctions
 
@@ -2047,6 +2058,7 @@ body: JSON.stringify({
       todo: base.todo
     });
   }
+rememberRecentExerciseIds(out);
 
   return out;
 }
