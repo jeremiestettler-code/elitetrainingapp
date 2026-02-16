@@ -5134,6 +5134,13 @@ if(Object.keys(custom).length){
       }
     });
   }
+
+  // === DEBUG CLICK AI (SAFE) ===
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest("#btnAIGenerate");
+  if (!btn) return;
+  console.log("✅ Click capté sur #btnAIGenerate");
+}, true);
 </script>
 
 
