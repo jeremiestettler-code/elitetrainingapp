@@ -2540,11 +2540,11 @@ async function aiGenerate({ regen=false } = {}){
     AI_LAST_SESSION = session;
     aiRenderPreview(session, parsed);
 
-    const open = $("btnAIOpenEditor");
-if(open){
-  open.disabled = false;
-  open.textContent = "Enregistrer la séance";
-}
+    const saveBtn = $("btnAIOpenEditor");
+    if(saveBtn){
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Enregistrer la séance";
+    }
 
     const reg = $("btnAIRegenerate");
     if(reg) reg.disabled = false;
@@ -2579,7 +2579,7 @@ if(open){
   gen?.addEventListener("click", ()=>aiGenerate({ regen:false }));
   reg?.addEventListener("click", ()=>aiGenerate({ regen:true }));
 
-  open?.addEventListener("click", async ()=>{
+  $("btnAIOpenEditor")?.addEventListener("click", async ()=>{
     if(AI_BUSY) return;
     if(!AI_LAST_SESSION) return;
 
@@ -2600,11 +2600,11 @@ if(open){
       }
 
       // Désactive le bouton après save (évite double save)
-      const btn = $("btnAIOpenEditor");
-      if(btn){
-        btn.disabled = true;
-        btn.textContent = "Séance enregistrée";
-      }
+      const saveBtn = $("btnAIOpenEditor");
+      if(saveBtn){
+  saveBtn.disabled = true;
+  saveBtn.textContent = "Séance enregistrée";
+}
 
     }catch(e){
       console.warn(e);
