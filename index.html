@@ -1128,6 +1128,104 @@
   border:1px solid rgba(10,20,40,0.12);
 }
 
+/* =========================
+   Play Icon Button
+========================= */
+
+.iconPlayBtn{
+  width:48px;
+  height:48px;
+  border-radius:50%;
+
+  border:none;
+  cursor:pointer;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  font-size:18px;
+  font-weight:900;
+  color:white;
+
+  background:linear-gradient(135deg,#4da8ff,#00c2ff);
+  box-shadow:0 6px 18px rgba(0,140,255,0.35);
+
+  transition:all 0.15s ease;
+}
+
+.iconPlayBtn:active{
+  transform:scale(0.95);
+  box-shadow:0 3px 10px rgba(0,140,255,0.25);
+}
+
+.iconPlayBtn:hover{
+  filter:brightness(1.05);
+}
+
+/* =========================
+   Play Button (SVG) + glow pulsant
+========================= */
+.playBtn{
+  width:48px;
+  height:48px;
+  border-radius:999px;
+  border:none;
+  cursor:pointer;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  position:relative;
+  flex:0 0 auto;
+
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  box-shadow: 0 10px 26px rgba(0, 170, 255, 0.28);
+  -webkit-tap-highlight-color: transparent;
+
+  transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
+}
+
+.playBtn:active{
+  transform: scale(0.96);
+  filter: brightness(1.03);
+  box-shadow: 0 6px 18px rgba(0, 170, 255, 0.22);
+}
+
+.playIcon{
+  width:22px;
+  height:22px;
+  fill: #ffffff;
+  transform: translateX(1px); /* petit centrage optique du triangle */
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,.25));
+}
+
+/* Glow pulsant léger */
+.playBtn::before{
+  content:"";
+  position:absolute;
+  inset:-6px;
+  border-radius:999px;
+  background: radial-gradient(circle, rgba(0, 200, 255, 0.22), rgba(0, 200, 255, 0.0) 60%);
+  opacity: 0;
+  transform: scale(0.92);
+  pointer-events:none;
+}
+
+@keyframes playPulse {
+  0%   { opacity: 0.10; transform: scale(0.92); }
+  45%  { opacity: 0.28; transform: scale(1.03); }
+  100% { opacity: 0.10; transform: scale(0.92); }
+}
+
+@media (prefers-reduced-motion: no-preference){
+  .playBtn::before{
+    opacity: 0.18;
+    animation: playPulse 1.8s ease-in-out infinite;
+  }
+}
+
 </style>
 
   <!-- Favicon -->
@@ -2969,8 +3067,40 @@ function addSessionCard(k, mount){
   <button class="btn" data-action="delete" title="Supprimer" style="min-width:44px;">🗑</button>
 ` : ""}
 
-      <button class="btn primary" data-action="start">Démarrer</button>
-    </div>
+/* =========================
+   Play Icon Button
+========================= */
+
+.iconPlayBtn{
+  width:48px;
+  height:48px;
+  border-radius:50%;
+
+  border:none;
+  cursor:pointer;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  font-size:18px;
+  font-weight:900;
+  color:white;
+
+  background:linear-gradient(135deg,#4da8ff,#00c2ff);
+  box-shadow:0 6px 18px rgba(0,140,255,0.35);
+
+  transition:all 0.15s ease;
+}
+
+.iconPlayBtn:active{
+  transform:scale(0.95);
+  box-shadow:0 3px 10px rgba(0,140,255,0.25);
+}
+
+.iconPlayBtn:hover{
+  filter:brightness(1.05);
+}
   `;
 
   // Start
