@@ -4256,10 +4256,9 @@ function buildSequence(session){
       renderWorkoutStep();
     }
 
-    $("btnPrev").addEventListener("click", stepPrev);
-    $("btnNext").addEventListener("click", stepNext);
-
-    $("btnPlayPause").addEventListener("click", ()=>{
+    $("btnPrev")?.addEventListener("click", stepPrev);
+$("btnNext")?.addEventListener("click", stepNext);
+$("btnPlayPause")?.addEventListener("click", ()=>{
       if(running) stopTimer();
       else startTimer();
     });
@@ -4397,7 +4396,7 @@ $("btnBackHome").addEventListener("click", ()=>{
       return (e?.message || String(e || "Erreur inconnue."));
     }
 
-    $("btnLogin").addEventListener("click", async ()=>{
+    $("btnLogin")?.addEventListener("click", async ()=>{
       setMsg("");
       const email = $("loginEmail").value.trim();
       const pass  = $("loginPass").value;
@@ -4413,7 +4412,7 @@ $("btnBackHome").addEventListener("click", ()=>{
       }
     });
 
-    $("btnSignup").addEventListener("click", async ()=>{
+    $("btnSignup")?.addEventListener("click", async ()=>{
       setMsg("");
       const name  = ($("signupName").value || "").trim();
       const email = $("loginEmail").value.trim();
@@ -4452,7 +4451,7 @@ $("btnBackHome").addEventListener("click", ()=>{
         setMsg("Création impossible : " + friendlyAuthError(e));
       }
     });
-    $("btnLogout").addEventListener("click", async ()=>{
+    $("btnLogout")?.addEventListener("click", async ()=>{
       try{ await signOut(auth); }catch(e){}
     });
 
