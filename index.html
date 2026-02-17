@@ -1032,6 +1032,59 @@
 .aiRow .t1{ font-weight: 900; font-size: 14px; line-height: 1.2; }
 .aiRow .t2{ font-size: 12px; opacity: .78; margin-top:2px; }
 
+/* =========================
+   IA Textarea Premium
+========================= */
+
+.aiTextarea{
+  width:100%;
+  min-height:110px;
+  resize:none;
+
+  padding:16px 18px;
+
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,0.10);
+
+  background:rgba(255,255,255,0.04);
+  color:var(--text);
+
+  font-size:16px;
+  font-weight:500;
+  line-height:1.4;
+
+  transition:all 0.2s ease;
+  box-sizing:border-box;
+}
+
+.aiTextarea::placeholder{
+  color:rgba(255,255,255,0.35);
+  font-weight:500;
+}
+
+.aiTextarea:focus{
+  outline:none;
+  border-color:rgba(0,180,255,0.7);
+  box-shadow:0 0 0 3px rgba(0,180,255,0.15);
+  background:rgba(255,255,255,0.06);
+}
+
+/* Light mode */
+[data-theme="light"] .aiTextarea{
+  border:1px solid rgba(10,20,40,0.12);
+  background:rgba(10,20,40,0.03);
+  color:var(--text);
+}
+
+[data-theme="light"] .aiTextarea::placeholder{
+  color:rgba(10,20,40,0.35);
+}
+
+[data-theme="light"] .aiTextarea:focus{
+  border-color:rgba(0,120,255,0.7);
+  box-shadow:0 0 0 3px rgba(0,120,255,0.15);
+}
+
 </style>
 
   <!-- Favicon -->
@@ -1120,9 +1173,9 @@
   <div style="height:10px"></div>
 
   <textarea id="aiPrompt"
-    class="input"
-    style="min-height:84px; resize:none;"
-    placeholder="Ex: dos + abdos 35 min, haltères, genou sensible"></textarea>
+  class="aiTextarea"
+  placeholder="Ex: dos + abdos 35 min, haltères, genou sensible"></textarea>
+
 
   <div style="height:10px"></div>
 
