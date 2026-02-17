@@ -1085,6 +1085,49 @@
   box-shadow:0 0 0 3px rgba(0,120,255,0.15);
 }
 
+/* =========================
+   App Toast Premium
+========================= */
+
+.appToast{
+  position:fixed;
+  left:50%;
+  bottom:24px;
+  transform:translateX(-50%) translateY(20px);
+  opacity:0;
+
+  padding:14px 18px;
+  border-radius:18px;
+
+  background:rgba(20,30,50,0.95);
+  backdrop-filter:blur(12px);
+
+  border:1px solid rgba(255,255,255,0.12);
+
+  color:white;
+  font-weight:600;
+  font-size:14px;
+
+  box-shadow:0 10px 30px rgba(0,0,0,0.35);
+
+  transition:all 0.25s ease;
+  z-index:9999;
+  pointer-events:none;
+  text-align:center;
+  max-width:90%;
+}
+
+.appToast.show{
+  transform:translateX(-50%) translateY(0);
+  opacity:1;
+}
+
+[data-theme="light"] .appToast{
+  background:rgba(255,255,255,0.95);
+  color:#0f172a;
+  border:1px solid rgba(10,20,40,0.12);
+}
+
 </style>
 
   <!-- Favicon -->
@@ -2589,7 +2632,7 @@ async function aiGenerate({ regen=false } = {}){
       const key = await saveAISessionToFirestore(AI_LAST_SESSION);
 
       // feedback simple
-      alert("Séance enregistrée ✅");
+      showToast("✅ Séance enregistrée • Ajoutée dans Mes séances");
 
       // Optionnel: refermer le bloc IA pour revenir aux séances
       const content = document.getElementById("aiCardContent");
@@ -5283,8 +5326,24 @@ document.addEventListener("click", (e) => {
   });
 })();
 
+// =======================
+// Toast helper
+// =======================
+function showToast(message, duration=2500){
+  const toast = document.getElementById("appToast");
+  if(!toast) return;
+
+  toast.textContent = message;
+  toast.classList.add("show");
+
+  clearTimeout(toast._timeout);
+  toast._timeout = setTimeout(()=>{
+    toast.classList.remove("show");
+  }, duration);
+}
+
 </script>
 
-
+<div id="appToast" class="appToast"></div>
 </body>
 </html>
