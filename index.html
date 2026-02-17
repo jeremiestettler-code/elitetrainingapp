@@ -344,7 +344,7 @@
       border:1px solid rgba(255,255,255,.14);
       background: rgba(0,0,0,.35);
       color:#fff; font-weight:900; font-size:16px;
-      display:flex; align-items:center; justify-content:center;
+      display:flex; align-items:flex-start; justify-content:center;
     }
     .infoBtn:active{ transform: scale(.98); }
 
@@ -514,7 +514,7 @@
     .modal{
       position:fixed; inset:0;
       background:rgba(0,0,0,.45);
-      display:flex; align-items:center; justify-content:center;
+      display:flex; align-items:flex-start; justify-content:center;
       padding: calc(var(--safe-top) + 12px) 14px calc(var(--safe-bot) + 14px);
       z-index: 9999;
     }
@@ -525,7 +525,37 @@
       box-shadow: var(--shadow);
       padding: 14px 14px 10px;
       border: 1px solid rgba(255,255,255,.06);
+
+      /* UX iPhone: permettre le scroll dans les modals longs */
+      max-height: calc(100dvh - var(--safe-top) - var(--safe-bot) - 28px);
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
     }
+
+    /* Custom modals (éditeur séance, picker, etc.) */
+    .modalCard{
+      width:min(560px, 100%);
+      background: var(--card);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      padding: 14px 14px 10px;
+      border: 1px solid rgba(255,255,255,.06);
+
+      /* structure: header/footer fixes, body scroll */
+      max-height: calc(100dvh - var(--safe-top) - var(--safe-bot) - 28px);
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+    }
+    .modalHeader{ flex:0 0 auto; }
+    .modalFooter{ flex:0 0 auto; padding-top: 10px; }
+    .modalBody{
+      flex:1 1 auto;
+      overflow:auto;
+      -webkit-overflow-scrolling: touch;
+      padding-right: 2px; /* évite que la scrollbar cache le contenu */
+    }
+
     .modal-header{
       display:flex; align-items:center; justify-content:space-between;
       gap: 10px;
@@ -5233,7 +5263,7 @@ if(Object.keys(custom).length){
       <button class="btn" type="button" id="pickerClose" style="min-width:44px;">✕</button>
     </div>
 
-    <div style="padding:10px;">
+    <div class="modalBody" style="padding:10px;">
       <input id="pickerSearch" class="input" placeholder="Rechercher..." />
       <div id="pickerList" style="margin-top:10px; display:flex; flex-direction:column; gap:8px;"></div>
     </div>
