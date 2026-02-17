@@ -2173,8 +2173,26 @@ body: JSON.stringify({
 })
   });
 
-  const data = await r.json();
-  if(!r.ok || !data.ok) throw new Error(data.error || "Erreur IA");
+ const rawText = await r.text();
+let payload = null;
+
+try {
+  payload = JSON.parse(rawText);
+} catch (e) {
+  payload = { ok: false, error: "Réponse non-JSON depuis generateWorkout", raw: rawText };
+}
+
+if (!r.ok || !payload.ok) {
+  console.error("[AI] generateWorkout failed", {
+    status: r.status,
+    statusText: r.statusText,
+    payload
+  });
+  throw new Error(payload?.error || `Erreur IA (${r.status})`);
+}
+
+// et on continue avec la session
+const data = payload;
 
   // ---- C3.4 SAFE: enrich session using library by id ----
   const lib = window.EXERCISE_LIBRARY || {};
