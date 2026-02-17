@@ -1206,7 +1206,7 @@
         <div class="h2" style="margin:0;">Aperçu</div>
         <div class="muted small" id="aiPreviewSub">—</div>
       </div>
-      <button class="btn" id="btnAIOpenEditor">Ouvrir dans l’éditeur</button>
+      <button class="btn" id="btnAIOpenEditor" disabled>Enregistrer la séance</button>
     </div>
 
     <div style="height:10px"></div>
@@ -2540,6 +2540,12 @@ async function aiGenerate({ regen=false } = {}){
     AI_LAST_SESSION = session;
     aiRenderPreview(session, parsed);
 
+    const open = $("btnAIOpenEditor");
+if(open){
+  open.disabled = false;
+  open.textContent = "Enregistrer la séance";
+}
+
     const reg = $("btnAIRegenerate");
     if(reg) reg.disabled = false;
 
@@ -2574,20 +2580,38 @@ async function aiGenerate({ regen=false } = {}){
   reg?.addEventListener("click", ()=>aiGenerate({ regen:true }));
 
   open?.addEventListener("click", async ()=>{
+    if(AI_BUSY) return;
     if(!AI_LAST_SESSION) return;
 
-    await openCustomSessionEditor(null);
+    try{
+      aiSetBusy(true, "Enregistrement…");
 
-    CS_DRAFT.name = AI_LAST_SESSION.name;
-    CS_DRAFT.estimatedMinutes = AI_LAST_SESSION.estimatedMinutes;
-    CS_DRAFT.warmup = AI_LAST_SESSION.warmup;
-    CS_DRAFT.items = AI_LAST_SESSION.items;
-    CS_DRAFT.cooldown = AI_LAST_SESSION.cooldown;
+      const key = await saveAISessionToFirestore(AI_LAST_SESSION);
 
-    $("cs_name").value = CS_DRAFT.name;
-    $("cs_minutes").value = CS_DRAFT.estimatedMinutes;
+      // feedback simple
+      alert("Séance enregistrée ✅");
 
-    renderCSEditor();
+      // Optionnel: refermer le bloc IA pour revenir aux séances
+      const content = document.getElementById("aiCardContent");
+      const icon = document.getElementById("aiToggleIcon");
+      if(content && icon){
+        content.style.display = "none";
+        icon.textContent = "+";
+      }
+
+      // Désactive le bouton après save (évite double save)
+      const btn = $("btnAIOpenEditor");
+      if(btn){
+        btn.disabled = true;
+        btn.textContent = "Séance enregistrée";
+      }
+
+    }catch(e){
+      console.warn(e);
+      alert("Erreur enregistrement : " + (e?.message || e));
+    }finally{
+      aiSetBusy(false);
+    }
   });
 })();
 
@@ -4500,6 +4524,41 @@ await setDoc(ref, payloadClean, { merge: true });
 
   console.log("[B2.0-3] Saved custom session:", sessionId, payload);
   return sessionId;
+}
+
+// =========================
+// IA V2 — Save direct to Firestore (sans ouvrir l'éditeur)
+// =========================
+async function saveAISessionToFirestore(aiSession){
+  if(!currentUser?.uid) throw new Error("Utilisateur non connecté.");
+  if(!aiSession) throw new Error("Aucune séance IA à enregistrer.");
+
+  const sessionId = csMakeId("cs"); // nouveau doc
+
+  const warmup = (aiSession.warmup || []).map(w => csCleanWarmBlock(w, "WU"));
+  const items = (aiSession.items || []).map(it => csCleanItem(it));
+  const cooldown = (aiSession.cooldown || []).map(c => csCleanWarmBlock(c, "CD"));
+
+  const payload = {
+    name: String(aiSession.name || "Séance IA").trim(),
+    estimatedMinutes: Number.isFinite(aiSession.estimatedMinutes) ? aiSession.estimatedMinutes : 0,
+    warmup,
+    items,
+    cooldown,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    source: "ai"
+  };
+
+  const ref = doc(db, "users", currentUser.uid, "customSessions", sessionId);
+  await setDoc(ref, stripUndefinedDeep(payload), { merge: true });
+
+  // Recharge les custom sessions dans window.SESSIONS puis refresh UI
+  await reloadCustomSessionsIntoSESSIONS();
+  if(typeof window.refreshSessionsList === "function") window.refreshSessionsList();
+  else if(typeof renderHome === "function") renderHome();
+
+  return "CUSTOM_" + sessionId; // clé UI
 }
 
 
