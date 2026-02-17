@@ -3064,48 +3064,21 @@ function addSessionCard(k, mount){
       </div>
 
       ${isCustom ? `
-  <button class="btn" data-action="edit" title="Modifier" style="min-width:44px;">✏️</button>
-  <button class="btn" data-action="delete" title="Supprimer" style="min-width:44px;">🗑</button>
-` : ""}
+        <button class="btn" data-action="edit" title="Modifier" style="min-width:44px;">✏️</button>
+        <button class="btn" data-action="delete" title="Supprimer" style="min-width:44px;">🗑</button>
+      ` : ""}
 
-/* =========================
-   Play Icon Button
-========================= */
-
-.iconPlayBtn{
-  width:48px;
-  height:48px;
-  border-radius:50%;
-
-  border:none;
-  cursor:pointer;
-
-  display:flex;
-  align-items:center;
-  justify-content:center;
-
-  font-size:18px;
-  font-weight:900;
-  color:white;
-
-  background:linear-gradient(135deg,#4da8ff,#00c2ff);
-  box-shadow:0 6px 18px rgba(0,140,255,0.35);
-
-  transition:all 0.15s ease;
-}
-
-.iconPlayBtn:active{
-  transform:scale(0.95);
-  box-shadow:0 3px 10px rgba(0,140,255,0.25);
-}
-
-.iconPlayBtn:hover{
-  filter:brightness(1.05);
-}
+      <button class="playBtn" data-action="start" title="Démarrer" aria-label="Démarrer">
+        <svg class="playIcon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M8 5v14l11-7z"></path>
+        </svg>
+      </button>
+    </div>
   `;
 
   // Start
-  card.querySelector('[data-action="start"]').addEventListener("click", ()=>startSession(k));
+  const startBtn = card.querySelector('[data-action="start"]');
+  if(startBtn) startBtn.addEventListener("click", ()=>startSession(k));
 
 // Edit + Delete (custom only)
 if(isCustom){
