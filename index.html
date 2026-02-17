@@ -1099,8 +1099,18 @@
      IA V2 — HOME (preview + generate)
      À COLLER juste AVANT: <div class="grid" id="sessionList"></div>
 ========================= -->
-<div class="aiCard" id="aiCard">
-  <div class="row" style="align-items:flex-start;">
+<div class="card" id="aiCardWrapper">
+
+  <!-- Header cliquable -->
+  <div class="row" 
+       style="align-items:center; justify-content:space-between; cursor:pointer;" 
+       id="aiToggleHeader">
+    <div class="h2" style="margin:0;">Mes séances IA</div>
+    <div id="aiToggleIcon" style="font-size:22px; font-weight:900;">+</div>
+  </div>
+
+<div id="aiCardContent" style="display:none; margin-top:12px;">
+    <div class="row" style="align-items:flex-start;">
     <div class="grow">
       <div class="h2">Mode IA</div>
       <div class="muted small">Décris ta séance (objectif, durée, matériel, genou…).</div>
@@ -1163,7 +1173,7 @@
       </div>
     </div>
   </div>
-</div>
+</div> <!-- fin aiCardContent -->
 <!-- ===== FIN IA V2 HOME ===== -->
 
         <div class="grid" id="sessionList"></div>
@@ -5143,6 +5153,24 @@ document.addEventListener("click", (e) => {
   if (!btn) return;
   console.log("✅ Click capté sur #btnAIGenerate");
 }, true);
+
+// =======================
+// Toggle bloc IA
+// =======================
+(function(){
+  const header = document.getElementById("aiToggleHeader");
+  const content = document.getElementById("aiCardContent");
+  const icon = document.getElementById("aiToggleIcon");
+
+  if(!header || !content) return;
+
+  header.addEventListener("click", () => {
+    const isOpen = content.style.display === "block";
+    content.style.display = isOpen ? "none" : "block";
+    icon.textContent = isOpen ? "+" : "✕";
+  });
+})();
+
 </script>
 
 
