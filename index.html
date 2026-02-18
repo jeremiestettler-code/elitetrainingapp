@@ -1257,6 +1257,10 @@
   }
 }
 
+
+/* IA: on masque le label durée à droite (doublon avec chips/aperçu) */
+.aiMetaRight{display:none !important;}
+
 </style>
 
   <!-- Favicon -->
@@ -2600,11 +2604,12 @@ function aiParsePrompt(text){
     goalText = raw + " (genou sensible)";
   }
 
-  const constraints = { equipment: Array.from(eq) };
+  const constraints = { equipment: noEquip ? ["none"] : Array.from(eq) };
 
   const chips = [];
-  chips.push(`${minutes} min`);
-  if(constraints.equipment.length) chips.push("Matériel: " + constraints.equipment.join(", "));
+  if(minutes) chips.push(`${minutes} min`);
+  if(noEquip) chips.push("Sans matériel");
+  else if(constraints.equipment.length) chips.push("Matériel: " + constraints.equipment.join(", "));
   if(kneeSensitive) chips.push("Genou: éviter impact");
 
   return { goalText, minutes, constraints, chips };
@@ -2613,17 +2618,24 @@ function aiParsePrompt(text){
 function aiRenderChips(parsed){
   const host = $("aiChips");
   if(!host) return;
+
   host.innerHTML = "";
-  (parsed?.chips || []).forEach(txt=>{
+
+  const cleanChips = (parsed?.chips || []).filter(Boolean);
+
+  if(cleanChips.length === 0){
+    host.style.display = "none";
+    return;
+  }
+
+  host.style.display = "flex";
+
+  cleanChips.forEach(txt=>{
     const d = document.createElement("div");
     d.className = "aiChip";
     d.textContent = txt;
     host.appendChild(d);
   });
-  const ml = $("aiMinutesLabel");
-  if(ml){
-    ml.textContent = parsed?.minutes ? `Durée : ${parsed.minutes} min` : `Durée : —`;
-  }
 }
 
 function aiRenderSummaryChips(session, parsed){
