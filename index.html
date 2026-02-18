@@ -2442,6 +2442,8 @@ const data = payload;
     cooldown: []
   };
 
+  out.__analysis = data.analysis || null;
+
   // Warmup: {id, seconds} -> add name/icon/desc/todo if present
   for(const w of (s.warmup || [])){
     const base = byId[w.id] || {};
@@ -2622,6 +2624,40 @@ function aiRenderChips(parsed){
   if(ml) ml.textContent = `Durée : ${parsed?.minutes || "—"} min`;
 }
 
+function aiRenderSummaryChips(session, parsed){
+  const host = $("aiChips");
+  if(!host) return;
+
+  host.innerHTML = "";
+
+  const chips = [];
+  const usedMin = Number(session?.estimatedMinutes || 0);
+  if(usedMin) chips.push(`${usedMin} min`);
+
+  const eq = parsed?.constraints?.equipment || [];
+  if(eq.length){
+    chips.push(eq.includes("none") ? "Sans matériel" : `Matériel: ${eq.join(", ")}`);
+  }
+
+  const a = session?.__analysis;
+
+  if(a?.constraints?.kneeSensitive) chips.push("Genou protégé");
+  if(a?.constraints?.avoidJumping) chips.push("Sans impact");
+  if(a?.constraints?.floorAllowed === false) chips.push("Sans sol");
+  if(a?.intensity) chips.push(`Intensité: ${a.intensity}`);
+
+  if(Array.isArray(a?.goals) && a.goals.length){
+    chips.push(a.goals.slice(0,2).join(" + "));
+  }
+
+  chips.forEach(txt=>{
+    const d = document.createElement("div");
+    d.className = "aiChip";
+    d.textContent = txt;
+    host.appendChild(d);
+  });
+}
+
 function aiRowHTML(icon, title, sub){
   const div = document.createElement("div");
   div.className = "aiRow";
@@ -2711,6 +2747,18 @@ async function aiGenerate({ regen=false } = {}){
 
     AI_LAST_SESSION = session;
     aiRenderPreview(session, parsed);
+    aiRenderSummaryChips(session, parsed);
+
+
+// ===============================
+// Durée réellement utilisée (backend)
+// ===============================
+const usedMin = Number(session?.estimatedMinutes || 0);
+const ml = $("aiMinutesLabel");
+
+if (ml && usedMin) {
+  ml.textContent = `Durée : ${usedMin} min`;
+}
 
     const saveBtn = $("btnAIOpenEditor");
     if(saveBtn){
