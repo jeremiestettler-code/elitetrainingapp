@@ -2631,47 +2631,44 @@ function aiRenderSummaryChips(session, parsed){
   if(!host) return;
 
   host.innerHTML = "";
-  const list = (parsed?.chips || []).filter(Boolean);
-if(list.length === 0){
-  host.style.display = "none";
-}else{
-  host.style.display = "flex";
-}
 
   const chips = [];
+
+  // Durée réelle (backend)
   const usedMin = Number(session?.estimatedMinutes || 0);
   if(usedMin) chips.push(`${usedMin} min`);
 
+  // Matériel demandé (brief)
   const eq = parsed?.constraints?.equipment || [];
   if(eq.length){
     chips.push(eq.includes("none") ? "Sans matériel" : `Matériel: ${eq.join(", ")}`);
   }
 
-  const a = session?.__analysis;
-
+  // Contraintes / signaux issus de l'analyse serveur (si dispo)
+  const a = session?.__analysis || null;
   if(a?.constraints?.kneeSensitive) chips.push("Genou protégé");
   if(a?.constraints?.avoidJumping) chips.push("Sans impact");
   if(a?.constraints?.floorAllowed === false) chips.push("Sans sol");
   if(a?.intensity) chips.push(`Intensité: ${a.intensity}`);
 
+  // Objectifs (courts)
   if(Array.isArray(a?.goals) && a.goals.length){
     chips.push(a.goals.slice(0,2).join(" + "));
   }
 
-const list = (parsed?.chips || []).filter(Boolean);
+  if(chips.length === 0){
+    host.style.display = "none";
+    return;
+  }
 
-if(list.length === 0){
-  host.style.display = "none";
-}else{
   host.style.display = "flex";
-}
 
-list.forEach(txt=>{
-  const d = document.createElement("div");
-  d.className = "aiChip";
-  d.textContent = txt;
-  host.appendChild(d);
-});
+  chips.forEach(txt=>{
+    const d = document.createElement("div");
+    d.className = "aiChip";
+    d.textContent = txt;
+    host.appendChild(d);
+  });
 }
 
 function aiRowHTML(icon, title, sub){
