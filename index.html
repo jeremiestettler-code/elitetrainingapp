@@ -1257,6 +1257,10 @@
   }
 }
 
+
+/* IA: on masque le label durée à droite (doublon avec chips/aperçu) */
+.aiMetaRight{display:none !important;}
+
 </style>
 
   <!-- Favicon -->
@@ -2242,88 +2246,6 @@ function validateAISessionAgainstLibrary(session, lib){
   return { ok: errors.length === 0, errors };
 }
 
-/* -------- REAL GENERATOR (backend) --------
-   Appelle la Cloud Function /generateWorkout (OpenAI côté serveur)
-------------------------------------------- */
-async function generateSessionWithAI({ goalText, minutes, constraints }){
-  const goal = String(goalText || "").trim();
-  if(!goal) throw new Error("goalText manquant");
-
-  if(!currentUser?.uid) throw new Error("Utilisateur non connecté.");
-  const token = await currentUser.getIdToken();
-
-  // library compact + anti-répétition
-  const libraryCompact = (typeof buildLibraryCompact === "function") ? buildLibraryCompact() : [];
-  const recentIds = (typeof getRecentExerciseIds === "function") ? getRecentExerciseIds(24) : [];
-
-  const body = {
-    goalText: goal,
-    constraints: constraints || {},
-    libraryCompact,
-    recentIds
-  };
-  // minutes: ne pas envoyer si non précisé (profil côté serveur)
-  if(Number.isFinite(Number(minutes)) && Number(minutes) > 0) body.minutes = Number(minutes);
-
-  const url = window.AI_FUNCTION_URL;
-  const r = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": "Bearer " + token
-    },
-    body: JSON.stringify(body)
-  });
-
-  const rawText = await r.text();
-  let payload = null;
-  try { payload = JSON.parse(rawText); } catch(e){ payload = { ok:false, error:"Invalid JSON from server", raw: rawText }; }
-
-  if(!r.ok || !payload?.ok){
-    const msg = payload?.error || ("Erreur IA (HTTP " + r.status + ")");
-    const err = new Error(msg);
-    err.status = r.status;
-    err.payload = payload;
-    throw err;
-  }
-
-  const lib = window.EXERCISE_LIBRARY;
-  const byId = lib?.byId || {};
-
-  const s = payload.session || {};
-  const out = {
-    name: s.name || ("IA — " + goal),
-    estimatedMinutes: Number(s.estimatedMinutes || minutes || 20),
-    warmup: [],
-    items: [],
-    cooldown: []
-  };
-
-  // expose analysis for chips / debug
-  out.__analysis = payload.analysis || null;
-
-  const enrich = (e)=> {
-    const id = String(e?.id || "");
-    const ref = byId[id] || {};
-    return {
-      id,
-      name: e?.name || ref.name || id,
-      icon: e?.icon || ref.icon || ref.gif || "",
-      tags: Array.isArray(ref.tags) ? ref.tags : [],
-      equipment: Array.isArray(ref.equipment) ? ref.equipment : [],
-      kneeImpact: ref.kneeImpact || "low",
-      ...e
-    };
-  };
-
-  (s.warmup || []).forEach(w => out.warmup.push(enrich(w)));
-  (s.items || []).forEach(it => out.items.push(enrich(it)));
-  (s.cooldown || []).forEach(c => out.cooldown.push(enrich(c)));
-
-  return out;
-}
-
-
 /* -------- MOCK GENERATOR (local) --------
    Heuristique simple basée sur tags/equipment/kneeImpact
    (remplacera plus tard par appel backend/OpenAI)
@@ -2465,13 +2387,7 @@ function rememberRecentExerciseIds(session, max = 50){
   }catch(e){}
 }
 
-window.getRecentExerciseIds = getRecentExerciseIds;
 
-window.getRecentExerciseIds = getRecentExerciseIds; // SAFE: expose console + autres fonctions
-
-
-
-// Expose pour debug console
 // -------- C3: compact library for AI (GLOBAL) --------
 function buildLibraryCompact(){
   const lib = window.EXERCISE_LIBRARY;
@@ -2579,11 +2495,12 @@ function aiParsePrompt(text){
     goalText = raw + " (genou sensible)";
   }
 
-  const constraints = { equipment: Array.from(eq) };
+  const constraints = { equipment: noEquip ? ["none"] : Array.from(eq) };
 
   const chips = [];
-  chips.push(`${minutes} min`);
-  if(constraints.equipment.length) chips.push("Matériel: " + constraints.equipment.join(", "));
+  if(minutes) chips.push(`${minutes} min`);
+  if(noEquip) chips.push("Sans matériel");
+  else if(constraints.equipment.length) chips.push("Matériel: " + constraints.equipment.join(", "));
   if(kneeSensitive) chips.push("Genou: éviter impact");
 
   return { goalText, minutes, constraints, chips };
@@ -2592,17 +2509,24 @@ function aiParsePrompt(text){
 function aiRenderChips(parsed){
   const host = $("aiChips");
   if(!host) return;
+
   host.innerHTML = "";
-  (parsed?.chips || []).forEach(txt=>{
+
+  const cleanChips = (parsed?.chips || []).filter(Boolean);
+
+  if(cleanChips.length === 0){
+    host.style.display = "none";
+    return;
+  }
+
+  host.style.display = "flex";
+
+  cleanChips.forEach(txt=>{
     const d = document.createElement("div");
     d.className = "aiChip";
     d.textContent = txt;
     host.appendChild(d);
   });
-  const ml = $("aiMinutesLabel");
-  if(ml){
-    ml.textContent = parsed?.minutes ? `Durée : ${parsed.minutes} min` : `Durée : —`;
-  }
 }
 
 function aiRenderSummaryChips(session, parsed){
@@ -2610,47 +2534,44 @@ function aiRenderSummaryChips(session, parsed){
   if(!host) return;
 
   host.innerHTML = "";
-  const list = (parsed?.chips || []).filter(Boolean);
-if(list.length === 0){
-  host.style.display = "none";
-}else{
-  host.style.display = "flex";
-}
 
   const chips = [];
+
+  // Durée réelle (backend)
   const usedMin = Number(session?.estimatedMinutes || 0);
   if(usedMin) chips.push(`${usedMin} min`);
 
+  // Matériel demandé (brief)
   const eq = parsed?.constraints?.equipment || [];
   if(eq.length){
     chips.push(eq.includes("none") ? "Sans matériel" : `Matériel: ${eq.join(", ")}`);
   }
 
-  const a = session?.__analysis;
-
+  // Contraintes / signaux issus de l'analyse serveur (si dispo)
+  const a = session?.__analysis || null;
   if(a?.constraints?.kneeSensitive) chips.push("Genou protégé");
   if(a?.constraints?.avoidJumping) chips.push("Sans impact");
   if(a?.constraints?.floorAllowed === false) chips.push("Sans sol");
   if(a?.intensity) chips.push(`Intensité: ${a.intensity}`);
 
+  // Objectifs (courts)
   if(Array.isArray(a?.goals) && a.goals.length){
     chips.push(a.goals.slice(0,2).join(" + "));
   }
 
-const list = (parsed?.chips || []).filter(Boolean);
+  if(chips.length === 0){
+    host.style.display = "none";
+    return;
+  }
 
-if(list.length === 0){
-  host.style.display = "none";
-}else{
   host.style.display = "flex";
-}
 
-list.forEach(txt=>{
-  const d = document.createElement("div");
-  d.className = "aiChip";
-  d.textContent = txt;
-  host.appendChild(d);
-});
+  chips.forEach(txt=>{
+    const d = document.createElement("div");
+    d.className = "aiChip";
+    d.textContent = txt;
+    host.appendChild(d);
+  });
 }
 
 function aiRowHTML(icon, title, sub){
@@ -3258,6 +3179,8 @@ if(complete.length){
       const entry = { v, d: todayISO() };
       const capped = [entry, ...filtered].slice(0, 12);
       localStorage.setItem(histKey(exoId), JSON.stringify(capped));
+      // Firestore sync (non bloquant)
+      fsUpsertExerciseLoad(exoId, v);
     }
     function getLastLoad(exoId){
       const arr = getLoadHistory(exoId);
@@ -3366,6 +3289,53 @@ updateLoadBadge();
     function saveWorkoutHistory(arr){
       localStorage.setItem(workoutHistKey(), JSON.stringify(arr));
     }
+
+/***********************
+ * Firestore sync (SAFE)
+ * - exerciseLoads: dernier poids / mini historique
+ * - workoutHistory: journal de séance
+ ***********************/
+async function fsUpsertExerciseLoad(exoId, value){
+  try{
+    if(!currentUser?.uid) return;
+    if(!exoId) return;
+    const v = String(value||"").trim();
+    if(!v) return;
+
+    const ref = doc(db, "users", currentUser.uid, "exerciseLoads", String(exoId));
+
+    // mini history (12 entrées max) depuis le localStorage (déjà stable chez toi)
+    const localHist = getLoadHistory(exoId) || [];
+    const history = localHist.slice(0, 12).map(x=>({ v:String(x.v||""), d:String(x.d||"") }));
+
+    await setDoc(ref, stripUndefinedDeep({
+      exoId: String(exoId),
+      last: v,
+      updatedAt: serverTimestamp(),
+      history
+    }), { merge:true });
+  }catch(e){
+    // SAFE MODE: jamais bloquant
+    console.warn("[FS] exerciseLoads sync skipped:", e?.message || e);
+  }
+}
+
+async function fsLogWorkout(workout){
+  try{
+    if(!currentUser?.uid) return;
+    if(!workout) return;
+
+    const ref = collection(db, "users", currentUser.uid, "workoutHistory");
+    await addDoc(ref, stripUndefinedDeep({
+      ...workout,
+      createdAt: serverTimestamp(),
+      source: "app"
+    }));
+  }catch(e){
+    console.warn("[FS] workoutHistory sync skipped:", e?.message || e);
+  }
+}
+
     /***********************
      * TROPHÉES (per-user)
      ***********************/
@@ -3819,17 +3789,17 @@ updateLoadBadge();
       // Render trophies grid
       try{ renderTrophiesSection(all); }catch(e){}
 
-      const list = $("historyList");
-      if(!list) return;
+      const histListEl = $("historyList");
+      if(!histListEl) return;
 
       if(period.length === 0){
-        list.innerHTML = `<div class="historyItem"><div class="historyName">Aucune séance</div><div class="historyMeta">Commence une séance, elle apparaîtra ici.</div></div>`;
+        histListEl.innerHTML = `<div class="historyItem"><div class="historyName">Aucune séance</div><div class="historyMeta">Commence une séance, elle apparaîtra ici.</div></div>`;
         // Render trophies even if no sessions in selected range
         try{ renderTrophiesSection(all); }catch(e){}
         return;
       }
 
-      list.innerHTML = period.slice(0, 30).map(x=>{
+      histListEl.innerHTML = period.slice(0, 30).map(x=>{
         const dur = x.durationSec ? formatHhMmFromSec(x.durationSec) : "—";
         const meta = `${formatDateShort(x.ts)} • ${dur}`;
         const line = `${x.exercisesCount||0} exercices • ${x.setsCount||0} séries`;
@@ -4133,6 +4103,21 @@ function buildSequence(session){
             });
             saveWorkoutHistory(all.slice(0, 200)); // keep last 200
 
+            // Firestore log (non bloquant)
+            try{
+              fsLogWorkout({
+                id: String(Date.now()),
+                ts: Date.now(),
+                sessionId: curSessionId || "",
+                sessionName: curSession?.name || "Séance",
+                durationSec,
+                exercisesCount,
+                setsCount,
+                tonnageKg: computeSessionTonnageKg(curSession, sessionLoadsUsed),
+                loadsUsed: sessionLoadsUsed || {}
+              });
+            }catch(e){}
+
             // Check & unlock trophies (store pending for popup later)
             try{ evaluateAndUnlockTrophies(all); }catch(e){}
           }
@@ -4338,6 +4323,19 @@ $("btnBackHome").addEventListener("click", ()=>{
           });
           saveWorkoutHistory(all.slice(0, 200));
           workoutLogged = true;
+          // Firestore log (non bloquant) — arrêtée
+          try{
+            fsLogWorkout({
+              id: String(Date.now()),
+              ts: Date.now(),
+              sessionId: curSessionId || "",
+              sessionName: (curSession?.name || "Séance") + " (stopped)",
+              durationSec,
+              exercisesCount,
+              setsCount,
+              loadsUsed: sessionLoadsUsed || {}
+            });
+          }catch(e){}
         }
       }
 
@@ -5056,9 +5054,9 @@ function closeExercisePicker(){
 }
 
 function renderExercisePickerList(filterText){
-  const list = $("pickerList");
-  if(!list) return;
-  list.innerHTML = "";
+  const pickerListEl = $("pickerList");
+  if(!pickerListEl) return;
+  pickerListEl.innerHTML = "";
 
   const lib = window.EXERCISE_LIBRARY || { warmup:[], items:[], cooldown:[] };
   const arr = (__pickerType === "warmup") ? lib.warmup
@@ -5072,7 +5070,7 @@ function renderExercisePickerList(filterText){
     const empty = document.createElement("div");
     empty.className = "muted small";
     empty.textContent = "Aucun résultat.";
-    list.appendChild(empty);
+    pickerListEl.appendChild(empty);
     return;
   }
 
@@ -5086,7 +5084,7 @@ function renderExercisePickerList(filterText){
       if(typeof __pickerOnPick === "function") __pickerOnPick(e);
       closeExercisePicker();
     };
-    list.appendChild(btn);
+    pickerListEl.appendChild(btn);
   });
 }
 
