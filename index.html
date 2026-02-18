@@ -2578,7 +2578,7 @@ function aiParsePrompt(text){
   let minutes = null;
   const m = lower.match(/(\d{2,3})\s*(min|mins|minute|minutes)\b/);
   if(m) minutes = Math.max(10, Math.min(120, parseInt(m[1], 10)));
-  if(!minutes) minutes = 35;
+
 
   const eq = new Set();
   const has = (s)=>lower.includes(s);
@@ -2621,7 +2621,9 @@ function aiRenderChips(parsed){
     host.appendChild(d);
   });
   const ml = $("aiMinutesLabel");
-  if(ml) ml.textContent = `Durée : ${parsed?.minutes || "—"} min`;
+  if(ml){
+    ml.textContent = parsed?.minutes ? `Durée : ${parsed.minutes} min` : `Durée : —`;
+  }
 }
 
 function aiRenderSummaryChips(session, parsed){
@@ -2629,6 +2631,12 @@ function aiRenderSummaryChips(session, parsed){
   if(!host) return;
 
   host.innerHTML = "";
+  const list = (parsed?.chips || []).filter(Boolean);
+if(list.length === 0){
+  host.style.display = "none";
+}else{
+  host.style.display = "flex";
+}
 
   const chips = [];
   const usedMin = Number(session?.estimatedMinutes || 0);
@@ -2650,12 +2658,20 @@ function aiRenderSummaryChips(session, parsed){
     chips.push(a.goals.slice(0,2).join(" + "));
   }
 
-  chips.forEach(txt=>{
-    const d = document.createElement("div");
-    d.className = "aiChip";
-    d.textContent = txt;
-    host.appendChild(d);
-  });
+const list = (parsed?.chips || []).filter(Boolean);
+
+if(list.length === 0){
+  host.style.display = "none";
+}else{
+  host.style.display = "flex";
+}
+
+list.forEach(txt=>{
+  const d = document.createElement("div");
+  d.className = "aiChip";
+  d.textContent = txt;
+  host.appendChild(d);
+});
 }
 
 function aiRowHTML(icon, title, sub){
