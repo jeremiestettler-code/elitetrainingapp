@@ -2374,12 +2374,39 @@ async function generateSessionWithAI({ goalText, minutes, constraints }){
     else payload.minutes = Math.max(10, Math.min(120, Math.round(payload.minutes)));
   }
 
+  // --- Helper: enrich entries with name/icon from EXERCISE_LIBRARY ---
+  const lib = window.EXERCISE_LIBRARY;
+  function enrichEntry(e){
+    const id = String(e?.id || "");
+    const ref = lib?.byId?.[id] || null;
+    return {
+      ...e,
+      id,
+      name: e?.name || ref?.name || "—",
+      icon: e?.icon || ref?.icon || ""
+    };
+  }
+  function enrichSession(sess, analysis){
+    const s = sess && typeof sess === "object" ? sess : {};
+    const out = {
+      ...s,
+      name: s.name || ("IA — " + payload.goalText),
+      estimatedMinutes: Number(s.estimatedMinutes || payload.minutes || 20),
+      warmup: (s.warmup || []).map(enrichEntry),
+      items: (s.items || []).map(enrichEntry),
+      cooldown: (s.cooldown || []).map(enrichEntry),
+    };
+    out.__analysis = analysis || s.__analysis || null;
+    return out;
+  }
+
   const url = window.AI_FUNCTION_URL;
   if(!url){
     console.warn("[AI] AI_FUNCTION_URL manquant → fallback mock");
     const s = mockGenerateSession(payload.goalText, payload.minutes || 20, payload.constraints);
-    rememberRecentExerciseIds(s);
-    return s;
+    const out = enrichSession(s, null);
+    rememberRecentExerciseIds(out);
+    return out;
   }
 
   // Token Firebase
@@ -2394,8 +2421,9 @@ async function generateSessionWithAI({ goalText, minutes, constraints }){
   if(!token){
     console.warn("[AI] User non connecté (token absent) → fallback mock");
     const s = mockGenerateSession(payload.goalText, payload.minutes || 20, payload.constraints);
-    rememberRecentExerciseIds(s);
-    return s;
+    const out = enrichSession(s, null);
+    rememberRecentExerciseIds(out);
+    return out;
   }
 
   try{
@@ -2408,25 +2436,29 @@ async function generateSessionWithAI({ goalText, minutes, constraints }){
       body: JSON.stringify(payload)
     });
 
+    // Lire texte puis JSON (plus robuste)
+    const rawText = await res.text();
+    let data = null;
+    try{ data = JSON.parse(rawText); }catch(e){}
+
     if(!res.ok){
-      let errPayload = null;
-      try{ errPayload = await res.json(); }catch(e){}
-      console.warn("[AI] generateWorkout failed", { status: res.status, statusText: res.statusText, payload: errPayload });
+      console.warn("[AI] generateWorkout failed", { status: res.status, statusText: res.statusText, payload: data });
       throw new Error("generateWorkout HTTP " + res.status);
     }
 
-    const data = await res.json();
     const session = data?.session || data; // tolère les 2 formats
     if(!session || typeof session !== "object") throw new Error("Réponse IA invalide.");
 
-    rememberRecentExerciseIds(session);
-    return session;
+    const out = enrichSession(session, data?.analysis || null);
+    rememberRecentExerciseIds(out);
+    return out;
 
   }catch(e){
     console.warn("[AI] backend error → fallback mock", e);
     const s = mockGenerateSession(payload.goalText, payload.minutes || 20, payload.constraints);
-    rememberRecentExerciseIds(s);
-    return s;
+    const out = enrichSession(s, null);
+    rememberRecentExerciseIds(out);
+    return out;
   }
 }
 
