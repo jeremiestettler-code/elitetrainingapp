@@ -2352,6 +2352,88 @@ function mockGenerateSession(goalText, minutes, constraints){
   };
 }
 
+
+/* -------- REAL GENERATOR (backend) --------
+   Appelle la Cloud Function sécurisée (Firebase Auth token)
+   Fallback sur le mock si l'appel échoue.
+----------------------------------------- */
+async function generateSessionWithAI({ goalText, minutes, constraints }){
+  const payload = {
+    goalText: String(goalText || "").trim(),
+    minutes: (minutes === null || minutes === undefined || minutes === "") ? null : Number(minutes),
+    constraints: constraints && typeof constraints === "object" ? constraints : {},
+    libraryCompact: buildLibraryCompact(),
+    recentIds: getRecentExerciseIds(25),
+    // profil optionnel si tu l'exposes plus tard
+    profile: (window.firestoreProfile || window.eliteProfile || null)
+  };
+
+  // Nettoyage minutes (évite NaN)
+  if(payload.minutes !== null){
+    if(!Number.isFinite(payload.minutes)) payload.minutes = null;
+    else payload.minutes = Math.max(10, Math.min(120, Math.round(payload.minutes)));
+  }
+
+  const url = window.AI_FUNCTION_URL;
+  if(!url){
+    console.warn("[AI] AI_FUNCTION_URL manquant → fallback mock");
+    const s = mockGenerateSession(payload.goalText, payload.minutes || 20, payload.constraints);
+    rememberRecentExerciseIds(s);
+    return s;
+  }
+
+  // Token Firebase
+  let token = null;
+  try{
+    const u = (typeof auth !== "undefined" && auth?.currentUser)
+      ? auth.currentUser
+      : (typeof getAuth === "function" ? getAuth().currentUser : null);
+    if(u) token = await u.getIdToken();
+  }catch(e){}
+
+  if(!token){
+    console.warn("[AI] User non connecté (token absent) → fallback mock");
+    const s = mockGenerateSession(payload.goalText, payload.minutes || 20, payload.constraints);
+    rememberRecentExerciseIds(s);
+    return s;
+  }
+
+  try{
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + token
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if(!res.ok){
+      let errPayload = null;
+      try{ errPayload = await res.json(); }catch(e){}
+      console.warn("[AI] generateWorkout failed", { status: res.status, statusText: res.statusText, payload: errPayload });
+      throw new Error("generateWorkout HTTP " + res.status);
+    }
+
+    const data = await res.json();
+    const session = data?.session || data; // tolère les 2 formats
+    if(!session || typeof session !== "object") throw new Error("Réponse IA invalide.");
+
+    rememberRecentExerciseIds(session);
+    return session;
+
+  }catch(e){
+    console.warn("[AI] backend error → fallback mock", e);
+    const s = mockGenerateSession(payload.goalText, payload.minutes || 20, payload.constraints);
+    rememberRecentExerciseIds(s);
+    return s;
+  }
+}
+
+// Expose global (pratique pour debug / autres scripts)
+window.generateSessionWithAI = generateSessionWithAI;
+
+
 // -------- C4.1 SAFE: store/reuse last AI-picked ids --------
 const AI_RECENT_IDS_KEY = "elite_ai_recent_ids_v1";
 
