@@ -4711,6 +4711,8 @@ try{
 }catch(e){
   console.warn("[A2-SAFE] Custom sessions load failed:", e);
 }
+
+await reloadProgramsIntoSESSIONS();
 /* ===== FIN A2-SAFE ===== */
         loadCoachMode();
         renderHome();
