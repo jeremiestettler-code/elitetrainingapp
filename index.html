@@ -1618,8 +1618,21 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, addDoc, serverTimestamp }
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { 
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  deleteDoc,
+  collection,
+  getDocs,
+  addDoc,
+  serverTimestamp,
+  query,
+  where,
+  orderBy,
+  limit
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 const firebaseConfig = {
   apiKey: "AIzaSyBNUTNpnUmO2Lx7L9oin9KR0ANYQ8fPdMo",
   authDomain: "elitetraining-77406.firebaseapp.com",
@@ -4964,6 +4977,90 @@ async function reloadCustomSessionsIntoSESSIONS(){
   window.SESSIONS = { ...(window.SESSIONS || {}), ...custom };
 }
 
+function purgeProgramsFromSessions(){
+  const prev = window.SESSIONS || {};
+  const cleaned = {};
+  for(const [k,v] of Object.entries(prev)){
+    if(!String(k).startsWith("PROG_")) cleaned[k] = v;
+  }
+  window.SESSIONS = cleaned;
+}
+
+async function reloadProgramsIntoSESSIONS(){
+  if(!currentUser?.uid) return;
+
+  // 1) trouver le programme actif le plus récent
+  const progQ = query(
+    collection(db, "users", currentUser.uid, "programs"),
+    where("active", "==", true),
+    orderBy("createdAt", "desc"),
+    limit(1)
+  );
+
+  const progSnap = await getDocs(progQ);
+  if(progSnap.empty){
+    purgeProgramsFromSessions();
+    return;
+  }
+
+  const progDoc = progSnap.docs[0];
+  const programId = progDoc.id;
+  const progData = progDoc.data() || {};
+  const programName = String(progData.goalText || "Programme 4 semaines");
+
+  // 2) déterminer la semaine courante (par défaut 1)
+  let currentWeek = "1";
+  try{
+    const weekQ = query(
+      collection(db, "users", currentUser.uid, "programs", programId, "weeks"),
+      where("status", "==", "current"),
+      limit(1)
+    );
+    const weekSnap = await getDocs(weekQ);
+    if(!weekSnap.empty){
+      currentWeek = String(weekSnap.docs[0].id || "1");
+    }
+  }catch(e){
+    // si pas de doc current, on garde week 1
+  }
+
+  // 3) charger les séances de la semaine courante
+  const sessSnap = await getDocs(
+    collection(db, "users", currentUser.uid, "programs", programId, "weeks", currentWeek, "sessions")
+  );
+
+  const programs = {};
+
+  sessSnap.forEach((d)=>{
+    const data = d.data() || {};
+    const sessionObj = data.session || {};
+    const key = `PROG_${programId}__${d.id}`; // ex: PROG_xxx__W1-D1
+
+    programs[key] = {
+      name: String(sessionObj.name || data.title || `Programme — ${d.id}`),
+      warmup: Array.isArray(sessionObj.warmup) ? sessionObj.warmup : [],
+      items: Array.isArray(sessionObj.items) ? sessionObj.items : [],
+      cooldown: Array.isArray(sessionObj.cooldown) ? sessionObj.cooldown : [],
+      estimatedMinutes: (typeof sessionObj.estimatedMinutes === "number") ? sessionObj.estimatedMinutes : null,
+
+      // tags pour le "dossier"
+      source: "program",
+      programId,
+      programName,
+      programWeek: Number(currentWeek) || 1,
+      programSessionKey: d.id
+    };
+  });
+
+  purgeProgramsFromSessions();
+
+  if(Object.keys(programs).length){
+    window.SESSIONS = { ...programs, ...(window.SESSIONS || {}) };
+    console.log("[PROGRAM] Sessions merged:", Object.keys(programs).length, "week", currentWeek, "program", programId);
+  }else{
+    console.log("[PROGRAM] No sessions found for week", currentWeek, "program", programId);
+  }
+}
 /* ===== FIN B2.0-3-SAFE ===== */
 
 
@@ -5345,6 +5442,9 @@ if(Object.keys(custom).length){
     }catch(e){
       console.warn("[B2.0-3] Reload custom failed:", e);
     }
+
+await reloadCustomSessionsIntoSESSIONS();
+await reloadProgramsIntoSESSIONS(); 
 
     renderHome(); // => la séance apparaît tout de suite dans “Mes séances”
     closeCustomSessionEditor();
