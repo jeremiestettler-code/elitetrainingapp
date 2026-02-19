@@ -3011,6 +3011,17 @@ function addSectionTitle(title){
       // (Prévu plus tard) Hockey : clés type HOC_* ou nom contenant "hockey"
       const isRunning = (k, s) => /^RUN[_-]/i.test(k) || /course|running/i.test(String(s?.name||""));
       const isHockey  = (k, s) => /^HOC[_-]/i.test(k) || /hockey/i.test(String(s?.name||""));
+      const isProgram = (k, s) => /^PROG_/i.test(k) || (s && s.source === "program");
+
+function getProgramIdFromKey(k){
+  // attendu: PROG_<programId>__W1_S1
+  const m = String(k).match(/^PROG_([^_]+)__?/i);
+  return m ? m[1] : null;
+}
+
+function getProgramName(s){
+  return String(s?.programName || s?.programTitle || "Programme");
+}
 /* =========================
    B1-SAFE — Groupe "Mes séances" (custom)
    À COLLER JUSTE AVANT : const complete = [];
@@ -3018,20 +3029,31 @@ function addSectionTitle(title){
 	const isCustom = (k, s) => k.startsWith("CUSTOM_") || (s && s.source === "custom");
 	const custom = [];
 /* ===== FIN B1-SAFE ===== */
-      const complete = [];
-      const running = [];
-      const hockey = [];
+  const complete = [];
+  const running = [];
+  const hockey = [];
+  const programs = new Map(); // programId -> { name, keys: [] }
+
 
 /* =========================
    B1-SAFE — Répartition avec custom en premier
 ========================= */
+
 allKeys.forEach((k)=>{
   const s = sessions[k];
 
   if(isCustom(k, s)) custom.push(k);
+  else if(isProgram(k, s)){
+    const pid = s?.programId || getProgramIdFromKey(k) || "unknown";
+    if(!programs.has(pid)){
+      programs.set(pid, { name: getProgramName(s), keys: [] });
+    }
+    programs.get(pid).keys.push(k);
+  }
   else if(isHockey(k, s)) hockey.push(k);
   else if(isRunning(k, s)) running.push(k);
   else complete.push(k);
+});
 });
 /* ===== FIN B1-SAFE ===== */
 
@@ -3243,6 +3265,18 @@ if(isCustom){
 ========================= */
 if(custom.length){
   addSection("Mes séances", custom, { id:"custom", defaultOpen:true });
+}
+
+if(programs.size){
+  // tri par nom
+  const arr = Array.from(programs.entries())
+    .sort((a,b)=>String(a[1].name).localeCompare(String(b[1].name)));
+
+  arr.forEach(([pid, obj])=>{
+    // optionnel: tri des clés pour garder W1/W2...
+    obj.keys.sort((a,b)=>String(a).localeCompare(String(b)));
+    addSection(obj.name, obj.keys, { id:`prog_${pid}`, defaultOpen:true });
+  });
 }
 /* ===== FIN B1-SAFE ===== */
 
