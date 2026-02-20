@@ -14,6 +14,9 @@
 <script>
   window.AI_FUNCTION_URL = "https://europe-west1-elitetraining-77406.cloudfunctions.net/generateWorkout";
 </script>
+<script>
+  window.AI_PROGRAM_URL = window.AI_FUNCTION_URL.replace("generateWorkout", "generateProgram4Weeks");
+</script>
   <style>
     :root{
       --bg:#0b0f17; --card:#121a29; --muted:#9fb0c7; --text:#eaf1ff;
@@ -1356,6 +1359,15 @@
   <div style="height:10px"></div>
 
   <div class="aiMetaRow">
+    <div style="height:8px"></div>
+
+<div class="row" style="gap:10px; align-items:center;">
+  <div class="muted small" style="min-width:52px;">Type :</div>
+  <select id="aiModeSelect" class="btn" style="flex:1;">
+    <option value="session" selected>Séance (1 entraînement)</option>
+    <option value="program">Programme (4 semaines)</option>
+  </select>
+</div>
     <div class="aiChips" id="aiChips"></div>
     <div class="aiMetaRight">
       <div class="muted small" id="aiMinutesLabel">Durée : —</div>
@@ -1367,6 +1379,8 @@
   <div class="row" style="gap:10px;">
     <button class="btn primary wide" id="btnAIGenerate">Générer</button>
     <button class="btn wide" id="btnAIRegenerate" disabled>Regénérer</button>
+    <div style="height:10px"></div>
+    <button class="btn primary wide" id="btnAIProgram" style="display:none;">Créer le programme 4 semaines</button>
   </div>
 
   <div style="height:10px"></div>
@@ -2829,6 +2843,79 @@ if (ml && usedMin) {
   const gen = $("btnAIGenerate");
   const reg = $("btnAIRegenerate");
   const open = $("btnAIOpenEditor");
+  const modeSel = $("aiModeSelect");
+  const btnProg = $("btnAIProgram");
+
+  function syncAIModeUI(){
+    const mode = modeSel ? modeSel.value : "session";
+
+    // En mode programme:
+    // - on cache "Regénérer" (optionnel)
+    // - on cache "Enregistrer la séance"
+    // - on affiche le bouton "Créer programme"
+    if(mode === "program"){
+      if(reg) reg.style.display = "none";
+      if(open) open.style.display = "none";
+      if(btnProg) btnProg.style.display = "block";
+    }else{
+      if(reg) reg.style.display = "";
+      if(open) open.style.display = "";
+      if(btnProg) btnProg.style.display = "none";
+    }
+  }
+
+  modeSel?.addEventListener("change", syncAIModeUI);
+  syncAIModeUI();
+
+  btnProg?.addEventListener("click", async ()=>{
+    if(AI_BUSY) return;
+
+    const promptEl = $("aiPrompt");
+    const txt = promptEl ? promptEl.value : "";
+    const parsed = aiParsePrompt(txt);
+
+    if(!parsed.goalText || !parsed.goalText.trim()){
+      alert("Écris un objectif (ex: prise de masse 4 semaines, 3 séances/semaine, haltères).");
+      return;
+    }
+
+    try{
+      aiSetBusy(true, "Création du programme 4 semaines…");
+
+      // payload minimal (le backend peut déjà gérer profile/constraints si tu l’as prévu)
+      const token = currentUser ? await currentUser.getIdToken() : null;
+
+      const res = await fetch(window.AI_PROGRAM_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type":"application/json",
+          ...(token ? { "Authorization": "Bearer " + token } : {})
+        },
+        body: JSON.stringify({
+          goalText: parsed.goalText,
+          duration: parsed.minutes || 30,
+          constraints: parsed.constraints || {},
+        })
+      });
+
+      const data = await res.json().catch(()=>null);
+      if(!res.ok || !data?.ok){
+        throw new Error(data?.error || "Erreur génération programme");
+      }
+
+      // 🔥 IMPORTANT : recharge les programmes dans window.SESSIONS + refresh UI
+      await reloadProgramsIntoSESSIONS();
+      if(typeof window.refreshSessionsList === "function") window.refreshSessionsList();
+      else if(typeof renderHome === "function") renderHome();
+
+      showToast("✅ Programme créé • Ajouté dans Ton programme");
+    }catch(e){
+      console.warn(e);
+      alert("Erreur programme : " + (e?.message || e));
+    }finally{
+      aiSetBusy(false);
+    }
+  });
 
   if(p){
     const onChange = ()=>{
