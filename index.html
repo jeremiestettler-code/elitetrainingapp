@@ -5136,7 +5136,7 @@ async function reloadProgramsIntoSESSIONS(){
 
   sessSnap.forEach((d)=>{
     const data = d.data() || {};
-    const sessionObj = data.session || {};
+    const sessionObj = (data.session && typeof data.session === "object") ? data.session : data;
     const key = `PROG_${programId}__${d.id}`; // ex: PROG_xxx__W1-D1
 
     programs[key] = {
