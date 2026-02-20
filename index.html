@@ -5154,44 +5154,42 @@ async function reloadProgramsIntoSESSIONS(forceProgramId){
 
   sessSnap.forEach((d)=>{
     const data = d.data() || {};
-
-    // Supporte les 2 formats:
-    // - { session: { warmup/items/cooldown } }
-    // - { warmup/items/cooldown } (à plat)
     const sessionObj = (data.session && typeof data.session === "object") ? data.session : data;
-
     const key = `PROG_${programId}__${d.id}`; // ex: PROG_xxx__W1-D1
 
-    // ✅ Enrichissement: ajoute name/icon/desc/todo depuis EXERCISE_LIBRARY.byId
-    const lib = (window.EXERCISE_LIBRARY && window.EXERCISE_LIBRARY.byId) ? window.EXERCISE_LIBRARY.byId : {};
+    const libById = (window.EXERCISE_LIBRARY && window.EXERCISE_LIBRARY.byId) ? window.EXERCISE_LIBRARY.byId : {};
 
     function enrichById(x){
       if(!x || typeof x !== "object") return x;
       const exoId = String(x.id || "").trim();
       if(!exoId) return x;
-      const base = lib[exoId];
-      if(!base || typeof base !== "object") return { ...x, id: exoId };
-      // On n'écrase pas les champs déjà présents
+      const ref = libById[exoId];
+      if(!ref || typeof ref !== "object") return { ...x, id: exoId, name: x.name || exoId };
+      // IMPORTANT: spread ref first to keep media fields (icon/gif/img/image) then x overrides (sets/reps/etc)
       return {
-        ...base,
+        ...ref,
         ...x,
         id: exoId,
-        name: x.name || base.name || "Exercice",
-        icon: x.icon || base.icon || "",
-        desc: x.desc || base.desc,
-        todo: x.todo || base.todo
+        name: x.name || ref.name || exoId,
+        icon: x.icon || ref.icon || "",
+        gif: x.gif || ref.gif || "",
+        img: x.img || ref.img || "",
+        image: x.image || ref.image || "",
+        media: x.media || ref.media || "",
+        desc: x.desc || ref.desc || "",
+        todo: x.todo || ref.todo || ""
       };
     }
 
-    const warmup = Array.isArray(sessionObj.warmup) ? sessionObj.warmup.map(enrichById) : [];
-    const items = Array.isArray(sessionObj.items) ? sessionObj.items.map(enrichById) : [];
-    const cooldown = Array.isArray(sessionObj.cooldown) ? sessionObj.cooldown.map(enrichById) : [];
+    const warmupList = (Array.isArray(sessionObj.warmup) ? sessionObj.warmup : []).map(enrichById);
+    const itemsList  = (Array.isArray(sessionObj.items) ? sessionObj.items : []).map(enrichById);
+    const coolList   = (Array.isArray(sessionObj.cooldown) ? sessionObj.cooldown : []).map(enrichById);
 
     programs[key] = {
       name: String(sessionObj.name || data.title || `Programme — ${d.id}`),
-      warmup,
-      items,
-      cooldown,
+      warmup: warmupList,
+      items: itemsList,
+      cooldown: coolList,
       estimatedMinutes: (typeof sessionObj.estimatedMinutes === "number") ? sessionObj.estimatedMinutes : null,
 
       // tags pour le "dossier"
@@ -5201,7 +5199,7 @@ async function reloadProgramsIntoSESSIONS(forceProgramId){
       programWeek: Number(currentWeek) || 1,
       programSessionKey: d.id
     };
-  });
+  }););
 
   purgeProgramsFromSessions();
 
