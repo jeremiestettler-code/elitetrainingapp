@@ -4520,12 +4520,17 @@ function buildSequence(session){
       sessionLoadsUsed = {}; // reset
 
       curSession = (window.SESSIONS || {})[sessionId];
+      // DEBUG/STATE (SAFE) — expose la séance courante
+      window.CURRENT_SESSION_ID = sessionId;
+      window.CURRENT_SESSION = curSession;
+      window.CURRENT_SEQUENCE = null;
       workoutStartMs = Date.now();
       workoutLogged = false;
 
       if(!curSession) return;
 
       seq = buildSequence(curSession);
+      window.CURRENT_SEQUENCE = seq;
       idx = 0;
 
       showScreen("workout");
@@ -5123,7 +5128,7 @@ async function reloadProgramsIntoSESSIONS(forceProgramId){
   }
 
   const programName = String(progData.goalText || "Programme 4 semaines");
-  
+
   // 2) déterminer la semaine courante (par défaut 1)
   let currentWeek = "1";
   try{
