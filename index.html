@@ -2885,6 +2885,18 @@ if (ml && usedMin) {
       // payload minimal (le backend peut déjà gérer profile/constraints si tu l’as prévu)
       const token = currentUser ? await currentUser.getIdToken() : null;
 
+      const libraryCompact = (typeof buildLibraryCompact === "function")
+        ? buildLibraryCompact()
+        : Object.values(EXERCISE_LIBRARY.byId).map(e => ({
+            id: e.id,
+            name: e.name,
+            primary: e.primary,
+            secondary: e.secondary,
+            equipment: e.equipment || [],
+            kneeImpact: e.kneeImpact || "low",
+            patterns: e.patterns || []
+          }));
+
       const res = await fetch(window.AI_PROGRAM_URL, {
         method: "POST",
         headers: {
@@ -2893,10 +2905,12 @@ if (ml && usedMin) {
         },
         body: JSON.stringify({
           goalText: parsed.goalText,
-          duration: parsed.minutes || 30,
+          weeks: 4,
           constraints: parsed.constraints || {},
-        })
-      });
+          libraryCompact,
+          recentIds: []
+  })
+});
 
       const data = await res.json().catch(()=>null);
       if(!res.ok || !data?.ok){
