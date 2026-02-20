@@ -5089,28 +5089,41 @@ function purgeProgramsFromSessions(){
   window.SESSIONS = cleaned;
 }
 
-async function reloadProgramsIntoSESSIONS(){
+async function reloadProgramsIntoSESSIONS(forceProgramId){
   if(!currentUser?.uid) return;
 
   // 1) trouver le programme actif le plus récent
-  const progQ = query(
-    collection(db, "users", currentUser.uid, "programs"),
-    where("active", "==", true),
-    orderBy("createdAt", "desc"),
-    limit(1)
-  );
+   let programId = forceProgramId || null;
+  let progData = null;
 
-  const progSnap = await getDocs(progQ);
-  if(progSnap.empty){
-    purgeProgramsFromSessions();
-    return;
+  if(!programId){
+    const progQ = query(
+      collection(db, "users", currentUser.uid, "programs"),
+      where("active", "==", true),
+      orderBy("createdAt", "desc"),
+      limit(1)
+    );
+
+    const progSnap = await getDocs(progQ);
+    if(progSnap.empty){
+      purgeProgramsFromSessions();
+      return;
+    }
+    const progDoc = progSnap.docs[0];
+    programId = progDoc.id;
+    progData = progDoc.data() || {};
+  }else{
+    const progRef = doc(db, "users", currentUser.uid, "programs", programId);
+    const progSnap = await getDoc(progRef);
+    if(!progSnap.exists()){
+      purgeProgramsFromSessions();
+      return;
+    }
+    progData = progSnap.data() || {};
   }
 
-  const progDoc = progSnap.docs[0];
-  const programId = progDoc.id;
-  const progData = progDoc.data() || {};
   const programName = String(progData.goalText || "Programme 4 semaines");
-
+  
   // 2) déterminer la semaine courante (par défaut 1)
   let currentWeek = "1";
   try{
