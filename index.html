@@ -5154,14 +5154,44 @@ async function reloadProgramsIntoSESSIONS(forceProgramId){
 
   sessSnap.forEach((d)=>{
     const data = d.data() || {};
+
+    // Supporte les 2 formats:
+    // - { session: { warmup/items/cooldown } }
+    // - { warmup/items/cooldown } (à plat)
     const sessionObj = (data.session && typeof data.session === "object") ? data.session : data;
+
     const key = `PROG_${programId}__${d.id}`; // ex: PROG_xxx__W1-D1
+
+    // ✅ Enrichissement: ajoute name/icon/desc/todo depuis EXERCISE_LIBRARY.byId
+    const lib = (window.EXERCISE_LIBRARY && window.EXERCISE_LIBRARY.byId) ? window.EXERCISE_LIBRARY.byId : {};
+
+    function enrichById(x){
+      if(!x || typeof x !== "object") return x;
+      const exoId = String(x.id || "").trim();
+      if(!exoId) return x;
+      const base = lib[exoId];
+      if(!base || typeof base !== "object") return { ...x, id: exoId };
+      // On n'écrase pas les champs déjà présents
+      return {
+        ...base,
+        ...x,
+        id: exoId,
+        name: x.name || base.name || "Exercice",
+        icon: x.icon || base.icon || "",
+        desc: x.desc || base.desc,
+        todo: x.todo || base.todo
+      };
+    }
+
+    const warmup = Array.isArray(sessionObj.warmup) ? sessionObj.warmup.map(enrichById) : [];
+    const items = Array.isArray(sessionObj.items) ? sessionObj.items.map(enrichById) : [];
+    const cooldown = Array.isArray(sessionObj.cooldown) ? sessionObj.cooldown.map(enrichById) : [];
 
     programs[key] = {
       name: String(sessionObj.name || data.title || `Programme — ${d.id}`),
-      warmup: Array.isArray(sessionObj.warmup) ? sessionObj.warmup : [],
-      items: Array.isArray(sessionObj.items) ? sessionObj.items : [],
-      cooldown: Array.isArray(sessionObj.cooldown) ? sessionObj.cooldown : [],
+      warmup,
+      items,
+      cooldown,
       estimatedMinutes: (typeof sessionObj.estimatedMinutes === "number") ? sessionObj.estimatedMinutes : null,
 
       // tags pour le "dossier"
