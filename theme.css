@@ -40,3 +40,5 @@
 
   --danger: #DC2626 !important;
 }
+/* TEST CHARGEMENT — à supprimer après */
+body{ outline: 6px solid magenta !important; }
