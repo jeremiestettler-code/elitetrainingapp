@@ -1,63 +1,44 @@
-/* EliteTraining — Elite Minimal theme overrides
-   This file is intentionally SMALL and only overrides variables + a few accents,
-   so it won't break your existing layout/components.
-*/
+/* =========================
+   EliteTraining — Theme (SAFE)
+   Palette globale uniquement (aucun layout)
+   ========================= */
 
 /* DARK (principal) */
 :root{
-  --bg:#0B0F14;
-  --card:#111827;
-  --muted:#94A3B8;
-  --text:#F8FAFC;
+  --bg:    #0B0F14;
+  --card:  #111827;
+  --text:  #F8FAFC;
+  --muted: #94A3B8;
 
-  /* Elite accent */
-  --accent:#22C55E;
-  --accent2:#22C55E; /* keep single accent (avoid gradient look) */
+  /* Accent Elite (vert performance) */
+  --accent:  #22C55E;
+  --accent2: #16A34A; /* juste pour garder ton gradient si tu en as */
 
-  --danger:#EF4444;
+  /* Surfaces “boutons / inputs” existantes */
+  --btn:  #1F2937;
+  --btn2: #0F172A;
 
-  /* Buttons/surfaces (keep your existing structure) */
-  --btn:#0F172A;
-  --btn2:#111827;
+  /* Ombre un peu plus premium */
+  --shadow: 0 12px 30px rgba(0,0,0,.28);
 
-  /* Subtler shadow to feel more premium */
-  --shadow: 0 10px 26px rgba(0,0,0,.28);
+  /* (Optionnel) danger si tu l’utilises en var quelque part */
+  --danger: #EF4444;
 }
 
 /* LIGHT (premium) */
-[data-theme="light"]{
-  --bg:#F8FAFC;
-  --card:#FFFFFF;
-  --muted:#475569;
-  --text:#0F172A;
+:root[data-theme="light"]{
+  --bg:    #F8FAFC;
+  --card:  #FFFFFF;
+  --text:  #0F172A;
+  --muted: #475569;
 
-  --accent:#16A34A;
-  --accent2:#16A34A;
+  --accent:  #16A34A;
+  --accent2: #15803D;
 
-  --btn:#E9EEF9;
-  --btn2:#DDE7FB;
+  --btn:  #E5E7EB;
+  --btn2: #F1F5F9;
 
   --shadow: 0 10px 26px rgba(10,20,40,.10);
-  --danger:#DC2626;
-}
 
-/* Remove gradient for primary buttons (Elite Minimal) */
-.btn.primary{
-  background: var(--accent) !important;
-  color:#04110A !important;
-}
-
-/* Switch uses accent instead of blue */
-.switch input:checked + .slider{
-  background: rgba(34,197,94,.55) !important;
-  border-color: rgba(34,197,94,.65) !important;
-}
-[data-theme="light"] .switch input:checked + .slider{
-  background: rgba(22,163,74,.45) !important;
-  border-color: rgba(22,163,74,.55) !important;
-}
-
-/* Subtle featured card outline option (use .featured in HTML if you want) */
-.card.featured{
-  border: 1px solid color-mix(in oklab, var(--accent) 55%, rgba(255,255,255,.10));
+  --danger: #DC2626;
 }
