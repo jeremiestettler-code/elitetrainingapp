@@ -1,44 +1,109 @@
 /* =========================
-   EliteTraining — Theme (FORCE)
-   Override variables même si le <style> interne passe après
-   Aucun changement de layout
+   EliteTraining — Global Skin (BRUTE FORCE SAFE)
+   But: voir un changement immédiat partout
    ========================= */
 
-/* DARK (principal) */
+/* Tokens */
 :root{
-  --bg:    #0B0F14 !important;
-  --card:  #111827 !important;
-  --text:  #F8FAFC !important;
-  --muted: #94A3B8 !important;
+  --et-bg:#0B0F14;
+  --et-surface:#111827;
+  --et-surface2:#0F172A;
+  --et-border:#1F2937;
 
-  --accent:  #22C55E !important;
-  --accent2: #16A34A !important;
+  --et-text:#F8FAFC;
+  --et-muted:#94A3B8;
 
-  --btn:  #1F2937 !important;
-  --btn2: #0F172A !important;
+  --et-accent:#22C55E;
+  --et-danger:#EF4444;
 
-  --shadow: 0 12px 30px rgba(0,0,0,.28) !important;
-
-  --danger: #EF4444 !important;
+  --et-shadow: 0 12px 30px rgba(0,0,0,.28);
 }
 
-/* LIGHT (premium) */
-:root[data-theme="light"],
-[data-theme="light"]{
-  --bg:    #F8FAFC !important;
-  --card:  #FFFFFF !important;
-  --text:  #0F172A !important;
-  --muted: #475569 !important;
+:root[data-theme="light"]{
+  --et-bg:#F8FAFC;
+  --et-surface:#FFFFFF;
+  --et-surface2:#F1F5F9;
+  --et-border:#E5E7EB;
 
-  --accent:  #16A34A !important;
-  --accent2: #15803D !important;
+  --et-text:#0F172A;
+  --et-muted:#475569;
 
-  --btn:  #E5E7EB !important;
-  --btn2: #F1F5F9 !important;
+  --et-accent:#16A34A;
+  --et-danger:#DC2626;
 
-  --shadow: 0 10px 26px rgba(10,20,40,.10) !important;
-
-  --danger: #DC2626 !important;
+  --et-shadow: 0 10px 26px rgba(10,20,40,.10);
 }
-/* TEST CHARGEMENT — à supprimer après */
+
+/* DEBUG visuel (tu peux enlever après) */
 body{ outline: 6px solid magenta !important; }
+
+/* Fond global */
+html, body{
+  background: var(--et-bg) !important;
+  color: var(--et-text) !important;
+}
+
+/* Textes secondaires */
+.muted, .small{
+  color: var(--et-muted) !important;
+}
+
+/* Cartes principales (tu utilises .card partout) */
+.card{
+  background: var(--et-surface) !important;
+  color: var(--et-text) !important;
+  box-shadow: var(--et-shadow) !important;
+}
+
+/* Topbar (chez toi elle est stylée en dur avec rgba) */
+.topbar{
+  background: color-mix(in srgb, var(--et-surface) 75%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--et-border) 80%, transparent) !important;
+  box-shadow: var(--et-shadow) !important;
+}
+
+/* Badges / chips (ex: .badge, IA chips) */
+.badge, .aiChip, .loadChip, .phase{
+  background: color-mix(in srgb, var(--et-surface2) 85%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--et-border) 80%, transparent) !important;
+  color: var(--et-text) !important;
+}
+
+/* Inputs */
+input, textarea, select{
+  background: var(--et-surface2) !important;
+  color: var(--et-text) !important;
+  border: 1px solid var(--et-border) !important;
+}
+
+/* Boutons */
+.btn{
+  background: var(--et-surface2) !important;
+  color: var(--et-text) !important;
+  box-shadow: var(--et-shadow) !important;
+}
+
+/* Bouton primary : plus de bleu, Elite green */
+.btn.primary{
+  background: var(--et-accent) !important;
+  color: #04110A !important;
+}
+
+/* Danger */
+.btn.danger{
+  background: var(--et-danger) !important;
+  color: #fff !important;
+}
+
+/* Boutons bas workout (ctrlBtn) */
+.ctrlBtn{
+  background: color-mix(in srgb, var(--et-surface2) 80%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--et-border) 80%, transparent) !important;
+  color: var(--et-text) !important;
+  box-shadow: var(--et-shadow) !important;
+}
+.ctrlBtn.primary{
+  background: var(--et-accent) !important;
+  border-color: var(--et-accent) !important;
+  color: #04110A !important;
+}
