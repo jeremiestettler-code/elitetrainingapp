@@ -1,44 +1,42 @@
 /* =========================
-   EliteTraining — Theme (SAFE)
-   Palette globale uniquement (aucun layout)
+   EliteTraining — Theme (FORCE)
+   Override variables même si le <style> interne passe après
+   Aucun changement de layout
    ========================= */
 
 /* DARK (principal) */
 :root{
-  --bg:    #0B0F14;
-  --card:  #111827;
-  --text:  #F8FAFC;
-  --muted: #94A3B8;
+  --bg:    #0B0F14 !important;
+  --card:  #111827 !important;
+  --text:  #F8FAFC !important;
+  --muted: #94A3B8 !important;
 
-  /* Accent Elite (vert performance) */
-  --accent:  #22C55E;
-  --accent2: #16A34A; /* juste pour garder ton gradient si tu en as */
+  --accent:  #22C55E !important;
+  --accent2: #16A34A !important;
 
-  /* Surfaces “boutons / inputs” existantes */
-  --btn:  #1F2937;
-  --btn2: #0F172A;
+  --btn:  #1F2937 !important;
+  --btn2: #0F172A !important;
 
-  /* Ombre un peu plus premium */
-  --shadow: 0 12px 30px rgba(0,0,0,.28);
+  --shadow: 0 12px 30px rgba(0,0,0,.28) !important;
 
-  /* (Optionnel) danger si tu l’utilises en var quelque part */
-  --danger: #EF4444;
+  --danger: #EF4444 !important;
 }
 
 /* LIGHT (premium) */
-:root[data-theme="light"]{
-  --bg:    #F8FAFC;
-  --card:  #FFFFFF;
-  --text:  #0F172A;
-  --muted: #475569;
+:root[data-theme="light"],
+[data-theme="light"]{
+  --bg:    #F8FAFC !important;
+  --card:  #FFFFFF !important;
+  --text:  #0F172A !important;
+  --muted: #475569 !important;
 
-  --accent:  #16A34A;
-  --accent2: #15803D;
+  --accent:  #16A34A !important;
+  --accent2: #15803D !important;
 
-  --btn:  #E5E7EB;
-  --btn2: #F1F5F9;
+  --btn:  #E5E7EB !important;
+  --btn2: #F1F5F9 !important;
 
-  --shadow: 0 10px 26px rgba(10,20,40,.10);
+  --shadow: 0 10px 26px rgba(10,20,40,.10) !important;
 
-  --danger: #DC2626;
+  --danger: #DC2626 !important;
 }
