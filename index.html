@@ -4517,6 +4517,12 @@ function buildSequence(session){
     function startSession(sessionId){
       __endSpoken = false;
       curSessionId = sessionId;
+      // ✅ SAFE: enrichit toujours la séance (utile pour les programmes Firestore)
+      if(curSession && typeof enrichSession === "function"){
+        curSession = enrichSession(curSession, null);
+        // garde la version enrichie en mémoire pour la suite
+        (window.SESSIONS || {})[sessionId] = curSession;
+      }
       sessionLoadsUsed = {}; // reset
 
       curSession = (window.SESSIONS || {})[sessionId];
