@@ -5162,7 +5162,7 @@ sessSnap.forEach((d)=>{
   function enrichById(x){
     if(!x || typeof x !== "object") return x;
 
-    const exoId = String(x.id || "").trim();
+    const exoId = String(x.id || x.exoId || x.exerciseId || x.name || "").trim();
     if(!exoId) return x;
 
     const ref = libById[exoId];
