@@ -5152,55 +5152,67 @@ async function reloadProgramsIntoSESSIONS(forceProgramId){
 
   const programs = {};
 
-  sessSnap.forEach((d)=>{
-    const data = d.data() || {};
-    const sessionObj = (data.session && typeof data.session === "object") ? data.session : data;
-    const key = `PROG_${programId}__${d.id}`; // ex: PROG_xxx__W1-D1
+sessSnap.forEach((d)=>{
+  const data = d.data() || {};
+  const sessionObj = (data.session && typeof data.session === "object") ? data.session : data;
+  const key = `PROG_${programId}__${d.id}`; // ex: PROG_xxx__W1-D1
 
-    const libById = (window.EXERCISE_LIBRARY && window.EXERCISE_LIBRARY.byId) ? window.EXERCISE_LIBRARY.byId : {};
+  const libById = (window.EXERCISE_LIBRARY && window.EXERCISE_LIBRARY.byId) ? window.EXERCISE_LIBRARY.byId : {};
 
-    function enrichById(x){
-      if(!x || typeof x !== "object") return x;
-      const exoId = String(x.id || "").trim();
-      if(!exoId) return x;
-      const ref = libById[exoId];
-      if(!ref || typeof ref !== "object") return { ...x, id: exoId, name: x.name || exoId };
-      // IMPORTANT: spread ref first to keep media fields (icon/gif/img/image) then x overrides (sets/reps/etc)
-      return {
-        ...ref,
-        ...x,
-        id: exoId,
-        name: x.name || ref.name || exoId,
-        icon: x.icon || ref.icon || "",
-        gif: x.gif || ref.gif || "",
-        img: x.img || ref.img || "",
-        image: x.image || ref.image || "",
-        media: x.media || ref.media || "",
-        desc: x.desc || ref.desc || "",
-        todo: x.todo || ref.todo || ""
-      };
+  function enrichById(x){
+    if(!x || typeof x !== "object") return x;
+
+    const exoId = String(x.id || "").trim();
+    if(!exoId) return x;
+
+    const ref = libById[exoId];
+
+    // Si pas trouvé dans la lib, on garde l'entrée telle quelle mais on force id + name minimal
+    if(!ref || typeof ref !== "object"){
+      return { ...x, id: exoId, name: x.name || exoId };
     }
 
-    const warmupList = (Array.isArray(sessionObj.warmup) ? sessionObj.warmup : []).map(enrichById);
-    const itemsList  = (Array.isArray(sessionObj.items) ? sessionObj.items : []).map(enrichById);
-    const coolList   = (Array.isArray(sessionObj.cooldown) ? sessionObj.cooldown : []).map(enrichById);
+    // ⚠️ Chez toi ref.icon est souvent une "clé" (ex: "dbbench"), pas un chemin direct.
+    // On la garde, car ton renderer sait la convertir via normalizeStepIcon / images.js.
+    // On remonte aussi gif/img/image si jamais ref les possède.
+    return {
+      ...ref,     // base (name/icon/etc)
+      ...x,       // x override pour sets/reps/work/rest/etc
+      id: exoId,
 
-    programs[key] = {
-      name: String(sessionObj.name || data.title || `Programme — ${d.id}`),
-      warmup: warmupList,
-      items: itemsList,
-      cooldown: coolList,
-      estimatedMinutes: (typeof sessionObj.estimatedMinutes === "number") ? sessionObj.estimatedMinutes : null,
+      // texte
+      name: x.name || ref.name || exoId,
+      desc: x.desc || ref.desc || "",
+      todo: x.todo || ref.todo || "",
 
-      // tags pour le "dossier"
-      source: "program",
-      programId,
-      programName,
-      programWeek: Number(currentWeek) || 1,
-      programSessionKey: d.id
+      // média: on remonte tout ce qui peut être utilisé par le renderer
+      icon: x.icon || ref.icon || ref.gif || ref.img || ref.image || "",
+      gif: x.gif || ref.gif || "",
+      img: x.img || ref.img || "",
+      image: x.image || ref.image || "",
+      media: x.media || ref.media || ""
     };
-  });
+  }
 
+  const warmupList = (Array.isArray(sessionObj.warmup) ? sessionObj.warmup : []).map(enrichById);
+  const itemsList  = (Array.isArray(sessionObj.items) ? sessionObj.items : []).map(enrichById);
+  const coolList   = (Array.isArray(sessionObj.cooldown) ? sessionObj.cooldown : []).map(enrichById);
+
+  programs[key] = {
+    name: String(sessionObj.name || data.title || `Programme — ${d.id}`),
+    warmup: warmupList,
+    items: itemsList,
+    cooldown: coolList,
+    estimatedMinutes: (typeof sessionObj.estimatedMinutes === "number") ? sessionObj.estimatedMinutes : null,
+
+    // tags pour le "dossier"
+    source: "program",
+    programId,
+    programName,
+    programWeek: Number(currentWeek) || 1,
+    programSessionKey: d.id
+  };
+});
   purgeProgramsFromSessions();
 
   if(Object.keys(programs).length){
