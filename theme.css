@@ -3,6 +3,19 @@
    But: voir un changement immédiat partout
    ========================= */
 
+/* TEST VISIBLE — tu peux supprimer après */
+html::before{
+  content:"THEME.CSS OK";
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 999999;
+  padding: 10px 12px;
+  font: 800 12px/1 system-ui;
+  letter-spacing: .3px;
+  background: #ff00ff;
+  color: #111;
+}
+
 /* Tokens */
 :root{
   --et-bg:#0B0F14;
