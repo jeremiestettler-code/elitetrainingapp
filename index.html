@@ -1276,7 +1276,7 @@
 
 <body>
 
-	<!-- Splash screen -->
+  <!-- Splash screen -->
 <div id="appSplash" class="etSplash">
   <div class="etSplashLogo">
 
@@ -1301,7 +1301,7 @@
   </div>
 </div>
 </div>
-	
+  
   <div class="app">
     <!-- TOPBAR -->
     <div class="topbar">
@@ -3169,8 +3169,8 @@ function getProgramName(s){
    B1-SAFE — Groupe "Mes séances" (custom)
    À COLLER JUSTE AVANT : const complete = [];
 ========================= */
-	const isCustom = (k, s) => k.startsWith("CUSTOM_") || (s && s.source === "custom");
-	const custom = [];
+  const isCustom = (k, s) => k.startsWith("CUSTOM_") || (s && s.source === "custom");
+  const custom = [];
 /* ===== FIN B1-SAFE ===== */
   const complete = [];
   const running = [];
@@ -5694,7 +5694,76 @@ await reloadProgramsIntoSESSIONS();
 
   </div>
 </div>
+<!-- =========================
+     PROFILE WIZARD MODAL (STEP 1/2 UI)
+     (reste invisible tant qu'on ne l'ouvre pas en JS)
+========================= -->
+<div id="profileWizardModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="pwTitle">
+  <div class="modalCard" style="height:100%; max-height:none; border-radius:0; padding:16px; display:flex; flex-direction:column;">
+    
+    <!-- Header -->
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+      <div>
+        <div id="pwTitle" class="h2" style="margin:0;">Bienvenue <span id="pwUserName">!</span></div>
+        <div style="opacity:.8; font-size:13px; margin-top:4px;">Complète ton profil</div>
+      </div>
+      <button class="icon-btn" id="pwClose" aria-label="Fermer">✕</button>
+    </div>
 
+    <!-- Progress -->
+    <div style="display:flex; gap:8px; margin:12px 0 16px 0;">
+      <div id="pwDot1" style="width:10px; height:10px; border-radius:99px; background:var(--accent);"></div>
+      <div id="pwDot2" style="width:10px; height:10px; border-radius:99px; background:rgba(255,255,255,.2);"></div>
+    </div>
+
+    <!-- Body -->
+    <div style="flex:1; overflow:auto; -webkit-overflow-scrolling:touch;">
+      
+      <!-- STEP 1 -->
+      <div id="pwStep1">
+        <div style="margin-bottom:10px; font-size:13px; opacity:.85;">Dis-nous en un peu plus sur toi :</div>
+
+        <div style="display:grid; gap:10px;">
+          <div>
+            <div style="font-size:12px; font-weight:800; opacity:.75; margin-bottom:6px;">Âge</div>
+            <input id="pwAge" class="input" type="number" inputmode="numeric" min="10" max="100" placeholder="Ex: 34" />
+          </div>
+
+          <div>
+            <div style="font-size:12px; font-weight:800; opacity:.75; margin-bottom:6px;">Niveau</div>
+            <div id="pwLevelGroup" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"></div>
+          </div>
+
+          <div>
+            <div style="font-size:12px; font-weight:800; opacity:.75; margin-bottom:6px;">Objectif</div>
+            <div id="pwGoalGroup" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2 (cachée pour l'instant) -->
+      <div id="pwStep2" class="hidden">
+        <div style="margin-bottom:10px; font-size:13px; opacity:.85;">De quel matériel disposes-tu ?</div>
+
+        <div id="pwEquipmentList" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"></div>
+
+        <div style="height:12px;"></div>
+
+        <div style="font-size:12px; font-weight:800; opacity:.75; margin-bottom:6px;">Autre matériel (optionnel)</div>
+        <input id="pwOtherEquipment" class="input" placeholder="Ex: TRX, rameur…" />
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div style="display:flex; gap:10px; padding-top:12px;">
+      <button class="btn" type="button" id="pwBack">Retour</button>
+      <button class="btn primary" type="button" id="pwNext">Continuer</button>
+      <button class="btn primary hidden" type="button" id="pwFinish">Terminer</button>
+    </div>
+
+  </div>
+</div>
 <div id="customSessionModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="customSessionTitle">
   <div class="modalCard">
     <div class="modalHeader" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
