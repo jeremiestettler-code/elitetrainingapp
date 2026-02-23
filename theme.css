@@ -310,3 +310,48 @@ html[data-theme="light"] .homeSection[data-section="complete"] .card:first-child
   from{ opacity:0; transform: translateY(8px) scale(.98); }
   to{ opacity:1; transform: translateY(0) scale(1); }
 }
+/* Splash animations */
+.etSplashInner{
+  animation: etSplashIn 500ms cubic-bezier(.2,.8,.2,1) both;
+}
+
+.etLogoImg{
+  width: 220px;
+  max-width: 70vw;
+  height: auto;
+  animation: etLogoPop 900ms cubic-bezier(.2,.8,.2,1) both;
+}
+
+.etSplashHint{
+  animation: etHintPulse 1200ms ease-in-out infinite;
+}
+
+@keyframes etSplashIn{
+  from{ opacity:0; transform: translateY(10px); }
+  to{ opacity:1; transform: translateY(0); }
+}
+
+@keyframes etLogoPop{
+  0%{ opacity:0; transform: translateY(10px) scale(.96); }
+  60%{ opacity:1; transform: translateY(0) scale(1.03); }
+  100%{ opacity:1; transform: translateY(0) scale(1); }
+}
+
+@keyframes etHintPulse{
+  0%,100%{ opacity:.55; }
+  50%{ opacity:1; }
+}
+
+/* Quand on ferme le splash */
+.etSplash.hide{
+  animation: etSplashOut 520ms cubic-bezier(.2,.8,.2,1) forwards;
+}
+@keyframes etSplashOut{
+  from{ opacity:1; }
+  to{ opacity:0; }
+}
+
+/* Accessibilité */
+@media (prefers-reduced-motion: reduce){
+  .etSplashInner,.etLogoImg,.etSplashHint{ animation: none !important; }
+}
