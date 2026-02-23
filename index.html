@@ -1263,7 +1263,174 @@
 
 /* IA: on masque le label durée à droite (doublon avec chips/aperçu) */
 .aiMetaRight{display:none !important;}
+/* =========================
+   PROFILE WIZARD (Onboarding)
+   - plein écran
+   - mobile-first
+   - utilise les variables du thème (var(--bg), var(--card), var(--accent), etc.)
+========================= */
 
+#profileWizardModal{ z-index: 1000000 !important; }
+
+#profileWizardModal .modalCard{
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  height: 100%;
+  max-height: none;
+  border-radius: 0;
+  padding: calc(var(--safe-top) + 14px) 14px calc(var(--safe-bot) + 14px);
+  display:flex;
+  flex-direction:column;
+  background: var(--bg);
+}
+
+/* Header */
+#profileWizardModal .pwHeader{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+}
+
+#profileWizardModal .pwTitle{
+  margin:0;
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: .2px;
+  line-height: 1.05;
+}
+
+#profileWizardModal .pwSub{
+  margin-top: 6px;
+  font-size: 13px;
+  opacity: .85;
+}
+
+/* Progress dots */
+#profileWizardModal .pwProgress{
+  display:flex;
+  gap:8px;
+  margin: 12px 0 16px;
+}
+#profileWizardModal .pwDot{
+  width:10px; height:10px;
+  border-radius:999px;
+  background: rgba(255,255,255,.18);
+}
+[data-theme="light"] #profileWizardModal .pwDot{
+  background: rgba(10,20,40,.12);
+}
+#profileWizardModal .pwDot.current{
+  background: var(--accent);
+  box-shadow: 0 0 0 3px rgba(139,195,74,.18);
+}
+
+/* Body */
+#profileWizardModal .pwBody{
+  flex:1;
+  overflow:auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Sections */
+#profileWizardModal .pwSection{
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.04);
+  border-radius: 18px;
+  padding: 12px;
+}
+[data-theme="light"] #profileWizardModal .pwSection{
+  border-color: rgba(10,20,40,.12);
+  background: rgba(10,20,40,.03);
+}
+
+#profileWizardModal .pwLabel{
+  font-size: 12px;
+  font-weight: 800;
+  opacity: .75;
+  margin-bottom: 6px;
+}
+
+#profileWizardModal .pwHelp{
+  font-size: 13px;
+  opacity: .85;
+  margin-bottom: 10px;
+}
+
+#profileWizardModal .pwGrid{
+  display:grid;
+  gap: 10px;
+}
+
+/* Options (niveau / objectif) */
+#profileWizardModal .pwOptions{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:10px;
+}
+@media (min-width: 420px){
+  #profileWizardModal .pwOptions{ grid-template-columns: repeat(3, 1fr); }
+}
+
+#profileWizardModal .pwOption{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 10px 10px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+  user-select:none;
+}
+[data-theme="light"] #profileWizardModal .pwOption{
+  border-color: rgba(10,20,40,.14);
+  background: rgba(10,20,40,.04);
+}
+#profileWizardModal .pwOption input{ display:none; }
+#profileWizardModal .pwOption.active{
+  border-color: rgba(139,195,74,.55);
+  box-shadow: 0 0 0 3px rgba(139,195,74,.16);
+}
+#profileWizardModal .pwOption .txt{
+  font-size: 13px;
+  font-weight: 850;
+}
+
+/* Equipment checkboxes grid */
+#profileWizardModal .pwChecks{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:10px;
+}
+@media (min-width: 420px){
+  #profileWizardModal .pwChecks{ grid-template-columns: repeat(3, 1fr); }
+}
+#profileWizardModal .pwCheck{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding: 10px 10px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+}
+[data-theme="light"] #profileWizardModal .pwCheck{
+  border-color: rgba(10,20,40,.14);
+  background: rgba(10,20,40,.04);
+}
+#profileWizardModal .pwCheck input{
+  width:18px; height:18px;
+  accent-color: var(--accent);
+}
+
+/* Footer buttons */
+#profileWizardModal .pwFooter{
+  display:flex;
+  gap:10px;
+  padding-top: 12px;
+}
+#profileWizardModal .pwFooter .btn{ flex:1; }
 </style>
   <link rel="stylesheet" href="theme.css?v=20260221">
 
