@@ -4,6 +4,25 @@
    - aucun changement de layout (pas de flex/grid/pos)
    ========================= */
 
+/* =========================
+   Typography — SF Pro Display stack
+   ========================= */
+
+html, body{
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Display",
+    "SF Pro Text",
+    "Helvetica Neue",
+    Helvetica,
+    Arial,
+    sans-serif !important;
+
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+}
+
 /* ---------- DARK (principal) ---------- */
 :root{
   /* Palette Elite Minimal */
