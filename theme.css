@@ -1,173 +1,104 @@
 /* =========================
-   EliteTraining — Theme Global (SAFE)
-   Re-skin global sans toucher au layout
+   EliteTraining — Theme.css (SAFE GLOBAL SKIN)
+   - override variables + quelques composants hardcodés
+   - aucun changement de layout (pas de flex/grid/pos)
    ========================= */
 
-/* -------- Tokens Dark (principal) -------- */
+/* ---------- DARK (principal) ---------- */
 :root{
-  --et-bg: #0B0F14;
-  --et-card: #111827;
-  --et-card2: #0F172A;
-  --et-border: #1F2937;
+  /* Palette Elite Minimal */
+  --bg: #0B0F14 !important;
+  --card:#111827 !important;
+  --text:#F8FAFC !important;
+  --muted:#94A3B8 !important;
 
-  --et-text: #F8FAFC;
-  --et-muted: #94A3B8;
+  /* Vert performance */
+  --accent:#22C55E !important;
+  --accent2:#16A34A !important;
 
-  --et-accent: #22C55E;
-  --et-accent2: #16A34A;
+  /* Surfaces */
+  --btn:#1F2937 !important;
+  --btn2:#0F172A !important;
 
-  --et-danger: #EF4444;
-
-  --et-shadow: 0 12px 30px rgba(0,0,0,.28);
+  /* Ombres + danger */
+  --shadow: 0 12px 30px rgba(0,0,0,.28) !important;
+  --danger:#EF4444 !important;
 }
 
-/* -------- Tokens Light (premium) -------- */
+/* ---------- LIGHT (premium) ---------- */
 :root[data-theme="light"]{
-  --et-bg: #F8FAFC;
-  --et-card: #FFFFFF;
-  --et-card2: #F1F5F9;
-  --et-border: #E5E7EB;
+  --bg:#F8FAFC !important;
+  --card:#FFFFFF !important;
+  --text:#0F172A !important;
+  --muted:#475569 !important;
 
-  --et-text: #0F172A;
-  --et-muted: #475569;
+  --accent:#16A34A !important;
+  --accent2:#15803D !important;
 
-  --et-accent: #16A34A;
-  --et-accent2: #15803D;
+  --btn:#E5E7EB !important;
+  --btn2:#F1F5F9 !important;
 
-  --et-danger: #DC2626;
-
-  --et-shadow: 0 10px 26px rgba(10,20,40,.10);
+  --shadow: 0 10px 26px rgba(10,20,40,.10) !important;
+  --danger:#DC2626 !important;
 }
 
-/* -------- Global background + text -------- */
-html, body{
-  background: var(--et-bg) !important;
-  color: var(--et-text) !important;
-}
+/* ========== Overrides ciblés des couleurs hardcodées ========== */
 
-/* Remap tes variables existantes (celles déjà utilisées par ton CSS inline)
-   -> ça recolorise énormément de choses d’un coup */
-:root{
-  --bg: var(--et-bg) !important;
-  --card: var(--et-card) !important;
-  --text: var(--et-text) !important;
-  --muted: var(--et-muted) !important;
-  --accent: var(--et-accent) !important;
-  --accent2: var(--et-accent2) !important;
-
-  --btn: var(--et-card2) !important;
-  --btn2: rgba(255,255,255,.06) !important; /* fallback dark */
-  --shadow: var(--et-shadow) !important;
-  --danger: var(--et-danger) !important;
-}
-:root[data-theme="light"]{
-  --btn2: var(--et-card2) !important;
-}
-
-/* -------- Cards (classe .card chez toi) -------- */
-.card{
-  background: var(--et-card) !important;
-  border: 1px solid rgba(255,255,255,.10) !important;
-  box-shadow: var(--et-shadow) !important;
-}
-:root[data-theme="light"] .card{
-  border: 1px solid rgba(10,20,40,.10) !important;
-}
-
-/* -------- Topbar (actuellement très “rgba” bleu) -------- */
+/* Topbar : actuellement en rgba bleu-ish dans l’inline CSS */
 .topbar{
-  background: rgba(17,24,39,.75) !important; /* proche et-card */
+  background: rgba(17,24,39,.72) !important;
   border: 1px solid rgba(255,255,255,.10) !important;
-  box-shadow: 0 10px 22px rgba(0,0,0,.20) !important;
+  box-shadow: 0 10px 22px rgba(0,0,0,.18) !important;
 }
-:root[data-theme="light"] .topbar{
+[data-theme="light"] .topbar{
   background: rgba(255,255,255,.82) !important;
   border: 1px solid rgba(10,20,40,.10) !important;
   box-shadow: 0 10px 22px rgba(10,20,40,.10) !important;
 }
-
-/* -------- Text muted -------- */
-.muted, .small{
-  color: var(--et-muted) !important;
+.topbar::after{
+  background: rgba(255,255,255,.10) !important;
+}
+[data-theme="light"] .topbar::after{
+  background: rgba(10,20,40,.10) !important;
 }
 
-/* -------- Inputs -------- */
-input, textarea, select{
-  background: var(--et-card2) !important;
-  color: var(--et-text) !important;
-  border: 1px solid rgba(255,255,255,.10) !important;
+/* Switch coach : remplace le bleu checked par le vert Elite */
+.switch input:checked + .slider{
+  background: rgba(34,197,94,.42) !important;
+  border-color: rgba(34,197,94,.55) !important;
 }
-:root[data-theme="light"] input,
-:root[data-theme="light"] textarea,
-:root[data-theme="light"] select{
-  border: 1px solid rgba(10,20,40,.10) !important;
+[data-theme="light"] .switch input:checked + .slider{
+  background: rgba(22,163,74,.30) !important;
+  border-color: rgba(22,163,74,.45) !important;
 }
 
-/* -------- Buttons (global) -------- */
-.btn{
+/* Badges/phase : garde le style mais harmonise un peu */
+.badge, .phase{
+  color: var(--muted) !important;
   background: rgba(255,255,255,.06) !important;
-  color: var(--et-text) !important;
-  border: 1px solid rgba(255,255,255,.10) !important;
-  box-shadow: var(--et-shadow) !important;
 }
-:root[data-theme="light"] .btn{
-  background: var(--et-card2) !important;
-  border: 1px solid rgba(10,20,40,.10) !important;
+[data-theme="light"] .badge,
+[data-theme="light"] .phase{
+  background: rgba(10,20,40,.06) !important;
 }
 
-/* Primary -> Elite green, sans look “bleu/gradient” agressif */
+/* Boutons primary : supprime le “look bleu” en gardant ton gradient, mais vert */
 .btn.primary{
-  background: var(--et-accent) !important;
-  border-color: rgba(0,0,0,.18) !important;
-  color: #04110A !important;
+  background: linear-gradient(135deg, var(--accent), var(--accent2)) !important;
+  color:#061224 !important; /* ton style actuel */
 }
 
-/* Secondary / auth tabs / chips */
-.badge, .phase, .aiChip, .loadChip, .authTab{
-  background: rgba(255,255,255,.06) !important;
-  border: 1px solid rgba(255,255,255,.10) !important;
-  color: var(--et-text) !important;
-}
-:root[data-theme="light"] .badge,
-:root[data-theme="light"] .phase,
-:root[data-theme="light"] .aiChip,
-:root[data-theme="light"] .loadChip,
-:root[data-theme="light"] .authTab{
-  background: rgba(10,20,40,.04) !important;
-  border: 1px solid rgba(10,20,40,.10) !important;
-}
-
-/* Auth tab active : accent Elite (au lieu du bleu) */
-.authTab.active{
-  background: rgba(34,197,94,.18) !important;
+/* Bottom controls workout : ctrlBtn.primary est un gradient bleu hardcodé */
+body.inWorkout .btnbar .ctrlBtn.primary{
+  background: linear-gradient(135deg, rgba(34,197,94,.70), rgba(16,163,74,.85)) !important;
   border-color: rgba(34,197,94,.35) !important;
-}
-:root[data-theme="light"] .authTab.active{
-  background: rgba(22,163,74,.14) !important;
-  border-color: rgba(22,163,74,.28) !important;
+  color:#04110A !important;
 }
 
-/* Danger */
-.btn.danger{
-  background: var(--et-danger) !important;
-  border-color: rgba(0,0,0,.15) !important;
-  color: #fff !important;
+/* Next exercise overlay : bordure/teintes bleues -> vert Elite */
+.nextOverlay .nextText{
+  border: 1px solid rgba(34,197,94,.32) !important;
 }
-
-/* -------- Workout bottom controls -------- */
-.ctrlBtn{
-  background: rgba(255,255,255,.06) !important;
-  border: 1px solid rgba(255,255,255,.10) !important;
-  color: rgba(255,255,255,.92) !important;
-  box-shadow: 0 10px 26px rgba(0,0,0,.22) !important;
-}
-:root[data-theme="light"] .ctrlBtn{
-  background: rgba(10,20,40,.04) !important;
-  border: 1px solid rgba(10,20,40,.10) !important;
-  color: rgba(10,20,40,.86) !important;
-}
-.ctrlBtn.primary{
-  background: var(--et-accent) !important;
-  border-color: rgba(0,0,0,.18) !important;
-  color: #04110A !important;
+.nextOverlay .nextTag{
+  color: rgba(34,197,94,.90) !important;
 }
