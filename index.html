@@ -2244,8 +2244,10 @@ function buildPWProfile(uid, s1){
 }
 
 function setPWStep(step){
-  const s1 = document.getElementById("pwStep1");
-  const s2 = document.getElementById("pwStep2");
+
+  const p1 = document.getElementById("pwPage1");
+  const p2 = document.getElementById("pwPage2");
+
   const d1 = document.getElementById("pwDot1");
   const d2 = document.getElementById("pwDot2");
 
@@ -2254,17 +2256,21 @@ function setPWStep(step){
   const bFin  = document.getElementById("pwFinish");
 
   if(step === 1){
-    s1?.classList.remove("hidden");
-    s2?.classList.add("hidden");
+    p1?.classList.remove("hidden");
+    p2?.classList.add("hidden");
+
     d1 && (d1.className = "pwDot current");
     d2 && (d2.className = "pwDot");
 
     bBack?.classList.add("hidden");
     bNext?.classList.remove("hidden");
     bFin?.classList.add("hidden");
+
   }else{
-    s1?.classList.add("hidden");
-    s2?.classList.remove("hidden");
+
+    p1?.classList.add("hidden");
+    p2?.classList.remove("hidden");
+
     d1 && (d1.className = "pwDot");
     d2 && (d2.className = "pwDot current");
 
@@ -6254,7 +6260,7 @@ await reloadProgramsIntoSESSIONS();
     <div style="flex:1; overflow:auto; -webkit-overflow-scrolling:touch;">
       
       <!-- STEP 1 -->
-      <div id="pwStep1">
+      <div id="pwPage1">
         <div style="margin-bottom:10px; font-size:13px; opacity:.85;">Dis-nous en un peu plus sur toi :</div>
 
         <div style="display:grid; gap:10px;">
@@ -6294,7 +6300,7 @@ await reloadProgramsIntoSESSIONS();
       </div>
 
       <!-- STEP 2 (cachée pour l'instant) -->
-      <div id="pwStep2" class="hidden">
+      <div id="pwPage2" class="hidden">
         <div style="margin-bottom:10px; font-size:13px; opacity:.85;">De quel matériel disposes-tu ?</div>
 
         <div id="pwEquipmentList" class="pwEquipmentGrid"></div>
