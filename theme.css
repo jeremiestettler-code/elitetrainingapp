@@ -102,3 +102,20 @@ body.inWorkout .btnbar .ctrlBtn.primary{
 .nextOverlay .nextTag{
   color: rgba(34,197,94,.90) !important;
 }
+/* Coach switch — force vert (remplace le bleu du CSS inline) */
+html .switch input:checked + .slider{
+  background: rgba(34,197,94,.55) !important;
+  border-color: rgba(34,197,94,.70) !important;
+}
+
+/* Optionnel : un petit glow vert sympa (tu peux enlever si tu veux ultra sobre) */
+html .switch input:checked + .slider{
+  box-shadow: 0 0 0 3px rgba(34,197,94,.18) !important;
+}
+
+/* Light */
+html[data-theme="light"] .switch input:checked + .slider{
+  background: rgba(22,163,74,.32) !important;
+  border-color: rgba(22,163,74,.50) !important;
+  box-shadow: 0 0 0 3px rgba(22,163,74,.14) !important;
+}
