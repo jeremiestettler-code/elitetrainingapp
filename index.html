@@ -1495,6 +1495,57 @@
   font-weight: 700;
 }
 
+/* ===== Grille accessoires avec images ===== */
+
+#profileWizardModal .pwEquipmentGrid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:12px;
+}
+
+@media (min-width: 420px){
+  #profileWizardModal .pwEquipmentGrid{
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+#profileWizardModal .pwEquipCard{
+  position:relative;
+  border-radius: 14px;
+  overflow:hidden;
+  border: 2px solid transparent;
+  cursor:pointer;
+  background:#111;
+}
+
+#profileWizardModal .pwEquipCard img{
+  width:100%;
+  height:100px;
+  object-fit:cover;
+  display:block;
+  opacity:.85;
+}
+
+#profileWizardModal .pwEquipCard span{
+  position:absolute;
+  bottom:6px;
+  left:6px;
+  right:6px;
+  font-size:12px;
+  font-weight:900;
+  color:white;
+  text-shadow: 0 2px 4px rgba(0,0,0,.6);
+}
+
+#profileWizardModal .pwEquipCard input{
+  display:none;
+}
+
+#profileWizardModal .pwEquipCard.active{
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(139,195,74,.25);
+}
+
 </style>
   <link rel="stylesheet" href="theme.css?v=20260221">
 
@@ -2113,11 +2164,23 @@ function buildProfileWizardUIOnce(){
   if(eqHost && !eqHost.dataset.built){
     eqHost.dataset.built = "1";
     PW_EQUIPMENT.forEach((e)=>{
-      const row = document.createElement("label");
-      row.className = "pwCheck";
-      row.innerHTML = `<input id="pwEq_${e.key}" type="checkbox"><span class="txt" style="font-weight:850; font-size:13px;">${e.label}</span>`;
-      eqHost.appendChild(row);
-    });
+  const card = document.createElement("label");
+  card.className = "pwEquipCard";
+
+  card.innerHTML = `
+    <input id="pwEq_${e.key}" type="checkbox">
+    <img src="images/equipment/${e.key}.jpg" alt="${e.label}">
+    <span>${e.label}</span>
+  `;
+
+  card.addEventListener("click", ()=>{
+    const cb = card.querySelector("input");
+    cb.checked = !cb.checked;
+    card.classList.toggle("active", cb.checked);
+  });
+
+  eqHost.appendChild(card);
+});
   }
 
   // Footer initial
@@ -6234,7 +6297,7 @@ await reloadProgramsIntoSESSIONS();
       <div id="pwStep2" class="hidden">
         <div style="margin-bottom:10px; font-size:13px; opacity:.85;">De quel matériel disposes-tu ?</div>
 
-        <div id="pwEquipmentList" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"></div>
+        <div id="pwEquipmentList" class="pwEquipmentGrid"></div>
 
         <div style="height:12px;"></div>
 
