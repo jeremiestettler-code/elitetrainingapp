@@ -1904,11 +1904,249 @@ const firebaseConfig = {
     const screens = { login:$("screenLogin"), home:$("screenHome"), history:$("screenHistory"), workout:$("screenWorkout") };
 
     let currentUser = null;
-    function ukey(suffix){
+    let currentUserId = null;    function ukey(suffix){
       const uid = currentUser?.uid || "anon";
       return `${uid}__${suffix}`;
     }
 
+/***********************
+ * PROFILE WIZARD (Onboarding localStorage par user)
+ ***********************/
+const ET_PROFILE_PREFIX = "et_profile_v1_";
+function etProfileKey(uid){
+  return ET_PROFILE_PREFIX + String(uid || "");
+}
+function loadEtProfile(uid){
+  try{
+    const raw = localStorage.getItem(etProfileKey(uid));
+    if(!raw) return null;
+    const obj = JSON.parse(raw);
+    return (obj && typeof obj === "object") ? obj : null;
+  }catch(e){
+    return null;
+  }
+}
+function saveEtProfile(uid, profile){
+  try{
+    localStorage.setItem(etProfileKey(uid), JSON.stringify(profile || {}));
+  }catch(e){
+    console.warn("[profile] save failed", e);
+  }
+}
+
+const PW_LEVELS = ["Débutant","Intermédiaire","Avancé"];
+const PW_GOALS  = ["Force","Hypertrophie","Perte de gras","Recomp","Mobilité"];
+const PW_EQUIPMENT = [
+  { key:"dumbbells", label:"Haltères" },
+  { key:"bench", label:"Banc" },
+  { key:"barbell", label:"Barre + disques" },
+  { key:"pullup", label:"Barre traction" },
+  { key:"bands", label:"Élastiques" },
+  { key:"kettlebell", label:"Kettlebell" },
+  { key:"machines", label:"Machines" },
+  { key:"cables", label:"Poulies" },
+  { key:"bodyweight", label:"Poids du corps" },
+];
+
+function startProfileWizardIfNeeded(uid){
+  if(!uid) return;
+
+  // si déjà présent => rien à faire
+  const existing = loadEtProfile(uid);
+  if(existing){
+    window.eliteProfile = existing; // prêt pour la suite IA
+    return;
+  }
+
+  openProfileWizard(uid);
+}
+
+function openProfileWizard(uid){
+  const modal = document.getElementById("profileWizardModal");
+  if(!modal) return;
+
+  // IMPORTANT: remonter le modal dans <body> (tu as déjà cette fonction dans ton fichier) :contentReference[oaicite:3]{index=3}
+  try{ portalModalToBody("profileWizardModal"); }catch(e){}
+
+  // ferme "Réglages" si jamais il est ouvert
+  try{ document.getElementById("settingsModal")?.classList.add("hidden"); }catch(e){}
+
+  // prénom / nom
+  const displayName =
+    (currentUser?.displayName && String(currentUser.displayName).trim()) ||
+    (currentUser?.email ? String(currentUser.email).split("@")[0] : "!");
+  const nameEl = document.getElementById("pwUserName");
+  if(nameEl) nameEl.textContent = displayName;
+
+  buildProfileWizardUIOnce();
+
+  // état initial
+  setPWStep(1);
+
+  // close (on cache le bouton X car onboarding obligatoire)
+  const closeBtn = document.getElementById("pwClose");
+  if(closeBtn){
+    closeBtn.style.display = "none";
+    closeBtn.onclick = ()=>{ modal.classList.add("hidden"); };
+  }
+
+  // boutons
+  const btnBack = document.getElementById("pwBack");
+  const btnNext = document.getElementById("pwNext");
+  const btnFinish = document.getElementById("pwFinish");
+
+  if(btnBack) btnBack.onclick = ()=> setPWStep(1);
+
+  if(btnNext) btnNext.onclick = ()=>{
+    const s1 = readPWStep1();
+    if(!s1.ok){ alert(s1.msg); return; }
+    setPWStep(2);
+  };
+
+  if(btnFinish) btnFinish.onclick = ()=>{
+    const s1 = readPWStep1();
+    if(!s1.ok){ alert(s1.msg); setPWStep(1); return; }
+
+    const profile = buildPWProfile(uid, s1);
+    saveEtProfile(uid, profile);
+    window.eliteProfile = profile;
+
+    modal.classList.add("hidden");
+  };
+
+  // afficher
+  modal.classList.remove("hidden");
+}
+
+function buildProfileWizardUIOnce(){
+  // Niveau
+  const levelHost = document.getElementById("pwLevelGroup");
+  if(levelHost && !levelHost.dataset.built){
+    levelHost.dataset.built = "1";
+    PW_LEVELS.forEach((label)=>{
+      const w = document.createElement("label");
+      w.className = "pwOption";
+      w.innerHTML = `<input type="radio" name="pwLevel" value="${label}"><span class="txt">${label}</span>`;
+      w.onclick = ()=> selectPWOption(levelHost, label);
+      levelHost.appendChild(w);
+    });
+  }
+
+  // Objectif
+  const goalHost = document.getElementById("pwGoalGroup");
+  if(goalHost && !goalHost.dataset.built){
+    goalHost.dataset.built = "1";
+    PW_GOALS.forEach((label)=>{
+      const w = document.createElement("label");
+      w.className = "pwOption";
+      w.innerHTML = `<input type="radio" name="pwGoal" value="${label}"><span class="txt">${label}</span>`;
+      w.onclick = ()=> selectPWOption(goalHost, label);
+      goalHost.appendChild(w);
+    });
+  }
+
+  // Matériel
+  const eqHost = document.getElementById("pwEquipmentList");
+  if(eqHost && !eqHost.dataset.built){
+    eqHost.dataset.built = "1";
+    PW_EQUIPMENT.forEach((e)=>{
+      const row = document.createElement("label");
+      row.className = "pwCheck";
+      row.innerHTML = `<input id="pwEq_${e.key}" type="checkbox"><span class="txt" style="font-weight:850; font-size:13px;">${e.label}</span>`;
+      eqHost.appendChild(row);
+    });
+  }
+
+  // Footer initial
+  document.getElementById("pwBack")?.classList.add("hidden");
+  document.getElementById("pwFinish")?.classList.add("hidden");
+}
+
+function selectPWOption(host, value){
+  const opts = host.querySelectorAll(".pwOption");
+  opts.forEach(o=>{
+    const inp = o.querySelector("input");
+    const v = inp?.value || "";
+    if(v === value){
+      o.classList.add("active");
+      if(inp) inp.checked = true;
+    }else{
+      o.classList.remove("active");
+      if(inp) inp.checked = false;
+    }
+  });
+}
+
+function getPWSelected(groupId){
+  const host = document.getElementById(groupId);
+  const inp = host ? host.querySelector("input:checked") : null;
+  return inp ? String(inp.value || "") : "";
+}
+
+function readPWStep1(){
+  const ageRaw = (document.getElementById("pwAge")?.value || "").trim();
+  const age = Number(ageRaw);
+  const level = getPWSelected("pwLevelGroup");
+  const goal  = getPWSelected("pwGoalGroup");
+
+  if(!Number.isFinite(age) || age < 10 || age > 100) return { ok:false, msg:"Entre un âge valide (10–100)." };
+  if(!PW_LEVELS.includes(level)) return { ok:false, msg:"Choisis ton niveau." };
+  if(!PW_GOALS.includes(goal)) return { ok:false, msg:"Choisis ton objectif." };
+
+  return { ok:true, age: Math.round(age), level, goal };
+}
+
+function buildPWProfile(uid, s1){
+  const equipment = PW_EQUIPMENT
+    .filter(e=>document.getElementById("pwEq_"+e.key)?.checked)
+    .map(e=>e.key);
+
+  const other = (document.getElementById("pwOtherEquipment")?.value || "").trim();
+  const now = new Date().toISOString();
+
+  return {
+    v: 1,
+    uid: String(uid),
+    createdAt: now,
+    updatedAt: now,
+    age: s1.age,
+    level: s1.level,
+    goal: s1.goal,
+    equipment,
+    equipmentOther: other || ""
+  };
+}
+
+function setPWStep(step){
+  const s1 = document.getElementById("pwStep1");
+  const s2 = document.getElementById("pwStep2");
+  const d1 = document.getElementById("pwDot1");
+  const d2 = document.getElementById("pwDot2");
+
+  const bBack = document.getElementById("pwBack");
+  const bNext = document.getElementById("pwNext");
+  const bFin  = document.getElementById("pwFinish");
+
+  if(step === 1){
+    s1?.classList.remove("hidden");
+    s2?.classList.add("hidden");
+    d1 && (d1.className = "pwDot current");
+    d2 && (d2.className = "pwDot");
+
+    bBack?.classList.add("hidden");
+    bNext?.classList.remove("hidden");
+    bFin?.classList.add("hidden");
+  }else{
+    s1?.classList.add("hidden");
+    s2?.classList.remove("hidden");
+    d1 && (d1.className = "pwDot");
+    d2 && (d2.className = "pwDot current");
+
+    bBack?.classList.remove("hidden");
+    bNext?.classList.add("hidden");
+    bFin?.classList.remove("hidden");
+  }
+}
 
     function migrateTrophyStorage(uid){
       // Merge older keys into the current keys (non-destructive).
@@ -4970,6 +5208,8 @@ $("btnBackHome").addEventListener("click", ()=>{
     onAuthStateChanged(auth, async (user)=>{
       currentUser = user;
 
+      currentUserId = user ? user.uid : null;
+
       if(!user){
         topbarUserText = "Non connecté";
         $("userLine").textContent = topbarUserText;
@@ -5025,6 +5265,7 @@ await reloadProgramsIntoSESSIONS();
         loadCoachMode();
         renderHome();
         showScreen("home");
+        try{ startProfileWizardIfNeeded(user.uid); }catch(e){}
       }catch(e){
         showScreen("login");
         setMsg("Erreur chargement config/séances : " + (e?.message || e));
