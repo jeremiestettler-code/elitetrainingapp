@@ -404,3 +404,66 @@ html[data-theme="light"] .homeSection[data-section="complete"] .card:first-child
   animation: etBarsWipe 1100ms cubic-bezier(.2,.8,.2,1) forwards;
 }
 @keyframes etBarsWipe{ to{ transform: scaleX(1); } }
+/* ===== Splash Logo Layout ===== */
+.etSplashLogo{
+  display: grid;
+  place-items: center;
+  gap: 12px;
+}
+
+/* Taille mobile responsive */
+.etLogoMarkSvg{
+  width: min(220px, 70vw);
+  height: auto;
+  display: block;
+}
+
+/* ===== Wipe animation iOS safe ===== */
+.etLogoMarkSvg .etBars{
+  transform-origin: left center;
+  transform-box: fill-box;
+  transform: scaleX(0);
+  animation: etBarsWipe 1100ms cubic-bezier(.2,.8,.2,1) forwards;
+}
+
+@keyframes etBarsWipe{
+  to{ transform: scaleX(1); }
+}
+
+/* ===== Wordmark ===== */
+.etLogoWordmark{
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 26px;
+  letter-spacing: .2px;
+  opacity: 0;
+  transform: translateY(6px);
+  animation: etWordmarkIn 600ms cubic-bezier(.2,.8,.2,1) forwards;
+  animation-delay: 650ms;
+}
+
+.elitePart{
+  font-weight: 700;
+}
+
+.trainingPart{
+  font-weight: 400;
+}
+
+@keyframes etWordmarkIn{
+  to{ opacity:1; transform: translateY(0); }
+}
+
+/* Light mode text */
+html[data-theme="light"] .etLogoWordmark{
+  color:#0F172A;
+}
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce){
+  .etLogoMarkSvg .etBars,
+  .etLogoWordmark{
+    animation:none !important;
+    transform:none !important;
+    opacity:1 !important;
+  }
+}
