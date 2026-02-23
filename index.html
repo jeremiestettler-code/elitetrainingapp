@@ -5951,31 +5951,32 @@ window.showToast = function(message, duration=2500){
 </script>
 
 <div id="appToast" class="appToast"></div>
-	<script>
+<script>
 (function(){
   const splash = document.getElementById("appSplash");
   if(!splash) return;
 
-  // Sécurité: si quelque chose bloque, on cache au bout de 2.5s
-  const hardTimeout = setTimeout(hideSplash, 2500);
+  const MIN_MS = 1400;   // durée minimale d’affichage
+  const FADE_MS = 520;   // doit matcher etSplashOut
+  const start = Date.now();
 
   function hideSplash(){
     if(!splash || splash.classList.contains("hide")) return;
-    splash.classList.add("hide");
-    // on retire du DOM après l'anim
-    setTimeout(()=> splash.remove(), 650);
-    clearTimeout(hardTimeout);
+
+    const elapsed = Date.now() - start;
+    const wait = Math.max(0, MIN_MS - elapsed);
+
+    setTimeout(() => {
+      splash.classList.add("hide");
+      setTimeout(() => splash.remove(), FADE_MS + 80);
+    }, wait);
   }
 
-  // Quand la page est prête
-  window.addEventListener("load", () => {
-    // petite pause pour laisser l'UI s'afficher
-    setTimeout(hideSplash, 350);
-  });
+  // sécurité
+  setTimeout(hideSplash, 3500);
 
-  // Si l'app affiche déjà une session (cas rare), on cache direct
-  document.addEventListener("DOMContentLoaded", () => {
-    // si tu as un flag global "CURRENT_SESSION" ou autre, tu peux le mettre ici
+  window.addEventListener("load", () => {
+    hideSplash();
   });
 })();
 </script>
