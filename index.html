@@ -5970,34 +5970,32 @@ window.showToast = function(message, duration=2500){
   const splash = document.getElementById("appSplash");
   if(!splash) return;
 
-  // Durée totale de l’animation (wipe + texte)
-  const ANIMATION_TOTAL = 1500; // ms
-  const FADE_OUT = 520;         // doit matcher etSplashOut
-
-  const start = Date.now();
-  let pageLoaded = false;
+  const bars = splash.querySelector(".etBars");
+  const FADE_OUT = 520;       // doit matcher ton animation CSS de sortie
+  const EXTRA_DELAY = 1500;   // <- 1.5 secondes supplémentaires
 
   function hideSplash(){
     if(!splash || splash.classList.contains("hide")) return;
-
-    const elapsed = Date.now() - start;
-    const wait = Math.max(0, ANIMATION_TOTAL - elapsed);
-
-    setTimeout(() => {
-      splash.classList.add("hide");
-      setTimeout(() => splash.remove(), FADE_OUT + 60);
-    }, wait);
+    splash.classList.add("hide");
+    setTimeout(()=> splash.remove(), FADE_OUT + 60);
   }
 
+  // Quand la page est prête
   window.addEventListener("load", () => {
-    pageLoaded = true;
-    hideSplash();
-  });
 
-  // sécurité maximale (au cas où load ne se déclenche pas)
-  setTimeout(() => {
-    if(!pageLoaded) hideSplash();
-  }, 4000);
+    if(bars){
+      // On attend la fin réelle de l’animation wipe
+      bars.addEventListener("animationend", () => {
+        setTimeout(hideSplash, EXTRA_DELAY);
+      }, { once:true });
+
+      // Sécurité si animationend ne se déclenche pas
+      setTimeout(() => hideSplash(), 4000);
+    } else {
+      setTimeout(hideSplash, 2000);
+    }
+
+  });
 
 })();
 </script>
