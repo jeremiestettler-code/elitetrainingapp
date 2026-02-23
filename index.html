@@ -1463,6 +1463,38 @@
 #profileWizardModal .pwRibbon:after{
   right:-12px;
 }
+/* Champs style "barres claires" (comme maquette) */
+#profileWizardModal .pwField{
+  background: rgba(255,255,255,.92);
+  color: #0b0f0a;
+  border-radius: 8px;
+  padding: 12px 12px;
+  border: 1px solid rgba(0,0,0,.08);
+}
+
+[data-theme="light"] #profileWizardModal .pwField{
+  background: rgba(245,245,245,1);
+  color: #0b0f0a;
+}
+
+#profileWizardModal .pwField input,
+#profileWizardModal .pwField select{
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  padding: 0;
+  margin: 0;
+}
+
+#profileWizardModal .pwField input::placeholder{
+  color: rgba(0,0,0,.45);
+  font-weight: 700;
+}
+
 </style>
   <link rel="stylesheet" href="theme.css?v=20260221">
 
@@ -2074,30 +2106,7 @@ try{
 
 function buildProfileWizardUIOnce(){
   // Niveau
-  const levelHost = document.getElementById("pwLevelGroup");
-  if(levelHost && !levelHost.dataset.built){
-    levelHost.dataset.built = "1";
-    PW_LEVELS.forEach((label)=>{
-      const w = document.createElement("label");
-      w.className = "pwOption";
-      w.innerHTML = `<input type="radio" name="pwLevel" value="${label}"><span class="txt">${label}</span>`;
-      w.onclick = ()=> selectPWOption(levelHost, label);
-      levelHost.appendChild(w);
-    });
-  }
 
-  // Objectif
-  const goalHost = document.getElementById("pwGoalGroup");
-  if(goalHost && !goalHost.dataset.built){
-    goalHost.dataset.built = "1";
-    PW_GOALS.forEach((label)=>{
-      const w = document.createElement("label");
-      w.className = "pwOption";
-      w.innerHTML = `<input type="radio" name="pwGoal" value="${label}"><span class="txt">${label}</span>`;
-      w.onclick = ()=> selectPWOption(goalHost, label);
-      goalHost.appendChild(w);
-    });
-  }
 
   // Matériel
   const eqHost = document.getElementById("pwEquipmentList");
@@ -2140,8 +2149,8 @@ function getPWSelected(groupId){
 function readPWStep1(){
   const ageRaw = (document.getElementById("pwAge")?.value || "").trim();
   const age = Number(ageRaw);
-  const level = getPWSelected("pwLevelGroup");
-  const goal  = getPWSelected("pwGoalGroup");
+  const level = (document.getElementById("pwLevelSelect")?.value || "").trim();
+  const goal  = (document.getElementById("pwGoalSelect")?.value || "").trim();
 
   if(!Number.isFinite(age) || age < 10 || age > 100) return { ok:false, msg:"Entre un âge valide (10–100)." };
   if(!PW_LEVELS.includes(level)) return { ok:false, msg:"Choisis ton niveau." };
@@ -6188,18 +6197,36 @@ await reloadProgramsIntoSESSIONS();
         <div style="display:grid; gap:10px;">
           <div>
             <div style="font-size:12px; font-weight:800; opacity:.75; margin-bottom:6px;">Âge</div>
-            <input id="pwAge" class="input" type="number" inputmode="numeric" min="10" max="100" placeholder="Ex: 34" />
+            <div class="pwField">
+  <input id="pwAge" type="number" inputmode="numeric" min="10" max="100" placeholder="Ex: 34" />
+</div>
           </div>
 
-          <div>
-            <div style="font-size:12px; font-weight:800; opacity:.75; margin-bottom:6px;">Niveau</div>
-            <div id="pwLevelGroup" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"></div>
+        <div>
+          <div style="font-size:12px; font-weight:800; opacity:.75; margin-bottom:6px;">Niveau</div>
+          <div class="pwField">
+            <select id="pwLevelSelect">
+              <option value="">Choisir…</option>
+              <option value="Débutant">Débutant</option>
+              <option value="Intermédiaire">Intermédiaire</option>
+              <option value="Avancé">Avancé</option>
+            </select>
           </div>
+        </div>
 
-          <div>
-            <div style="font-size:12px; font-weight:800; opacity:.75; margin-bottom:6px;">Objectif</div>
-            <div id="pwGoalGroup" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"></div>
+        <div>
+          <div style="font-size:12px; font-weight:800; opacity:.75; margin-bottom:6px;">Objectif</div>
+          <div class="pwField">
+            <select id="pwGoalSelect">
+              <option value="">Choisir…</option>
+              <option value="Force">Force</option>
+              <option value="Hypertrophie">Hypertrophie</option>
+              <option value="Perte de gras">Perte de gras</option>
+              <option value="Recomp">Recomp</option>
+              <option value="Mobilité">Mobilité</option>
+            </select>
           </div>
+        </div>
         </div>
       </div>
 
