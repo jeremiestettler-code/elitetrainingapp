@@ -5976,28 +5976,35 @@ window.showToast = function(message, duration=2500){
   const splash = document.getElementById("appSplash");
   if(!splash) return;
 
-  const MIN_MS = 1400;   // durée minimale d’affichage
-  const FADE_MS = 520;   // doit matcher etSplashOut
+  // Durée totale de l’animation (wipe + texte)
+  const ANIMATION_TOTAL = 1500; // ms
+  const FADE_OUT = 520;         // doit matcher etSplashOut
+
   const start = Date.now();
+  let pageLoaded = false;
 
   function hideSplash(){
     if(!splash || splash.classList.contains("hide")) return;
 
     const elapsed = Date.now() - start;
-    const wait = Math.max(0, MIN_MS - elapsed);
+    const wait = Math.max(0, ANIMATION_TOTAL - elapsed);
 
     setTimeout(() => {
       splash.classList.add("hide");
-      setTimeout(() => splash.remove(), FADE_MS + 80);
+      setTimeout(() => splash.remove(), FADE_OUT + 60);
     }, wait);
   }
 
-  // sécurité
-  setTimeout(hideSplash, 3500);
-
   window.addEventListener("load", () => {
+    pageLoaded = true;
     hideSplash();
   });
+
+  // sécurité maximale (au cas où load ne se déclenche pas)
+  setTimeout(() => {
+    if(!pageLoaded) hideSplash();
+  }, 4000);
+
 })();
 </script>
 </body>
