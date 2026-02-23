@@ -355,3 +355,45 @@ html[data-theme="light"] .homeSection[data-section="complete"] .card:first-child
 @media (prefers-reduced-motion: reduce){
   .etSplashInner,.etLogoImg,.etSplashHint{ animation: none !important; }
 }
+/* =========================
+   Splash — SVG wipe animation (bars)
+   ========================= */
+
+.etLogoSvg{
+  width: 240px;          /* ajuste si besoin */
+  max-width: 70vw;
+  height: auto;
+}
+
+/* Wipe : révélation gauche -> droite */
+.etLogoSvg .etBar{
+  clip-path: inset(0 100% 0 0);
+  animation: etWipe 900ms cubic-bezier(.2,.8,.2,1) forwards;
+  will-change: clip-path;
+}
+
+/* Stagger (délais) */
+.etLogoSvg .etBar1{ animation-delay: 80ms; }
+.etLogoSvg .etBar2{ animation-delay: 180ms; }
+.etLogoSvg .etBar3{ animation-delay: 280ms; }
+
+@keyframes etWipe{
+  to{ clip-path: inset(0 0 0 0); }
+}
+
+/* Texte : petit fade/slide (optionnel, joli) */
+.etLogoSvg #EliteTraining{
+  opacity: 0;
+  transform: translateY(6px);
+  animation: etTextIn 600ms cubic-bezier(.2,.8,.2,1) forwards;
+  animation-delay: 360ms;
+}
+
+@keyframes etTextIn{
+  to{ opacity: 1; transform: translateY(0); }
+}
+
+/* Accessibilité */
+@media (prefers-reduced-motion: reduce){
+  .etLogoSvg .etBar, .etLogoSvg #EliteTraining{ animation: none !important; clip-path: inset(0 0 0 0) !important; opacity: 1 !important; transform: none !important; }
+}
