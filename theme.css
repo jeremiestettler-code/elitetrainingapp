@@ -215,3 +215,88 @@ html[data-theme="light"] .homeSection[data-section="complete"] .card:first-child
     linear-gradient(180deg, rgba(139,195,74,.08), rgba(255,255,255,0)) ,
     var(--card) !important;
 }
+/* =========================
+   Splash screen (in-app)
+   ========================= */
+
+.etSplash{
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  display: grid;
+  place-items: center;
+  background: #0B0F14;
+  padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
+}
+
+.etSplashInner{
+  display: grid;
+  place-items: center;
+  gap: 12px;
+  transform: translateY(6px);
+  animation: etSplashIn 520ms cubic-bezier(.2,.8,.2,1) forwards;
+}
+
+.etSplashHint{
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .3px;
+  color: rgba(248,250,252,.68);
+}
+
+/* SVG */
+.etLogo{
+  overflow: visible;
+}
+
+.etLogo .bar{
+  opacity: 0;
+  transform-origin: center;
+  animation: etBarIn 700ms cubic-bezier(.2,.8,.2,1) forwards;
+}
+.etLogo .bar.green{ fill: #8BC34A; }
+.etLogo .bar.gray{ fill: rgba(248,250,252,.60); }
+
+.etLogo .bar:nth-child(1){ animation-delay: 80ms; }
+.etLogo .bar:nth-child(2){ animation-delay: 160ms; }
+.etLogo .bar:nth-child(3){ animation-delay: 240ms; }
+
+.etLogoText{
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: .2px;
+  fill: #F8FAFC;
+  opacity: 0;
+  animation: etTextIn 650ms cubic-bezier(.2,.8,.2,1) forwards;
+  animation-delay: 260ms;
+}
+
+/* Hide */
+.etSplash.hide{
+  animation: etSplashOut 520ms cubic-bezier(.2,.8,.2,1) forwards;
+}
+
+@keyframes etSplashIn{
+  from{ opacity: 0; transform: translateY(10px); }
+  to{ opacity: 1; transform: translateY(0); }
+}
+@keyframes etSplashOut{
+  from{ opacity: 1; }
+  to{ opacity: 0; }
+}
+@keyframes etBarIn{
+  0%{ opacity: 0; transform: translateX(-10px) scale(.98); }
+  60%{ opacity: 1; transform: translateX(0) scale(1.02); }
+  100%{ opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes etTextIn{
+  from{ opacity: 0; transform: translateX(-6px); }
+  to{ opacity: 1; transform: translateX(0); }
+}
+
+/* Accessibilité */
+@media (prefers-reduced-motion: reduce){
+  .etSplashInner, .etLogo .bar, .etLogoText{ animation: none !important; opacity: 1 !important; transform: none !important; }
+}
