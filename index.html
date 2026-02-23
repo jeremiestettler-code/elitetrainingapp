@@ -2146,7 +2146,6 @@ try{
     // on garde aussi l'age + autre matériel dans Firestore (ne gêne pas)
     dob: profile.dob || "",
     age: profile.age,
-    equipmentOther: profile.equipmentOther || ""
   };
 
   // db existe déjà dans ton app (Firestore) + setDoc est déjà importé
@@ -2243,7 +2242,6 @@ function buildPWProfile(uid, s1){
     .filter(e=>document.getElementById("pwEq_"+e.key)?.checked)
     .map(e=>e.key);
 
-  const other = (document.getElementById("pwOtherEquipment")?.value || "").trim();
   const now = new Date().toISOString();
 
   return {
@@ -2256,7 +2254,6 @@ function buildPWProfile(uid, s1){
     level: s1.level,
     goal: s1.goal,
     equipment,
-    equipmentOther: other || ""
   };
 }
 
@@ -6337,9 +6334,6 @@ await reloadProgramsIntoSESSIONS();
         <div id="pwEquipmentList" class="pwEquipmentGrid"></div>
 
         <div style="height:12px;"></div>
-
-        <div style="font-size:12px; font-weight:800; opacity:.75; margin-bottom:6px;">Autre matériel (optionnel)</div>
-        <input id="pwOtherEquipment" class="input" placeholder="Ex: TRX, rameur…" />
       </div>
 
     </div>
