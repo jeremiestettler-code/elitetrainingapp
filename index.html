@@ -515,7 +515,7 @@
     /* Settings modal */
     .modal.hidden{display:none}
     .hidden{display:none !important;}
-    
+
     .modal{
       position:fixed; inset:0;
       background:rgba(0,0,0,.45);
@@ -2060,9 +2060,9 @@ const PW_EQUIPMENT = [
   { key:"pullup", label:"Barre traction" },
   { key:"bands", label:"Élastiques" },
   { key:"kettlebell", label:"Kettlebell" },
-  { key:"machines", label:"Machines" },
+  { key:"rameur", label:"Rameur" },
   { key:"cables", label:"Poulies" },
-  { key:"bodyweight", label:"Poids du corps" },
+  { key:"trx", label:"TRX" },
 ];
 
 function startProfileWizardIfNeeded(uid){
@@ -2132,7 +2132,16 @@ try{
   // mapping wizard -> profil Firestore existant
   const levelMap = { "Débutant":"debutant", "Intermédiaire":"intermediaire", "Avancé":"avance" };
   const goalMap  = { "Force":"force", "Hypertrophie":"hypertrophie", "Perte de gras":"perte_poids", "Recomp":"reprise", "Mobilité":"sport" };
-  const equipMap = { dumbbells:"halteres", bench:"banc", barbell:"barre", cables:"poulie", bands:"elastiques", kettlebell:"kettlebell" };
+  const equipMap = {
+  dumbbells:"halteres",
+  bench:"banc",
+  barbell:"barre",
+  cables:"poulie",
+  bands:"elastiques",
+  kettlebell:"kettlebell",
+  rameur:"rameur",
+  trx:"trx"
+};
 
   const fs = {
     level: levelMap[profile.level] || "intermediaire",
@@ -2141,6 +2150,7 @@ try{
       .map(k => equipMap[k])
       .filter(Boolean),
     // on garde aussi l'age + autre matériel dans Firestore (ne gêne pas)
+    dob: profile.dob || "",
     age: profile.age,
     equipmentOther: profile.equipmentOther || ""
   };
@@ -2212,16 +2222,26 @@ function getPWSelected(groupId){
 }
 
 function readPWStep1(){
-  const ageRaw = (document.getElementById("pwAge")?.value || "").trim();
-  const age = Number(ageRaw);
+  const dob = (document.getElementById("pwDob")?.value || "").trim(); // format YYYY-MM-DD
   const level = (document.getElementById("pwLevelSelect")?.value || "").trim();
   const goal  = (document.getElementById("pwGoalSelect")?.value || "").trim();
 
-  if(!Number.isFinite(age) || age < 10 || age > 100) return { ok:false, msg:"Entre un âge valide (10–100)." };
+  // Validation date
+  if(!dob) return { ok:false, msg:"Choisis ta date de naissance." };
+  const d = new Date(dob + "T00:00:00");
+  if(!Number.isFinite(d.getTime())) return { ok:false, msg:"Date de naissance invalide." };
+
+  // Calcul âge
+  const now = new Date();
+  let age = now.getFullYear() - d.getFullYear();
+  const m = now.getMonth() - d.getMonth();
+  if(m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
+
+  if(age < 10 || age > 100) return { ok:false, msg:"Âge calculé invalide (10–100)." };
   if(!PW_LEVELS.includes(level)) return { ok:false, msg:"Choisis ton niveau." };
   if(!PW_GOALS.includes(goal)) return { ok:false, msg:"Choisis ton objectif." };
 
-  return { ok:true, age: Math.round(age), level, goal };
+  return { ok:true, dob, age, level, goal };
 }
 
 function buildPWProfile(uid, s1){
@@ -2237,6 +2257,7 @@ function buildPWProfile(uid, s1){
     uid: String(uid),
     createdAt: now,
     updatedAt: now,
+    dob: s1.dob,
     age: s1.age,
     level: s1.level,
     goal: s1.goal,
@@ -6277,12 +6298,15 @@ await reloadProgramsIntoSESSIONS();
         <div style="margin-bottom:10px; font-size:13px; opacity:.85;">Dis-nous en un peu plus sur toi :</div>
 
         <div style="display:grid; gap:10px;">
-          <div>
-            <div style="font-size:12px; font-weight:800; opacity:.75; margin-bottom:6px;">Âge</div>
-            <div class="pwField">
-  <input id="pwAge" type="number" inputmode="numeric" min="10" max="100" placeholder="Ex: 34" />
-</div>
-          </div>
+    <div>
+      <div style="font-size:12px; font-weight:800; opacity:.75; margin-bottom:6px;">Date de naissance</div>
+      <div class="pwField">
+        <input id="pwDob" type="date" />
+      </div>
+      <div style="font-size:12px; opacity:.75; margin-top:6px;">
+        (Ton âge se mettra à jour automatiquement)
+      </div>
+    </div>
 
         <div>
           <div style="font-size:12px; font-weight:800; opacity:.75; margin-bottom:6px;">Niveau</div>
