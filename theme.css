@@ -397,3 +397,10 @@ html[data-theme="light"] .homeSection[data-section="complete"] .card:first-child
 @media (prefers-reduced-motion: reduce){
   .etLogoSvg .etBar, .etLogoSvg #EliteTraining{ animation: none !important; clip-path: inset(0 0 0 0) !important; opacity: 1 !important; transform: none !important; }
 }
+.etLogoSvg .etBars{
+  transform-origin: left center;
+  transform-box: fill-box;
+  transform: scaleX(0);
+  animation: etBarsWipe 1100ms cubic-bezier(.2,.8,.2,1) forwards;
+}
+@keyframes etBarsWipe{ to{ transform: scaleX(1); } }
