@@ -2003,14 +2003,36 @@ function openProfileWizard(uid){
     setPWStep(2);
   };
 
-  if(btnFinish) btnFinish.onclick = ()=>{
+  if(btnFinish) btnFinish.onclick = async ()=>{
     const s1 = readPWStep1();
     if(!s1.ok){ alert(s1.msg); setPWStep(1); return; }
 
     const profile = buildPWProfile(uid, s1);
     saveEtProfile(uid, profile);
     window.eliteProfile = profile;
+// --- Sync vers Firestore (pour que "Profil" affiche les infos) ---
+try{
+  // mapping wizard -> profil Firestore existant
+  const levelMap = { "Débutant":"debutant", "Intermédiaire":"intermediaire", "Avancé":"avance" };
+  const goalMap  = { "Force":"force", "Hypertrophie":"hypertrophie", "Perte de gras":"perte_poids", "Recomp":"reprise", "Mobilité":"sport" };
+  const equipMap = { dumbbells:"halteres", bench:"banc", barbell:"barre", cables:"poulie", bands:"elastiques", kettlebell:"kettlebell" };
 
+  const fs = {
+    level: levelMap[profile.level] || "intermediaire",
+    goal:  goalMap[profile.goal] || "force",
+    equipment: (profile.equipment || [])
+      .map(k => equipMap[k])
+      .filter(Boolean),
+    // on garde aussi l'age + autre matériel dans Firestore (ne gêne pas)
+    age: profile.age,
+    equipmentOther: profile.equipmentOther || ""
+  };
+
+  // db existe déjà dans ton app (Firestore) + setDoc est déjà importé
+  await setDoc(doc(db, "users", uid, "profile", "main"), fs, { merge:true });
+}catch(e){
+  console.warn("[profile] Firestore sync failed (ok)", e);
+}
     modal.classList.add("hidden");
   };
 
