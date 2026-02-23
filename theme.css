@@ -300,3 +300,13 @@ html[data-theme="light"] .homeSection[data-section="complete"] .card:first-child
 @media (prefers-reduced-motion: reduce){
   .etSplashInner, .etLogo .bar, .etLogoText{ animation: none !important; opacity: 1 !important; transform: none !important; }
 }
+.etLogoImg{
+  width: 220px;
+  max-width: 70vw;
+  animation: etSplashLogo 600ms cubic-bezier(.2,.8,.2,1);
+}
+
+@keyframes etSplashLogo{
+  from{ opacity:0; transform: translateY(8px) scale(.98); }
+  to{ opacity:1; transform: translateY(0) scale(1); }
+}
