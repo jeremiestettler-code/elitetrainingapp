@@ -119,3 +119,24 @@ html[data-theme="light"] .switch input:checked + .slider{
   border-color: rgba(22,163,74,.50) !important;
   box-shadow: 0 0 0 3px rgba(22,163,74,.14) !important;
 }
+/* Dots progression (remplace bleu 59,130,246) */
+.dot.current{
+  background: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(34,197,94,.25) !important;
+}
+
+[data-theme="light"] .dot.current{
+  box-shadow: 0 0 0 3px rgba(22,163,74,.20) !important;
+}
+
+/* États actifs génériques */
+.active,
+.isActive{
+  color: var(--accent) !important;
+}
+
+/* Bordures highlight */
+.highlight,
+.card.active{
+  border-color: rgba(34,197,94,.35) !important;
+}
