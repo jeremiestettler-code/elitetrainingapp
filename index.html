@@ -2244,6 +2244,17 @@ function buildPWProfile(uid, s1){
 }
 
 function setPWStep(step){
+    // --- Change le titre et le bandeau pour que ça fasse vraiment 2 "pages"
+  const titleEl = document.getElementById("pwTitle");
+  const ribbonEl = document.getElementById("pwRibbonText");
+
+  if(step === 1){
+    if(titleEl) titleEl.textContent = "Bienvenue " + ((currentUser?.displayName?.trim()) || (currentUser?.email ? currentUser.email.split("@")[0] : "!"));
+    if(ribbonEl) ribbonEl.textContent = "Complète ton profil";
+  }else{
+    if(titleEl) titleEl.textContent = "Ton matériel";
+    if(ribbonEl) ribbonEl.textContent = "Sélectionne tes accessoires";
+  }
 
   const p1 = document.getElementById("pwPage1");
   const p2 = document.getElementById("pwPage2");
@@ -6249,7 +6260,7 @@ await reloadProgramsIntoSESSIONS();
       </div>
       <button class="icon-btn" id="pwClose" aria-label="Fermer">✕</button>
     </div>
-<div class="pwRibbon">Complète ton profil</div>
+<div class="pwRibbon" id="pwRibbonText">Complète ton profil</div>
     <!-- Progress -->
     <div style="display:flex; gap:8px; margin:12px 0 16px 0;">
       <div id="pwDot1" style="width:10px; height:10px; border-radius:99px; background:var(--accent);"></div>
