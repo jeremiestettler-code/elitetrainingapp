@@ -857,7 +857,26 @@
   font-weight: 900;
   opacity: .85;
 }
+.homeTrophyRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
 
+.homeLastTrophyImg{
+  width: 54px;
+  height: 54px;
+  object-fit: contain;
+  border-radius: 16px;
+  padding: 6px;
+  background: rgba(0,0,0,.14);
+  border: 1px solid rgba(255,255,255,.10);
+}
+[data-theme="light"] .homeLastTrophyImg{
+  background: rgba(255,255,255,.75);
+  border-color: rgba(10,20,40,.10);
+}
     /* ===== TROPHÉES ===== */
     .trophySection{
       margin-top: 12px;
@@ -1841,8 +1860,14 @@
   </button>
 
   <button class="homeTrophiesCard" id="homeTrophiesBtn" type="button">
-    <div class="homeTrophiesTitle">Trophies</div>
-    <div class="homeTrophiesSub">Congrats!</div>
+    <button class="homeTrophiesCard" id="homeTrophiesBtn" type="button">
+        <div class="homeTrophyRow">
+    <div>
+      <div class="homeTrophiesTitle">Trophies</div>
+      <div class="homeTrophiesSub">Congrats!</div>
+    </div>
+    <img id="homeLastTrophyImg" class="homeLastTrophyImg" alt="" style="display:none;" />
+  </div>
   </button>
 
 </div>
@@ -4476,7 +4501,7 @@ async function fsLogWorkout(workout){
   type:"weeks", threshold:52
 },
     ];
-
+window.TROPHIES = TROPHIES;
     function loadTrophyState(){
       try{ return JSON.parse(localStorage.getItem(TROPHY_KEY()) || "{}") || {}; }
       catch(e){ return {}; }
@@ -7015,6 +7040,49 @@ function updateHomePremiumUI(){
     if(w) w.textContent = workouts;
     if(t) t.textContent = formatTimeFromSeconds(totalSec);
     if(s) s.textContent = streak;
+  }catch(e){}
+    // --------- Last trophy image ----------
+  try{
+    const img = document.getElementById("homeLastTrophyImg");
+    if(img){
+      const uid = window.currentUser?.uid || window.currentUserId || null;
+      if(!uid){
+        img.style.display = "none";
+      }else{
+        // state: { trophyId: true, ... }
+        const state = JSON.parse(localStorage.getItem(`${uid}__trophies_v1`) || "{}") || {};
+        const pending = JSON.parse(localStorage.getItem(`${uid}__trophies_pending_v1`) || "[]");
+        const defs = Array.isArray(window.TROPHIES) ? window.TROPHIES : [];
+
+        // 1) le dernier pending si dispo
+        let def = null;
+        const pendingId = (Array.isArray(pending) && pending.length) ? pending[pending.length-1] : null;
+        if(pendingId) def = defs.find(t=>t.id === pendingId) || null;
+
+        // 2) sinon: dernier trophée débloqué (le plus "avancé" dans la liste)
+        if(!def && defs.length){
+          for(let i=defs.length-1; i>=0; i--){
+            if(state[defs[i].id]){ def = defs[i]; break; }
+          }
+        }
+
+        if(!def){
+          img.style.display = "none";
+        }else{
+          // set image
+          const map = window.IMG || {};
+          const path =
+            const path =
+            map[def.iconKey] ||
+            map[def.id] ||
+            `images/trophies/${def.iconKey}.png`;
+
+          img.src = path;
+          img.alt = def.label || def.title || "Trophée";
+          img.style.display = "block";
+        }
+      }
+    }
   }catch(e){}
 }
 // Expose pour que le module Firebase puisse rafraîchir après login
