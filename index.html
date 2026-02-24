@@ -6885,6 +6885,131 @@ window.showToast = function(message, duration=2500){
   });
 
 })();
+
+/* ======================================================
+   HOME PREMIUM — INIT
+====================================================== */
+
+function updateHomePremiumUI(){
+  // --------- Athlete name ----------
+  try{
+    const profile =
+      window.firestoreProfile ||
+      JSON.parse(localStorage.getItem("profile_main") || "null") ||
+      JSON.parse(localStorage.getItem("profile") || "null");
+
+    const firstName = profile?.firstName || profile?.prenom || profile?.name || "Athlète";
+    const elName = document.getElementById("homeAthleteName");
+    if(elName) elName.textContent = firstName;
+  }catch(e){}
+
+  // --------- Stats ----------
+  try{
+    const history = JSON.parse(localStorage.getItem("history") || "[]");
+
+    const workouts = history.length;
+
+    const totalSeconds = history.reduce((acc,s)=>{
+      return acc + (Number(s.durationSeconds)||0);
+    },0);
+
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+    const streak = computeWeeklyStreak(history);
+
+    const w = document.getElementById("homeStatWorkouts");
+    const t = document.getElementById("homeStatTime");
+    const s = document.getElementById("homeStatStreak");
+
+    if(w) w.textContent = workouts;
+    if(t) t.textContent = hours > 0 ? `${hours}h` : `${minutes}m`;
+    if(s) s.textContent = streak;
+  }catch(e){}
+}
+
+
+/* ======================================================
+   WEEKLY STREAK
+====================================================== */
+
+function computeWeeklyStreak(history){
+  if(!history || !history.length) return 0;
+
+  const weeks = new Set();
+
+  history.forEach(s=>{
+    if(!s.date) return;
+    const d = new Date(s.date);
+    const year = d.getFullYear();
+    const week = getWeekNumber(d);
+    weeks.add(year + "-" + week);
+  });
+
+  // streak simple = nombre total de semaines actives
+  return weeks.size;
+}
+
+function getWeekNumber(d){
+  d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+}
+
+
+/* ======================================================
+   HOME BUTTONS
+====================================================== */
+
+function initHomePremiumButtons(){
+
+  const trending = document.getElementById("homeTrendingBtn");
+  const ai = document.getElementById("homeAIProgramBtn");
+  const stats = document.getElementById("homeStatsBtn");
+  const trophies = document.getElementById("homeTrophiesBtn");
+
+  if(trending){
+    trending.addEventListener("click", ()=>{
+      // Affiche simplement le legacy (liste des séances)
+      const legacy = document.getElementById("homeLegacy");
+      if(legacy){
+        legacy.scrollIntoView({behavior:"smooth"});
+      }
+    });
+  }
+
+  if(ai){
+    ai.addEventListener("click", ()=>{
+      const btn = document.getElementById("btnCreateSession");
+      if(btn) btn.click();
+    });
+  }
+
+  if(stats){
+    stats.addEventListener("click", ()=>{
+      if(typeof openHistory === "function") openHistory();
+    });
+  }
+
+  if(trophies){
+    trophies.addEventListener("click", ()=>{
+      if(typeof openTrophies === "function") openTrophies();
+    });
+  }
+}
+
+
+/* ======================================================
+   AUTO INIT
+====================================================== */
+
+document.addEventListener("DOMContentLoaded", ()=>{
+  updateHomePremiumUI();
+  initHomePremiumButtons();
+});
+
 </script>
 </body>
 </html>
