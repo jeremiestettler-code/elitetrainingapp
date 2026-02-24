@@ -99,7 +99,6 @@
   appearance:none;
   border:none;
   background:transparent;
-  color:rgba(255,255,255,.65);
   width:56px;
   height:56px;
   border-radius:999px;
@@ -108,50 +107,47 @@
   align-items:center;
   justify-content:center;
 
-  transition:.2s ease;
+  position:relative;
+  color:rgba(255,255,255,.72);
+  transition:transform .15s ease, color .15s ease;
 }
+
 [data-theme="light"] .navBtn{
-  color:rgba(10,20,40,.65);
+  color:rgba(10,20,40,.68);
+}
+
+.navBtn .navIco{
+  width:24px;
+  height:24px;
+  display:block;
+  opacity:.92;
+}
+
+.navBtn::before{
+  content:"";
+  position:absolute;
+  width:46px;
+  height:46px;
+  border-radius:999px;
+  background:transparent;
+  transform:scale(.9);
+  transition:all .18s ease;
 }
 
 .navBtn.active{
-  background: linear-gradient(135deg, rgba(139,195,74,.95), rgba(139,195,74,.55));
-  color:#0c111a;
-  box-shadow: 0 8px 20px rgba(139,195,74,.25);
+  color: rgba(139,195,74,1);
 }
 
-/* Rond vert derrière l’icône du bouton actif */
-.navBtn.active .navIco{
-  position: relative;
-  display: inline-flex;
-  align-items:center;
-  justify-content:center;
-  width: 38px;
-  height: 38px;
-  border-radius: 999px;
-  background: rgba(139,195,74,.95);
-  color: #0c111a;
-  box-shadow: 0 10px 22px rgba(139,195,74,.22);
-}
-.navBtn:active{ transform: scale(.98); }
-
-.navHome{
-  width: 56px;
-  height: 56px;
-  border-radius: 999px;
-  border: 1px solid rgba(139,195,74,.30);
-  background: linear-gradient(135deg, rgba(139,195,74,.95), rgba(139,195,74,.55));
-  box-shadow: 0 10px 22px rgba(139,195,74,.22);
-
-  display:flex;
-  align-items:center;
-  justify-content:center;
+.navBtn.active::before{
+  background: rgba(139,195,74,.16);
+  box-shadow:
+    0 10px 26px rgba(139,195,74,.18),
+    0 0 0 1px rgba(139,195,74,.22) inset;
+  transform:scale(1);
 }
 
-.navHome .navIco{
-  width:22px;
-  height:22px;
-  transition:.2s ease;
+.navBtn:active{
+  transform: scale(.98);
 }
 
 /* On cache la bottom nav pendant la séance (coach) */
@@ -7013,28 +7009,36 @@ window.showToast = function(message, duration=2500){
 <nav id="bottomNav" class="bottomNav" aria-label="Navigation">
   <div class="bottomNavInner">
 
-    <!-- Séances -->
-    <button class="navBtn" id="navSessions" type="button" aria-label="Séances">
-      <svg class="navIco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M4 8h16M4 16h16M7 4v4M17 16v4"/>
-      </svg>
-    </button>
+<!-- Séances -->
+<button class="navBtn" id="navSessions" type="button" aria-label="Séances">
+  <svg class="navIco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <!-- Dumbbell -->
+    <path d="M6 10v4"/>
+    <path d="M8 9v6"/>
+    <path d="M16 9v6"/>
+    <path d="M18 10v4"/>
+    <path d="M8 12h8"/>
+  </svg>
+</button>
 
-    <!-- Home -->
-    <button class="navBtn" id="navHome" type="button" aria-label="Accueil">
-      <svg class="navIco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M3 11l9-7 9 7"/>
-        <path d="M9 22V12h6v10"/>
-      </svg>
-    </button>
+<!-- Home -->
+<button class="navBtn" id="navHome" type="button" aria-label="Accueil">
+  <svg class="navIco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M3 10.5l9-7 9 7"/>
+    <path d="M8.5 21V12.5h7V21"/>
+  </svg>
+</button>
 
-    <!-- Profil -->
-    <button class="navBtn" id="navProfile" type="button" aria-label="Profil">
-      <svg class="navIco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="8" r="4"/>
-        <path d="M4 22c2-4 14-4 16 0"/>
-      </svg>
-    </button>
+<!-- Profil -->
+<button class="navBtn" id="navProfile" type="button" aria-label="Profil">
+  <svg class="navIco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M20 21a8 8 0 0 0-16 0"/>
+    <circle cx="12" cy="9" r="4"/>
+  </svg>
+</button>
 
   </div>
 </nav>
