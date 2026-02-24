@@ -5662,6 +5662,10 @@ await reloadProgramsIntoSESSIONS();
         loadCoachMode();
         renderHome();
         showScreen("home");
+        // Rafraîchit la Home premium une fois l'utilisateur dispo (nom + stats)
+setTimeout(()=>{ 
+  if(window.updateHomePremiumUI) window.updateHomePremiumUI(); 
+}, 50);
         try{ startProfileWizardIfNeeded(user.uid); }catch(e){}
       }catch(e){
         showScreen("login");
@@ -7013,7 +7017,8 @@ function updateHomePremiumUI(){
     if(s) s.textContent = streak;
   }catch(e){}
 }
-
+// Expose pour que le module Firebase puisse rafraîchir après login
+window.updateHomePremiumUI = updateHomePremiumUI;
 
 /* ======================================================
    WEEKLY STREAK
