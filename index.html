@@ -5601,7 +5601,12 @@ $("btnBackHome").addEventListener("click", ()=>{
       currentUser = user;
 
       currentUserId = user ? user.uid : null;
-
+// Expose pour les scripts non-module (Home premium, etc.)
+window.currentUser = currentUser;
+window.currentUserId = currentUserId;
+window.openHistory = openHistory;
+window.showScreen = showScreen;
+window.loadWorkoutHistory = loadWorkoutHistory;
       if(!user){
         topbarUserText = "Non connecté";
         $("userLine").textContent = topbarUserText;
@@ -6894,8 +6899,8 @@ window.showToast = function(message, duration=2500){
 function getAthleteName(){
   // 1) Firebase Auth (priorité)
   try{
-    const u = (typeof currentUser !== "undefined" && currentUser) ? currentUser : null;
-    if(u){
+      const u = window.currentUser || null;
+      if(u){
       const dn = String(u.displayName || "").trim();
       if(dn) return dn.split(" ")[0]; // Prénom
       const em = String(u.email || "").trim();
@@ -6992,7 +6997,7 @@ function updateHomePremiumUI(){
   // --------- Stats depuis TON système réel ----------
   try{
     // loadWorkoutHistory() existe déjà dans ton code
-    const hist = (typeof loadWorkoutHistory === "function") ? loadWorkoutHistory() : [];
+    const hist = (typeof window.loadWorkoutHistory === "function") ? window.loadWorkoutHistory() : [];
     const workouts = Array.isArray(hist) ? hist.length : 0;
 
     const totalSec = (Array.isArray(hist) ? hist : []).reduce((acc, h)=> acc + (Number(h?.durationSec)||0), 0);
@@ -7077,7 +7082,7 @@ function initHomePremiumButtons(){
 if(trophies){
   trophies.addEventListener("click", ()=>{
     // Tes trophées sont dans l'écran Historique (section trophySection)
-    if(typeof openHistory === "function") openHistory();
+    if(typeof window.openHistory === "function") window.openHistory();
 
     setTimeout(()=>{
       const sec = document.getElementById("trophySection");
