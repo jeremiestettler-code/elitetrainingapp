@@ -6890,40 +6890,120 @@ window.showToast = function(message, duration=2500){
    HOME PREMIUM — INIT
 ====================================================== */
 
-function updateHomePremiumUI(){
-  // --------- Athlete name ----------
+function getAthleteName(){
+  // 1) Firebase Auth (priorité)
   try{
-    const profile =
-      window.firestoreProfile ||
-      JSON.parse(localStorage.getItem("profile_main") || "null") ||
-      JSON.parse(localStorage.getItem("profile") || "null");
-
-    const firstName = profile?.firstName || profile?.prenom || profile?.name || "Athlète";
-    const elName = document.getElementById("homeAthleteName");
-    if(elName) elName.textContent = firstName;
+    const u = (typeof currentUser !== "undefined" && currentUser) ? currentUser : null;
+    if(u){
+      const dn = String(u.displayName || "").trim();
+      if(dn) return dn.split(" ")[0]; // Prénom
+      const em = String(u.email || "").trim();
+      if(em && em.includes("@")) return em.split("@")[0]; // fallback email prefix
+    }
   }catch(e){}
 
-  // --------- Stats ----------
+  // 2) Fallback : profile wizard local (n’a pas de prénom mais au cas où tu l’ajoutes plus tard)
   try{
-    const history = JSON.parse(localStorage.getItem("history") || "[]");
+    const p = window.eliteProfile || null;
+    const maybe = String(p?.firstName || p?.prenom || p?.name || "").trim();
+    if(maybe) return maybe.split(" ")[0];
+  }catch(e){}
 
-    const workouts = history.length;
+  return "—";
+}
 
-    const totalSeconds = history.reduce((acc,s)=>{
-      return acc + (Number(s.durationSeconds)||0);
-    },0);
+function formatTimeFromSeconds(totalSec){
+  totalSec = Math.max(0, Number(totalSec)||0);
+  const hours = Math.floor(totalSec / 3600);
+  const minutes = Math.floor((totalSec % 3600) / 60);
 
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
+  if(hours >= 1) return `${hours}h`;
+  return `${minutes}m`;
+}
 
-    const streak = computeWeeklyStreak(history);
+// Streak = nombre de semaines consécutives (au moins 1 séance) jusqu’à la semaine courante
+function computeWeeklyStreakFromHistory(history){
+  if(!Array.isArray(history) || !history.length) return 0;
+
+  const weekSet = new Set();
+  for(const h of history){
+    const ts = Number(h?.ts || 0) || (h?.date ? Date.parse(h.date) : 0);
+    if(!ts) continue;
+    const d = new Date(ts);
+    const yw = yearWeekKey(d);
+    weekSet.add(yw);
+  }
+
+  // semaine courante
+  const now = new Date();
+  let y = isoWeekYear(now);
+  let w = isoWeekNumber(now);
+
+  let streak = 0;
+  // remonte jusqu’à 260 semaines max (~5 ans) pour éviter boucle infinie
+  for(let i=0;i<260;i++){
+    const key = `${y}-${String(w).padStart(2,"0")}`;
+    if(!weekSet.has(key)) break;
+    streak++;
+
+    // semaine précédente
+    const prev = prevIsoWeek(y, w);
+    y = prev.year;
+    w = prev.week;
+  }
+  return streak;
+}
+
+// ISO helpers
+function isoWeekNumber(date){
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+function isoWeekYear(date){
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  return d.getUTCFullYear();
+}
+function yearWeekKey(date){
+  const y = isoWeekYear(date);
+  const w = isoWeekNumber(date);
+  return `${y}-${String(w).padStart(2,"0")}`;
+}
+function weeksInIsoYear(year){
+  // 28 décembre est toujours dans la dernière semaine ISO
+  return isoWeekNumber(new Date(Date.UTC(year, 11, 28)));
+}
+function prevIsoWeek(year, week){
+  if(week > 1) return { year, week: week-1 };
+  const py = year - 1;
+  return { year: py, week: weeksInIsoYear(py) };
+}
+
+function updateHomePremiumUI(){
+  // --------- Athlete name ----------
+  const elName = document.getElementById("homeAthleteName");
+  if(elName) elName.textContent = getAthleteName();
+
+  // --------- Stats depuis TON système réel ----------
+  try{
+    // loadWorkoutHistory() existe déjà dans ton code
+    const hist = (typeof loadWorkoutHistory === "function") ? loadWorkoutHistory() : [];
+    const workouts = Array.isArray(hist) ? hist.length : 0;
+
+    const totalSec = (Array.isArray(hist) ? hist : []).reduce((acc, h)=> acc + (Number(h?.durationSec)||0), 0);
+
+    const streak = computeWeeklyStreakFromHistory(hist);
 
     const w = document.getElementById("homeStatWorkouts");
     const t = document.getElementById("homeStatTime");
     const s = document.getElementById("homeStatStreak");
 
     if(w) w.textContent = workouts;
-    if(t) t.textContent = hours > 0 ? `${hours}h` : `${minutes}m`;
+    if(t) t.textContent = formatTimeFromSeconds(totalSec);
     if(s) s.textContent = streak;
   }catch(e){}
 }
@@ -6993,11 +7073,19 @@ function initHomePremiumButtons(){
     });
   }
 
-  if(trophies){
-    trophies.addEventListener("click", ()=>{
-      if(typeof openTrophies === "function") openTrophies();
-    });
-  }
+if(trophies){
+  trophies.addEventListener("click", ()=>{
+    // Tes trophées sont dans l'écran Historique (section trophySection)
+    if(typeof openHistory === "function") openHistory();
+
+    setTimeout(()=>{
+      const sec = document.getElementById("trophySection");
+      if(sec){
+        sec.style.display = ""; // au cas où
+        sec.scrollIntoView({behavior:"smooth", block:"start"});
+      }
+    }, 200);
+  });
 }
 
 
@@ -7006,8 +7094,23 @@ function initHomePremiumButtons(){
 ====================================================== */
 
 document.addEventListener("DOMContentLoaded", ()=>{
+document.addEventListener("DOMContentLoaded", ()=>{
   updateHomePremiumUI();
   initHomePremiumButtons();
+});
+
+// Refresh quand on revient sur Home (après auth, après une séance, etc.)
+(function(){
+  const _showScreen = (typeof showScreen === "function") ? showScreen : null;
+  if(!_showScreen) return;
+  window.showScreen = function(name){
+    const r = _showScreen(name);
+    if(String(name).toLowerCase() === "home"){
+      setTimeout(()=>updateHomePremiumUI(), 50);
+    }
+    return r;
+  };
+})();
 });
 
 </script>
