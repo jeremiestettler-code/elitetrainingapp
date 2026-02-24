@@ -74,7 +74,7 @@
 }
 
 .bottomNavInner{
-  width: min(520px, calc(100vw - 28px));
+  width: min(250px, calc(100vw - 28px));
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
@@ -121,17 +121,21 @@
   height:24px;
   display:block;
   opacity:.92;
+  transform: translateY(0.5px);
 }
 
 .navBtn::before{
   content:"";
   position:absolute;
+  top:50%;
+  left:50%;
   width:46px;
   height:46px;
   border-radius:999px;
   background:transparent;
-  transform:scale(.9);
+  transform:translate(-50%,-50%) scale(.90);
   transition:all .18s ease;
+  pointer-events:none;
 }
 
 .navBtn.active{
@@ -143,7 +147,7 @@
   box-shadow:
     0 10px 26px rgba(139,195,74,.18),
     0 0 0 1px rgba(139,195,74,.22) inset;
-  transform:scale(1);
+  transform:translate(-50%,-50%) scale(1);
 }
 
 .navBtn:active{
