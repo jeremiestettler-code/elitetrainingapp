@@ -2053,10 +2053,20 @@ const PW_EQUIPMENT = [
   { key:"barbell", label:"Barre + disques" },
   { key:"pullup", label:"Barre traction" },
   { key:"bands", label:"Élastiques" },
-  { key:"kettlebell", label:"Kettlebell" },
-  { key:"rameur", label:"Rameur" },
-  { key:"cables", label:"Poulies" },
   { key:"trx", label:"TRX" },
+  { key:"kettlebell", label:"Kettlebell" },
+  { key:"cables", label:"Poulies" },
+  { key:"dipbar", label:"Barres dips" },
+  { key:"parallel", label:"Barres parallèles" },
+  { key:"abwheel", label:"Roue abdos" },
+  { key:"slider", label:"Sliders" },
+  { key:"mat", label:"Tapis" },
+  { key:"ball", label:"Swiss ball" },
+  { key:"box", label:"Box" },
+  { key:"steps", label:"Step" },
+  { key:"rope", label:"Corde à sauter" },
+  { key:"rameur", label:"Rameur" },
+  { key:"bike", label:"Vélo" }
 ];
 
 function startProfileWizardIfNeeded(uid){
@@ -6270,7 +6280,7 @@ await reloadProgramsIntoSESSIONS();
     <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
       <div>
         <div id="pwTitle" class="h2" style="margin:0;">Bienvenue <span id="pwUserName">!</span></div>
-        <div style="opacity:.8; font-size:13px; margin-top:4px;">Complète ton profil</div>
+        <div style="opacity:.8; font-size:22px; margin-top:4px;">Complète ton profil</div>
       </div>
       <button class="icon-btn" id="pwClose" aria-label="Fermer">✕</button>
     </div>
@@ -6286,7 +6296,7 @@ await reloadProgramsIntoSESSIONS();
       
       <!-- STEP 1 -->
       <div id="pwPage1">
-        <div style="margin-bottom:10px; font-size:13px; opacity:.85;">Dis-nous en un peu plus sur toi :</div>
+        <div style="margin-bottom:10px; font-size:22px; opacity:.85;">Dis-nous en un peu plus sur toi :</div>
 
         <div style="display:grid; gap:10px;">
     <div>
@@ -6329,7 +6339,7 @@ await reloadProgramsIntoSESSIONS();
 
       <!-- STEP 2 (cachée pour l'instant) -->
       <div id="pwPage2" class="hidden">
-        <div style="margin-bottom:10px; font-size:13px; opacity:.85;">De quel matériel disposes-tu ?</div>
+        <div style="margin-bottom:10px; font-size:22px; opacity:.85;">De quel matériel disposes-tu ?</div>
 
         <div id="pwEquipmentList" class="pwEquipmentGrid"></div>
 
