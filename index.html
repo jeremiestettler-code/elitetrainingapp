@@ -44,7 +44,7 @@
       /* Safe-area top is handled by the sticky topbar so it stays clear of the
          notch/status bar while scrolling (and avoids double-padding). */
       padding-top: 0;
-      padding-bottom: var(--safe-bot);
+      padding-bottom: calc(var(--safe-bot) + var(--nav-h, 0px));
       overscroll-behavior: none;
       touch-action: manipulation;
     }
@@ -54,7 +54,105 @@
     /* Safe-area for workout screen (topbar hidden) */
     body.inWorkout{ padding-top: var(--safe-top); }
 
+/* =========================
+   Bottom Nav (Premium Home)
+========================= */
+:root{
+  --nav-h: 76px; /* hauteur totale (hors safe-area, ajoutée via padding-bottom) */
+}
 
+.bottomNav{
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+
+  padding: 10px 14px calc(var(--safe-bot) + 10px);
+  display: flex;
+  justify-content: center;
+}
+
+.bottomNavInner{
+  width: min(520px, calc(100vw - 28px));
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+
+  border-radius: 22px;
+  border: 1px solid rgba(139,195,74,.25);
+  background: rgba(10,14,22,.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+
+  padding: 10px 12px;
+}
+
+[data-theme="light"] .bottomNavInner{
+  background: rgba(255,255,255,.78);
+  box-shadow: 0 12px 28px rgba(10,20,40,.18);
+}
+
+.navBtn{
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: inherit;
+  padding: 8px 10px;
+  border-radius: 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  font-weight: 800;
+  font-size: 13px;
+  opacity: .80;
+}
+
+.navBtn .navIco{
+  width: 18px;
+  height: 18px;
+  display:inline-block;
+  opacity: .90;
+}
+
+.navBtn.active{
+  opacity: 1;
+  color: #8BC34A;
+  background: linear-gradient(180deg, rgba(139,195,74,.18), rgba(255,255,255,.02));
+  border: 1px solid rgba(139,195,74,.22);
+}
+
+.navBtn:active{ transform: scale(.98); }
+
+.navHome{
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  border: 1px solid rgba(139,195,74,.30);
+  background: linear-gradient(135deg, rgba(139,195,74,.95), rgba(139,195,74,.55));
+  box-shadow: 0 10px 22px rgba(139,195,74,.22);
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.navHome .navIco{
+  width: 22px;
+  height: 22px;
+  opacity: 1;
+}
+
+/* On cache la bottom nav pendant la séance (coach) */
+body.inWorkout .bottomNav{ display:none !important; }
+
+/* On la cache aussi sur login si besoin (on le fera en JS, mais ce fallback évite les flash) */
+.screenLoginActive .bottomNav{ display:none !important; }
     /* Global iOS-like topbar (logo + title + user + logout)
        - Sticky at the top
        - Adds safe-area padding so it never goes under the notch/status bar */
@@ -6903,6 +7001,26 @@ window.showToast = function(message, duration=2500){
 </script>
 
 <div id="appToast" class="appToast"></div>
+<!-- =========================
+     Bottom Navigation
+========================= -->
+<nav id="bottomNav" class="bottomNav" aria-label="Navigation">
+  <div class="bottomNavInner">
+    <button class="navBtn" id="navSessions" type="button" aria-label="Séances">
+      <span class="navIco">🏋️</span>
+      <span>Séances</span>
+    </button>
+
+    <button class="navHome" id="navHome" type="button" aria-label="Accueil">
+      <span class="navIco">🏠</span>
+    </button>
+
+    <button class="navBtn" id="navProfile" type="button" aria-label="Profil">
+      <span class="navIco">👤</span>
+      <span>Profil</span>
+    </button>
+  </div>
+</nav>
 <script>
 (function(){
   const splash = document.getElementById("appSplash");
@@ -7191,8 +7309,60 @@ if(trophies){
 document.addEventListener("DOMContentLoaded", ()=>{
   updateHomePremiumUI();
   initHomePremiumButtons();
+  initBottomNav();
 });
+function setBottomNavActive(which){
+  const bSessions = document.getElementById("navSessions");
+  const bHome = document.getElementById("navHome");
+  const bProfile = document.getElementById("navProfile");
+  if(!bSessions || !bHome || !bProfile) return;
 
+  bSessions.classList.toggle("active", which === "sessions");
+  bHome.classList.toggle("active", which === "home");
+  bProfile.classList.toggle("active", which === "profile");
+}
+
+function openProfileModalSafe(){
+  // ferme réglages si ouverts
+  try{ document.getElementById("settingsModal")?.classList.add("hidden"); }catch(e){}
+  const pm = document.getElementById("profileModal");
+  if(pm) pm.classList.remove("hidden");
+}
+
+function initBottomNav(){
+  const bSessions = document.getElementById("navSessions");
+  const bHome = document.getElementById("navHome");
+  const bProfile = document.getElementById("navProfile");
+
+  if(bHome){
+    bHome.addEventListener("click", ()=>{
+      if(typeof showScreen === "function") showScreen("home");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setBottomNavActive("home");
+    });
+  }
+
+  if(bSessions){
+    bSessions.addEventListener("click", ()=>{
+      if(typeof showScreen === "function") showScreen("home");
+      setBottomNavActive("sessions");
+      setTimeout(()=>{
+        const legacy = document.getElementById("homeLegacy") || document.getElementById("sessionList");
+        if(legacy) legacy.scrollIntoView({ behavior:"smooth", block:"start" });
+      }, 60);
+    });
+  }
+
+  if(bProfile){
+    bProfile.addEventListener("click", ()=>{
+      setBottomNavActive("profile");
+      openProfileModalSafe();
+    });
+  }
+
+  // défaut
+  setBottomNavActive("home");
+}
 // Refresh quand on revient sur Home (après auth, après une séance, etc.)
 (function(){
   const _showScreen = (typeof showScreen === "function") ? showScreen : null;
@@ -7200,8 +7370,9 @@ document.addEventListener("DOMContentLoaded", ()=>{
   window.showScreen = function(name){
     const r = _showScreen(name);
     if(String(name).toLowerCase() === "home"){
-      setTimeout(()=>updateHomePremiumUI(), 50);
-    }
+  setBottomNavActive("home");
+  setTimeout(()=>updateHomePremiumUI(), 50);
+}
     return r;
   };
 })();
