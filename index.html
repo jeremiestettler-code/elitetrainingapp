@@ -1446,6 +1446,17 @@
   letter-spacing: .2px;
 }
 
+/* Boutons centrés (groupés) */
+#profileWizardModal .pwFooter{
+  justify-content: center;
+  gap: 12px;
+}
+
+#profileWizardModal .pwFooter .btn{
+  flex: 0 1 180px;   /* largeur cohérente */
+  max-width: 220px;
+}
+
 /* Petites pointes à gauche/droite pour l'effet "ruban" */
 #profileWizardModal .pwRibbon:before,
 #profileWizardModal .pwRibbon:after{
@@ -1540,6 +1551,56 @@
 #profileWizardModal .pwEquipCard.active{
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(139,195,74,.25);
+}
+
+/* ===== Pager iOS (slide + fade + scale) ===== */
+#profileWizardModal .pwPager{
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+}
+
+#profileWizardModal .pwPage{
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+
+  transition:
+    transform 260ms cubic-bezier(.2,.8,.2,1),
+    opacity 260ms cubic-bezier(.2,.8,.2,1);
+  will-change: transform, opacity;
+}
+
+#profileWizardModal[data-step="1"] #pwPage1{
+  transform: translateX(0) scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#profileWizardModal[data-step="1"] #pwPage2{
+  transform: translateX(18%) scale(.96);
+  opacity: 0;
+  pointer-events: none;
+}
+
+#profileWizardModal[data-step="2"] #pwPage1{
+  transform: translateX(-18%) scale(.96);
+  opacity: 0;
+  pointer-events: none;
+}
+
+#profileWizardModal[data-step="2"] #pwPage2{
+  transform: translateX(0) scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Respect "Réduire les animations" */
+@media (prefers-reduced-motion: reduce){
+  #profileWizardModal .pwPage{
+    transition: none !important;
+  }
 }
 
 </style>
@@ -2282,7 +2343,13 @@ function setPWStep(step){
 
   const p1 = document.getElementById("pwPage1");
   const p2 = document.getElementById("pwPage2");
+// Animation : on garde les deux pages "présentes" et on anime via data-step
+const modal = document.getElementById("profileWizardModal");
+if(modal) modal.setAttribute("data-step", String(step));
 
+// On enlève hidden pour que l’animation puisse fonctionner
+p1?.classList.remove("hidden");
+p2?.classList.remove("hidden");
   const d1 = document.getElementById("pwDot1");
   const d2 = document.getElementById("pwDot2");
 
@@ -2291,8 +2358,7 @@ function setPWStep(step){
   const bFin  = document.getElementById("pwFinish");
 
   if(step === 1){
-    p1?.classList.remove("hidden");
-    p2?.classList.add("hidden");
+
 
     d1 && (d1.className = "pwDot current");
     d2 && (d2.className = "pwDot");
@@ -2303,8 +2369,6 @@ function setPWStep(step){
 
   }else{
 
-    p1?.classList.add("hidden");
-    p2?.classList.remove("hidden");
 
     d1 && (d1.className = "pwDot");
     d2 && (d2.className = "pwDot current");
@@ -6292,10 +6356,10 @@ await reloadProgramsIntoSESSIONS();
     </div>
 
     <!-- Body -->
-    <div style="flex:1; overflow:auto; -webkit-overflow-scrolling:touch;">
+    <div class="pwPager">
       
       <!-- STEP 1 -->
-      <div id="pwPage1">
+      <div id="pwPage1" class="pwPage">
         <div style="margin-bottom:10px; font-size:22px; opacity:.85;">Dis-nous en un peu plus sur toi :</div>
 
         <div style="display:grid; gap:10px;">
@@ -6338,7 +6402,7 @@ await reloadProgramsIntoSESSIONS();
       </div>
 
       <!-- STEP 2 (cachée pour l'instant) -->
-      <div id="pwPage2" class="hidden">
+      <div id="pwPage2" class="pwPage hidden">
         <div style="margin-bottom:10px; font-size:22px; opacity:.85;">De quel matériel disposes-tu ?</div>
 
         <div id="pwEquipmentList" class="pwEquipmentGrid"></div>
@@ -6349,7 +6413,7 @@ await reloadProgramsIntoSESSIONS();
     </div>
 
     <!-- Footer -->
-    <div style="display:flex; gap:10px; padding-top:12px;">
+    <div class="pwFooter">
       <button class="btn" type="button" id="pwBack">Retour</button>
       <button class="btn primary" type="button" id="pwNext">Continuer</button>
       <button class="btn primary hidden" type="button" id="pwFinish">Terminer</button>
