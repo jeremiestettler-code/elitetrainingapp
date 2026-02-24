@@ -746,7 +746,117 @@
       opacity: .8;
     }
 
+/* =========================
+   HOME PREMIUM (UI)
+========================= */
+.homePremium{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
 
+.homeCards2{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:12px;
+}
+
+.homeTile{
+  appearance:none;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.04);
+  border-radius: 22px;
+  padding: 16px;
+  min-height: 120px;
+  text-align:left;
+  color: inherit;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-start;
+}
+
+[data-theme="light"] .homeTile{
+  border-color: rgba(10,20,40,.12);
+  background: rgba(10,20,40,.03);
+}
+
+.homeTilePrimary{
+  border-color: rgba(139,195,74,.35);
+  background: linear-gradient(180deg, rgba(139,195,74,.55), rgba(139,195,74,.12));
+}
+
+.homeTileTitle{
+  font-weight: 950;
+  letter-spacing: -.2px;
+  font-size: 22px;
+  line-height: 1.05;
+}
+
+.homeStatsCard,
+.homeTrophiesCard{
+  appearance:none;
+  border: 1px solid rgba(139,195,74,.30);
+  background: linear-gradient(180deg, rgba(139,195,74,.22), rgba(255,255,255,.02));
+  border-radius: 22px;
+  padding: 14px 14px 12px;
+  text-align:left;
+  color: inherit;
+}
+
+[data-theme="light"] .homeStatsCard,
+[data-theme="light"] .homeTrophiesCard{
+  background: linear-gradient(180deg, rgba(139,195,74,.18), rgba(10,20,40,.02));
+}
+
+.homeStatsTitle{
+  font-weight: 950;
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.homeStatsGrid{
+  display:grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap:10px;
+}
+
+.homeStat{
+  background: rgba(0,0,0,.16);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 16px;
+  padding: 10px;
+}
+
+[data-theme="light"] .homeStat{
+  background: rgba(255,255,255,.70);
+  border-color: rgba(10,20,40,.10);
+}
+
+.homeStatLbl{
+  font-size: 11px;
+  font-weight: 900;
+  opacity: .8;
+  letter-spacing: .2px;
+  margin-bottom: 4px;
+}
+
+.homeStatVal{
+  font-size: 28px;
+  font-weight: 950;
+  letter-spacing: -.4px;
+  line-height: 1;
+}
+
+.homeTrophiesTitle{
+  font-weight: 950;
+  font-size: 18px;
+  margin-bottom: 2px;
+}
+
+.homeTrophiesSub{
+  font-weight: 900;
+  opacity: .85;
+}
 
     /* ===== TROPHÉES ===== */
     .trophySection{
@@ -1687,8 +1797,10 @@
       <div class="card">
         <div class="row">
           <div class="grow">
-            <div class="h1">Séances</div>
-            <div class="muted small">Choisis une séance. Le mode coach est actif par défaut.</div>
+            <div class="muted small" style="font-weight:900; letter-spacing:.2px; opacity:.85;">Athlète:</div>
+            <div class="h1" style="margin-top:2px; line-height:1.05;">
+              <span id="homeAthleteName">—</span>
+            </div>
           </div>
           <button id="btnSettings" class="icon-btn" aria-label="Réglages" title="Réglages">⚙️</button>
         </div>
@@ -1696,8 +1808,57 @@
         <div style="height:12px"></div>
 
 <!-- =========================
+     HOME PREMIUM (nouveau layout)
+========================= -->
+<div class="homePremium">
+
+  <div class="homeCards2">
+    <button class="homeTile homeTilePrimary" id="homeTrendingBtn" type="button">
+      <div class="homeTileTitle">Trending<br/>Workout</div>
+    </button>
+
+    <button class="homeTile" id="homeAIProgramBtn" type="button">
+      <div class="homeTileTitle">Your AI<br/>Programme</div>
+    </button>
+  </div>
+
+  <button class="homeStatsCard" id="homeStatsBtn" type="button">
+    <div class="homeStatsTitle">Activités</div>
+    <div class="homeStatsGrid">
+      <div class="homeStat">
+        <div class="homeStatLbl">Workouts</div>
+        <div class="homeStatVal" id="homeStatWorkouts">—</div>
+      </div>
+      <div class="homeStat">
+        <div class="homeStatLbl">Time</div>
+        <div class="homeStatVal" id="homeStatTime">—</div>
+      </div>
+      <div class="homeStat">
+        <div class="homeStatLbl">Weak streak</div>
+        <div class="homeStatVal" id="homeStatStreak">—</div>
+      </div>
+    </div>
+  </button>
+
+  <button class="homeTrophiesCard" id="homeTrophiesBtn" type="button">
+    <div class="homeTrophiesTitle">Trophies</div>
+    <div class="homeTrophiesSub">Congrats!</div>
+  </button>
+
+</div>
+
+<div style="height:14px"></div>
+
+<!-- =========================
+     HOME LEGACY (contenu actuel)
+     On le garde pour ne rien casser, et on branchera les boutons ensuite.
+========================= -->
+<div id="homeLegacy">
+
+<!-- =========================
      IA V2 — HOME (preview + generate)
-     À COLLER juste AVANT: <div class="grid" id="sessionList"></div>
+     À COLLER juste AVANT: <div class="grid" id="sessionList">
+     </div>
 ========================= -->
 <div class="card" id="aiCardWrapper">
 
