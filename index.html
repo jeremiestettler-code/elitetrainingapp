@@ -113,20 +113,24 @@
   opacity: .80;
 }
 
-.navBtn .navIco{
-  width: 18px;
-  height: 18px;
-  display:inline-block;
-  opacity: .90;
-}
-
 .navBtn.active{
   opacity: 1;
   color: #8BC34A;
-  background: linear-gradient(180deg, rgba(139,195,74,.18), rgba(255,255,255,.02));
-  border: 1px solid rgba(139,195,74,.22);
 }
 
+/* Rond vert derrière l’icône du bouton actif */
+.navBtn.active .navIco{
+  position: relative;
+  display: inline-flex;
+  align-items:center;
+  justify-content:center;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  background: rgba(139,195,74,.95);
+  color: #0c111a;
+  box-shadow: 0 10px 22px rgba(139,195,74,.22);
+}
 .navBtn:active{ transform: scale(.98); }
 
 .navHome{
@@ -7011,8 +7015,9 @@ window.showToast = function(message, duration=2500){
       <span>Séances</span>
     </button>
 
-    <button class="navHome" id="navHome" type="button" aria-label="Accueil">
-      <span class="navIco">🏠</span>
+    <button class="navBtn" id="navHome" type="button" aria-label="Accueil">
+        <span class="navIco">🏠</span>
+        <span>Home</span>
     </button>
 
     <button class="navBtn" id="navProfile" type="button" aria-label="Profil">
