@@ -792,7 +792,18 @@
   line-height: 1.05;
 }
 
-.homeStatsCard,
+.homeStatsCard{
+  appearance:none;
+  border: 1px solid rgba(139,195,74,.30);
+  background: linear-gradient(180deg, rgba(139,195,74,.22), rgba(255,255,255,.02));
+  border-radius: 22px;
+  padding: 14px 14px 12px;
+  text-align:left;
+  color: inherit;
+
+  position:relative;
+  z-index:1;
+}
 .homeTrophiesCard{
   appearance:none;
   border: 1px solid rgba(139,195,74,.30);
@@ -801,6 +812,11 @@
   padding: 14px 14px 12px;
   text-align:left;
   color: inherit;
+
+  width:100%;
+  display:block;
+  position:relative;
+  z-index:2;
 }
 
 [data-theme="light"] .homeStatsCard,
