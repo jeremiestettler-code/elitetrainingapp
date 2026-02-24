@@ -74,11 +74,10 @@
 }
 
 .bottomNavInner{
-  width: min(250px, calc(100vw - 28px));
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 10px;
+  width: min(300px, calc(100vw - 120px));
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
 
   border-radius: 22px;
   border: 1px solid rgba(139,195,74,.25);
@@ -87,7 +86,7 @@
   -webkit-backdrop-filter: blur(10px);
   box-shadow: 0 10px 30px rgba(0,0,0,.35);
 
-  padding: 10px 12px;
+  padding: 10px 14px;
 }
 
 [data-theme="light"] .bottomNavInner{
@@ -110,6 +109,8 @@
   position:relative;
   color:rgba(255,255,255,.72);
   transition:transform .15s ease, color .15s ease;
+  flex: 1;
+  justify-content:center;
 }
 
 [data-theme="light"] .navBtn{
@@ -121,6 +122,7 @@
   height:24px;
   display:block;
   opacity:.92;
+  margin:auto;
   transform: translateY(0.5px);
 }
 
@@ -7015,32 +7017,31 @@ window.showToast = function(message, duration=2500){
 
 <!-- Séances -->
 <button class="navBtn" id="navSessions" type="button" aria-label="Séances">
-  <svg class="navIco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <!-- Dumbbell -->
-    <path d="M6 10v4"/>
-    <path d="M8 9v6"/>
-    <path d="M16 9v6"/>
-    <path d="M18 10v4"/>
-    <path d="M8 12h8"/>
+  <svg class="navIco" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <path d="M7 10v4"/>
+  <path d="M9 9v6"/>
+  <path d="M15 9v6"/>
+  <path d="M17 10v4"/>
+  <path d="M9 12h6"/>
   </svg>
 </button>
 
 <!-- Home -->
 <button class="navBtn" id="navHome" type="button" aria-label="Accueil">
-  <svg class="navIco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <path d="M3 10.5l9-7 9 7"/>
-    <path d="M8.5 21V12.5h7V21"/>
+  <svg class="navIco" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <path d="M4 10.75l8-6 8 6"/>
+  <path d="M9 20V12.25h6V20"/>
   </svg>
 </button>
 
 <!-- Profil -->
 <button class="navBtn" id="navProfile" type="button" aria-label="Profil">
-  <svg class="navIco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <path d="M20 21a8 8 0 0 0-16 0"/>
-    <circle cx="12" cy="9" r="4"/>
+  <svg class="navIco" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <circle cx="12" cy="9" r="3.5"/>
+  <path d="M5 20c1.8-3.2 4.6-4.8 7-4.8S17.2 16.8 19 20"/>
   </svg>
 </button>
 
