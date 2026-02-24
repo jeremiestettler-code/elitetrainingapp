@@ -96,26 +96,28 @@
 }
 
 .navBtn{
-  appearance: none;
-  border: none;
-  background: transparent;
-  color: inherit;
-  padding: 8px 10px;
-  border-radius: 16px;
+  appearance:none;
+  border:none;
+  background:transparent;
+  color:rgba(255,255,255,.65);
+  width:56px;
+  height:56px;
+  border-radius:999px;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 
-  font-weight: 800;
-  font-size: 13px;
-  opacity: .80;
+  transition:.2s ease;
+}
+[data-theme="light"] .navBtn{
+  color:rgba(10,20,40,.65);
 }
 
 .navBtn.active{
-  opacity: 1;
-  color: #8BC34A;
+  background: linear-gradient(135deg, rgba(139,195,74,.95), rgba(139,195,74,.55));
+  color:#0c111a;
+  box-shadow: 0 8px 20px rgba(139,195,74,.25);
 }
 
 /* Rond vert derrière l’icône du bouton actif */
@@ -147,9 +149,9 @@
 }
 
 .navHome .navIco{
-  width: 22px;
-  height: 22px;
-  opacity: 1;
+  width:22px;
+  height:22px;
+  transition:.2s ease;
 }
 
 /* On cache la bottom nav pendant la séance (coach) */
@@ -7010,20 +7012,30 @@ window.showToast = function(message, duration=2500){
 ========================= -->
 <nav id="bottomNav" class="bottomNav" aria-label="Navigation">
   <div class="bottomNavInner">
+
+    <!-- Séances -->
     <button class="navBtn" id="navSessions" type="button" aria-label="Séances">
-      <span class="navIco">🏋️</span>
-      <span>Séances</span>
+      <svg class="navIco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M4 8h16M4 16h16M7 4v4M17 16v4"/>
+      </svg>
     </button>
 
+    <!-- Home -->
     <button class="navBtn" id="navHome" type="button" aria-label="Accueil">
-        <span class="navIco">🏠</span>
-        <span>Home</span>
+      <svg class="navIco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 11l9-7 9 7"/>
+        <path d="M9 22V12h6v10"/>
+      </svg>
     </button>
 
+    <!-- Profil -->
     <button class="navBtn" id="navProfile" type="button" aria-label="Profil">
-      <span class="navIco">👤</span>
-      <span>Profil</span>
+      <svg class="navIco" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="8" r="4"/>
+        <path d="M4 22c2-4 14-4 16 0"/>
+      </svg>
     </button>
+
   </div>
 </nav>
 <script>
