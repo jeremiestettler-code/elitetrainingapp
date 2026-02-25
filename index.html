@@ -7636,39 +7636,56 @@ window.syncBottomNavVisibility = syncBottomNavVisibility;
   const _showScreen = (typeof window.showScreen === "function") ? window.showScreen : null;
   if(!_showScreen) return;
 
-  function updateProfilePremiumUI(){
-    try{
-      const nameEl = document.getElementById("profileName");
-      const emailEl = document.getElementById("profileEmail");
-      const avatarEl = document.getElementById("profileAvatar");
-      if(!nameEl || !emailEl || !avatarEl) return;
+  async function updateProfilePremiumUI(){
+  try{
+    const nameEl = document.getElementById("profileName");
+    const emailEl = document.getElementById("profileEmail");
+    const avatarEl = document.getElementById("profileAvatar");
+    if(!nameEl || !emailEl || !avatarEl) return;
 
-      // ✅ sources réelles de TON app
-      const u = (typeof currentUser !== "undefined") ? currentUser : null;
-      const p = window.eliteProfile || window.firestoreProfile || null;
+    // ✅ Récupère l'user Firebase (selon ton app)
+    const u =
+      (typeof currentUser !== "undefined" && currentUser) ? currentUser :
+      (window.currentUser || null);
 
-      const email = String(u?.email || p?.email || "").trim();
+    // ✅ Profil déjà en mémoire ?
+    let p = window.eliteProfile || window.firestoreProfile || null;
 
-      // Ton wizard utilise "displayName" (pas firstName) dans le profil par défaut :contentReference[oaicite:4]{index=4}
-      let first =
-        String(p?.firstName || p?.prenom || p?.displayName || "").trim() ||
-        String(u?.displayName || "").trim();
-
-      if(first) first = first.split(" ")[0];
-      if(!first && email.includes("@")) first = email.split("@")[0];
-      if(!first) first = "Utilisateur";
-
-      // Initiales
-      const parts = String(first).trim().split(/\s+/).filter(Boolean);
-      const initials = (parts[0]?.[0] || "U").toUpperCase().slice(0,1);
-
-      nameEl.textContent = first;
-      emailEl.textContent = email || "—";
-      avatarEl.textContent = initials || "U";
-    }catch(e){
-      // safe
+    // ✅ Sinon, on tente un fetch Firestore (safe)
+    if(!p && u && u.uid && typeof doc === "function" && typeof getDoc === "function" && typeof db !== "undefined"){
+      try{
+        const ref = doc(db, "users", u.uid, "profile", "main");
+        const snap = await getDoc(ref);
+        if(snap && snap.exists()){
+          p = snap.data() || null;
+          window.firestoreProfile = p; // cache pour les prochains affichages
+        }
+      }catch(e){
+        // offline / droits / pas prêt : on ignore
+      }
     }
+
+    const email = String(u?.email || p?.email || "").trim();
+
+    // 🔤 Nom affiché (displayName en priorité)
+    let first =
+      String(p?.displayName || p?.firstName || p?.prenom || "").trim() ||
+      String(u?.displayName || "").trim();
+
+    if(first) first = first.split(" ")[0];
+    if(!first && email.includes("@")) first = email.split("@")[0];
+    if(!first) first = "Utilisateur";
+
+    // 👤 Initiale (1 lettre)
+    const initials = (String(first).trim()[0] || "U").toUpperCase();
+
+    nameEl.textContent = first;
+    emailEl.textContent = email || "—";
+    avatarEl.textContent = initials;
+  }catch(e){
+    // safe
   }
+}
 
   window.showScreen = function(name){
     const r = _showScreen(name);
