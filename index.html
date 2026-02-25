@@ -7499,10 +7499,9 @@ document.addEventListener("DOMContentLoaded", ()=>{
   updateHomePremiumUI();
   initHomePremiumButtons();
   initBottomNav();
-
-  // ✅ Masque/affiche la bottom nav dès le chargement (utile si l'écran login est déjà actif)
-  syncBottomNavVisibility();
+  syncBottomNavVisibility(); // ✅ cache sur login au load, montre ailleurs
 });
+
 function setBottomNavActive(which){
   const bSessions = document.getElementById("navSessions");
   const bHome = document.getElementById("navHome");
@@ -7567,6 +7566,15 @@ function initBottomNav(){
   // défaut
   setBottomNavActive("home");
 }
+function syncBottomNavVisibility(){
+  const nav = document.getElementById("bottomNav");
+  const login = document.getElementById("screenLogin");
+  if(!nav || !login) return;
+
+  const isLogin = login.classList.contains("active");
+  nav.style.display = isLogin ? "none" : "";
+}
+
 // Refresh quand on revient sur Home (après auth, après une séance, etc.)
 function syncBottomNavVisibility(){
   const nav = document.getElementById("bottomNav");
@@ -7594,7 +7602,7 @@ window.syncBottomNavVisibility = syncBottomNavVisibility;
       setTimeout(()=>updateHomePremiumUI(), 50);
     }
 
-    // ✅ Masque/affiche la bottom nav selon l'écran
+    // ✅ show/hide bottom nav selon si l'écran login est actif
     syncBottomNavVisibility();
 
     return r;
