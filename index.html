@@ -7631,9 +7631,9 @@ function syncBottomNavVisibility(){
 }
 window.syncBottomNavVisibility = syncBottomNavVisibility;
 
-// Refresh quand on revient sur Home / Profile (après auth, après une séance, etc.)
+// Refresh quand on change d’écran
 (function(){
-  const _showScreen = (typeof showScreen === "function") ? showScreen : null;
+  const _showScreen = (typeof window.showScreen === "function") ? window.showScreen : null;
   if(!_showScreen) return;
 
   function updateProfileHeaderSafe(){
@@ -7643,12 +7643,12 @@ window.syncBottomNavVisibility = syncBottomNavVisibility;
       const avatarEl = document.getElementById("profileAvatar");
       if(!nameEl || !emailEl || !avatarEl) return;
 
-      const u = window.currentUser || null;
+      // Sources “safe” (peu importe comment ton auth les expose)
+      const u = window.currentUser || (typeof currentUser !== "undefined" ? currentUser : null);
       const p = window.eliteProfile || window.firestoreProfile || null;
 
       const email = String(u?.email || p?.email || "").trim();
 
-      // priorité: profil (wizard / firestore) -> displayName auth -> email prefix
       let first =
         String(p?.firstName || p?.prenom || p?.displayName || "").trim() ||
         String(u?.displayName || "").trim();
@@ -7657,11 +7657,11 @@ window.syncBottomNavVisibility = syncBottomNavVisibility;
       if(!first && email.includes("@")) first = email.split("@")[0];
       if(!first) first = "Utilisateur";
 
-      const initials = (first[0] || "U").toUpperCase();
+      const initial = (first[0] || "U").toUpperCase();
 
       nameEl.textContent = first;
       emailEl.textContent = email || "—";
-      avatarEl.textContent = initials;
+      avatarEl.textContent = initial;
     }catch(e){}
   }
 
@@ -7679,8 +7679,7 @@ window.syncBottomNavVisibility = syncBottomNavVisibility;
       setTimeout(()=>updateProfileHeaderSafe(), 0);
     }
 
-    // garde ton comportement existant si présent
-    try{ window.syncBottomNavVisibility?.(); }catch(e){}
+    syncBottomNavVisibility();
     return r;
   };
 })();
