@@ -7636,6 +7636,47 @@ window.syncBottomNavVisibility = syncBottomNavVisibility;
   const _showScreen = (typeof window.showScreen === "function") ? window.showScreen : null;
   if(!_showScreen) return;
 
+  function updateProfileHeaderSafe(){
+    try{
+      const elName = document.getElementById("profileName");
+      const elEmail = document.getElementById("profileEmail");
+      const elAvatar = document.getElementById("profileAvatar");
+
+      if(!elName && !elEmail && !elAvatar) return;
+
+      const u = window.currentUser || null;
+      const p = window.firestoreProfile || window.eliteProfile || null;
+
+      const email =
+        (u && u.email) ||
+        (p && p.email) ||
+        "";
+
+      // On essaie de trouver un "prénom" dans plusieurs sources possibles
+      const rawName =
+        (p && (p.firstName || p.prenom || p.firstname || p.displayName || p.name)) ||
+        (u && u.displayName) ||
+        "";
+
+      const fallbackName = (email ? String(email).split("@")[0] : "Utilisateur").slice(0, 22);
+      const name = String(rawName || fallbackName).trim() || "Utilisateur";
+
+      // Initiales (2 lettres)
+      const initials = name
+        .split(" ")
+        .filter(Boolean)
+        .slice(0, 2)
+        .map(s => s[0].toUpperCase())
+        .join("") || "ET";
+
+      if(elName) elName.textContent = name;
+      if(elEmail) elEmail.textContent = email || "—";
+      if(elAvatar) elAvatar.textContent = initials;
+    }catch(e){
+      // SAFE: ne jamais casser la nav
+    }
+  }
+
   window.showScreen = function(name){
     const r = _showScreen(name);
     const n = String(name || "").toLowerCase();
@@ -7643,6 +7684,11 @@ window.syncBottomNavVisibility = syncBottomNavVisibility;
     if(n === "home"){
       setBottomNavActive("home");
       setTimeout(()=>updateHomePremiumUI(), 50);
+    }
+
+    if(n === "profile"){
+      setBottomNavActive("profile");
+      setTimeout(()=>updateProfileHeaderSafe(), 0);
     }
 
     syncBottomNavVisibility();
