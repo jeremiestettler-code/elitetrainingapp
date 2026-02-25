@@ -3143,6 +3143,9 @@ function setMsg(txt){ $("loginMsg").textContent = txt || ""; }
           setProfileMsg("Enregistrement...");
           await saveProfile();
           setProfileMsg("Enregistré ✅");
+
+window.refreshProfileScreen?.();
+          
         }catch(e){
           setProfileMsg("Erreur : " + (e?.message || e));
         }
@@ -6991,6 +6994,7 @@ await reloadProgramsIntoSESSIONS();
         </div>
       </div>
 
+
       <button class="btn secondary" id="profileEditOpen" type="button">Modifier</button>
     </div>
     <div class="setting-row" style="align-items:flex-start;">
@@ -7641,6 +7645,11 @@ function openProfileEntrySafe(){
       if(infoSexe) infoSexe.textContent = p?.sex || p?.gender || "—";
     }catch(e){}
   }
+
+// Expose un refresh global (utile après edit/save)
+window.refreshProfileScreen = function(){
+  try{ updateHeaderNow(); }catch(e){}
+};
 
   // ✅ Si la page Profil (screen) existe, on l’ouvre
   try{
