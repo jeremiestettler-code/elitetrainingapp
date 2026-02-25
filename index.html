@@ -7568,24 +7568,23 @@ function initBottomNav(){
 }
 function syncBottomNavVisibility(){
   const nav = document.getElementById("bottomNav");
-  const login = document.getElementById("screenLogin");
-  if(!nav || !login) return;
-
-  const isLogin = login.classList.contains("active");
-  nav.style.display = isLogin ? "none" : "";
-}
-
-// Refresh quand on revient sur Home (après auth, après une séance, etc.)
-function syncBottomNavVisibility(){
-  const nav = document.getElementById("bottomNav");
   if(!nav) return;
 
   const active = document.querySelector(".screen.active");
   const id = String(active?.id || "").toLowerCase();
+  const isLogin = id.includes("login");
 
-  // Si l'écran actif est la page de login
-  nav.style.display = id.includes("login") ? "none" : "";
+  // ✅ important: la classe pilote un display:none !important dans le CSS
+  document.body.classList.toggle("screenLoginActive", isLogin);
+
+  if(isLogin){
+    nav.style.display = "none";
+  }else{
+    // ✅ enlève le display inline pour revenir au CSS (.bottomNav { display:flex })
+    nav.style.removeProperty("display");
+  }
 }
+
 window.syncBottomNavVisibility = syncBottomNavVisibility;
 
 // Refresh quand on revient sur Home (après auth, après une séance, etc.)
