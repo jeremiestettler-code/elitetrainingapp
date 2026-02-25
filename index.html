@@ -7556,12 +7556,49 @@ function openProfileEntrySafe(){
   // ferme réglages si ouverts
   try{ document.getElementById("settingsModal")?.classList.add("hidden"); }catch(e){}
 
+  function updateHeaderNow(){
+    try{
+      const nameEl = document.getElementById("profileName");
+      const emailEl = document.getElementById("profileEmail");
+      const avatarEl = document.getElementById("profileAvatar");
+      if(!nameEl || !emailEl || !avatarEl) return;
+
+      const u = window.currentUser || null;
+      const p = window.eliteProfile || window.firestoreProfile || null;
+
+      const email = String(u?.email || p?.email || "").trim();
+
+      // On récupère un "prénom" robuste (ton eliteProfile contient dob/age etc, donc on couvre plusieurs clés)
+      let raw =
+        String(p?.firstName || p?.prenom || p?.displayName || p?.name || p?.firstname || "").trim() ||
+        String(u?.displayName || "").trim();
+
+      // fallback sur email avant @
+      if(!raw && email.includes("@")) raw = email.split("@")[0];
+      if(!raw) raw = "Utilisateur";
+
+      const first = raw.split(" ")[0];
+
+      // Initiales (1 ou 2 lettres si 2 mots)
+      const parts = raw.split(/\s+/).filter(Boolean);
+      const initials = (parts.length >= 2)
+        ? (parts[0][0] + parts[1][0]).toUpperCase()
+        : (first[0] || "U").toUpperCase();
+
+      nameEl.textContent = first;
+      emailEl.textContent = email || "—";
+      avatarEl.textContent = initials || "U";
+    }catch(e){}
+  }
+
   // ✅ Si la page Profil (screen) existe, on l’ouvre
   try{
     const hasScreen = !!document.getElementById("screenProfile");
     const hasScreensMap = (typeof window.screens === "object" && window.screens && window.screens.profile);
     if(hasScreen && hasScreensMap && typeof window.showScreen === "function"){
       window.showScreen("profile");
+      // IMPORTANT: on force le refresh après le changement d'écran
+      setTimeout(updateHeaderNow, 0);
       return;
     }
   }catch(e){}
