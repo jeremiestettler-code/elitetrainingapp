@@ -7617,6 +7617,14 @@ function openProfileEntrySafe(){
       if(infoFirst) infoFirst.textContent = first;
       if(infoEmail) infoEmail.textContent = email || "—";
 
+      // ===== FITNESS CARD =====
+      const fitGoal = document.getElementById("fitGoal");
+      const fitLevel = document.getElementById("fitLevel");
+
+      if(fitGoal) fitGoal.textContent = p?.goal || p?.objectif || "—";
+      if(fitLevel) fitLevel.textContent = p?.level || p?.niveau || "—";
+
+
       // âge calculé depuis dob
       let age = "—";
       try{
