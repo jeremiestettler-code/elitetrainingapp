@@ -467,3 +467,24 @@ html[data-theme="light"] .etLogoWordmark{
     opacity:1 !important;
   }
 }
+
+.profileInfoRow{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:14px 0;
+  border-bottom:1px solid rgba(255,255,255,.06);
+  font-size:15px;
+}
+
+.profileInfoRow:last-child{
+  border-bottom:none;
+}
+
+.profileInfoRow span:first-child{
+  opacity:.7;
+}
+
+.profileInfoRow span:last-child{
+  font-weight:600;
+}

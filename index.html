@@ -2240,14 +2240,29 @@ body.inWorkout .bottomNav{ display:none !important; }
       <div style="height:12px"></div>
 
       <!-- Sections (placeholders pour l’instant) -->
-      <div class="card">
-        <div class="row">
-          <div class="grow">
-            <div class="h2">Infos</div>
-            <div class="muted small">Prénom, email, âge, sexe.</div>
-          </div>
-        </div>
-      </div>
+<div class="card" id="profileInfosCard">
+  <div class="h2">Infos</div>
+
+  <div class="profileInfoRow">
+    <span>Prénom</span>
+    <span id="infoFirstName">—</span>
+  </div>
+
+  <div class="profileInfoRow">
+    <span>Email</span>
+    <span id="infoEmail">—</span>
+  </div>
+
+  <div class="profileInfoRow">
+    <span>Âge</span>
+    <span id="infoAge">—</span>
+  </div>
+
+  <div class="profileInfoRow">
+    <span>Sexe</span>
+    <span id="infoSexe">—</span>
+  </div>
+</div>
 
       <div style="height:12px"></div>
 
@@ -7588,6 +7603,29 @@ function openProfileEntrySafe(){
       nameEl.textContent = first;
       emailEl.textContent = email || "—";
       avatarEl.textContent = initials || "U";
+      // ===== INFOS CARD =====
+      const infoFirst = document.getElementById("infoFirstName");
+      const infoEmail = document.getElementById("infoEmail");
+      const infoAge = document.getElementById("infoAge");
+      const infoSexe = document.getElementById("infoSexe");
+
+      if(infoFirst) infoFirst.textContent = first;
+      if(infoEmail) infoEmail.textContent = email || "—";
+
+      // âge calculé depuis dob
+      let age = "—";
+      try{
+        const dob = p?.dob;
+        if(dob){
+          const birth = new Date(dob);
+          const diff = Date.now() - birth.getTime();
+          const years = new Date(diff).getUTCFullYear() - 1970;
+          age = years;
+        }
+      }catch(e){}
+
+      if(infoAge) infoAge.textContent = age;
+      if(infoSexe) infoSexe.textContent = p?.sex || p?.gender || "—";
     }catch(e){}
   }
 
