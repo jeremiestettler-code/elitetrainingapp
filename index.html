@@ -6809,7 +6809,18 @@ await reloadProgramsIntoSESSIONS();
       <div class="h2" id="profileTitle">Profil</div>
       <button id="closeProfile" class="icon-btn" aria-label="Fermer">✕</button>
     </div>
+          <div class="profileHero">
+      <div class="profileHeroLeft">
+        <div class="profileAvatar" aria-hidden="true">👤</div>
 
+        <div class="profileHeroTxt">
+          <div class="profileHeroName" id="profileHeroName">—</div>
+          <div class="profileHeroEmail" id="profileHeroEmail">—</div>
+        </div>
+      </div>
+
+      <button class="btn secondary" id="profileEditOpen" type="button">Modifier</button>
+    </div>
     <div class="setting-row" style="align-items:flex-start;">
       <span>Objectif</span>
       <select id="profileGoal" class="input" style="max-width: 220px;">
