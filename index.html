@@ -7631,61 +7631,39 @@ function syncBottomNavVisibility(){
 }
 window.syncBottomNavVisibility = syncBottomNavVisibility;
 
-// Refresh quand on change d’écran
+// Refresh quand on revient sur Home / Profile (après auth, après une séance, etc.)
 (function(){
-  const _showScreen = (typeof window.showScreen === "function") ? window.showScreen : null;
+  const _showScreen = (typeof showScreen === "function") ? showScreen : null;
   if(!_showScreen) return;
 
-  async function updateProfilePremiumUI(){
-  try{
-    const nameEl = document.getElementById("profileName");
-    const emailEl = document.getElementById("profileEmail");
-    const avatarEl = document.getElementById("profileAvatar");
-    if(!nameEl || !emailEl || !avatarEl) return;
+  function updateProfileHeaderSafe(){
+    try{
+      const nameEl = document.getElementById("profileName");
+      const emailEl = document.getElementById("profileEmail");
+      const avatarEl = document.getElementById("profileAvatar");
+      if(!nameEl || !emailEl || !avatarEl) return;
 
-    // ✅ Récupère l'user Firebase (selon ton app)
-    const u =
-      (typeof currentUser !== "undefined" && currentUser) ? currentUser :
-      (window.currentUser || null);
+      const u = window.currentUser || null;
+      const p = window.eliteProfile || window.firestoreProfile || null;
 
-    // ✅ Profil déjà en mémoire ?
-    let p = window.eliteProfile || window.firestoreProfile || null;
+      const email = String(u?.email || p?.email || "").trim();
 
-    // ✅ Sinon, on tente un fetch Firestore (safe)
-    if(!p && u && u.uid && typeof doc === "function" && typeof getDoc === "function" && typeof db !== "undefined"){
-      try{
-        const ref = doc(db, "users", u.uid, "profile", "main");
-        const snap = await getDoc(ref);
-        if(snap && snap.exists()){
-          p = snap.data() || null;
-          window.firestoreProfile = p; // cache pour les prochains affichages
-        }
-      }catch(e){
-        // offline / droits / pas prêt : on ignore
-      }
-    }
+      // priorité: profil (wizard / firestore) -> displayName auth -> email prefix
+      let first =
+        String(p?.firstName || p?.prenom || p?.displayName || "").trim() ||
+        String(u?.displayName || "").trim();
 
-    const email = String(u?.email || p?.email || "").trim();
+      if(first) first = first.split(" ")[0];
+      if(!first && email.includes("@")) first = email.split("@")[0];
+      if(!first) first = "Utilisateur";
 
-    // 🔤 Nom affiché (displayName en priorité)
-    let first =
-      String(p?.displayName || p?.firstName || p?.prenom || "").trim() ||
-      String(u?.displayName || "").trim();
+      const initials = (first[0] || "U").toUpperCase();
 
-    if(first) first = first.split(" ")[0];
-    if(!first && email.includes("@")) first = email.split("@")[0];
-    if(!first) first = "Utilisateur";
-
-    // 👤 Initiale (1 lettre)
-    const initials = (String(first).trim()[0] || "U").toUpperCase();
-
-    nameEl.textContent = first;
-    emailEl.textContent = email || "—";
-    avatarEl.textContent = initials;
-  }catch(e){
-    // safe
+      nameEl.textContent = first;
+      emailEl.textContent = email || "—";
+      avatarEl.textContent = initials;
+    }catch(e){}
   }
-}
 
   window.showScreen = function(name){
     const r = _showScreen(name);
@@ -7698,10 +7676,11 @@ window.syncBottomNavVisibility = syncBottomNavVisibility;
 
     if(n === "profile"){
       setBottomNavActive("profile");
-      setTimeout(()=>updateProfilePremiumUI(), 0);
+      setTimeout(()=>updateProfileHeaderSafe(), 0);
     }
 
-    syncBottomNavVisibility();
+    // garde ton comportement existant si présent
+    try{ window.syncBottomNavVisibility?.(); }catch(e){}
     return r;
   };
 })();
