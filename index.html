@@ -7502,6 +7502,45 @@ document.addEventListener("DOMContentLoaded", ()=>{
   syncBottomNavVisibility(); // ✅ cache sur login au load, montre ailleurs
 });
 
+// =======================
+// Bottom nav visibility watcher (bulletproof)
+// =======================
+(function(){
+  function apply(){
+    const nav = document.getElementById("bottomNav");
+    const login = document.getElementById("screenLogin");
+    if(!nav || !login) return;
+
+    const isLogin = login.classList.contains("active");
+    document.body.classList.toggle("screenLoginActive", isLogin);
+
+    // évite que la nav reste cachée à cause d’un display inline précédent
+    if(isLogin) nav.style.display = "none";
+    else nav.style.removeProperty("display");
+  }
+
+  // Applique une première fois (au load + après auth)
+  apply();
+  setTimeout(apply, 50);
+  setTimeout(apply, 300);
+
+  // Observe les changements de classe sur les screens
+  const root = document.body;
+  const obs = new MutationObserver((mutations)=>{
+    for(const m of mutations){
+      if(m.type === "attributes" && m.attributeName === "class"){
+        apply();
+        break;
+      }
+    }
+  });
+
+  // Observe les screens (c’est là que "active" change)
+  document.querySelectorAll(".screen").forEach(el=>{
+    obs.observe(el, { attributes:true, attributeFilter:["class"] });
+  });
+})();
+
 function setBottomNavActive(which){
   const bSessions = document.getElementById("navSessions");
   const bHome = document.getElementById("navHome");
