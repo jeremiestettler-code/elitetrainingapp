@@ -7632,39 +7632,9 @@ function syncBottomNavVisibility(){
 window.syncBottomNavVisibility = syncBottomNavVisibility;
 
 // Refresh quand on change d’écran
-// Refresh quand on change d’écran
 (function(){
   const _showScreen = (typeof window.showScreen === "function") ? window.showScreen : null;
   if(!_showScreen) return;
-
-  function getProfileDisplay(){
-    const u = window.currentUser || null;
-    const p = window.firestoreProfile || window.eliteProfile || null;
-
-    // Nom (priorité: prénom du profil local/firestore, puis displayName Firebase, puis email prefix)
-    let name =
-      String(p?.firstName || p?.prenom || "").trim() ||
-      String(u?.displayName || "").trim();
-
-    if(name) name = name.split(" ")[0];
-
-    const email = String(u?.email || p?.email || "").trim();
-    if(!name && email.includes("@")) name = email.split("@")[0];
-
-    if(!name) name = "Utilisateur";
-
-    // Initiales
-    let initials = "";
-    try{
-      const parts = String(u?.displayName || name).trim().split(/\s+/).filter(Boolean);
-      if(parts.length >= 2) initials = (parts[0][0] + parts[1][0]).toUpperCase();
-      else initials = String(name[0] || "U").toUpperCase();
-    }catch(e){
-      initials = "U";
-    }
-
-    return { name, email, initials };
-  }
 
   function updateProfilePremiumUI(){
     try{
@@ -7673,11 +7643,31 @@ window.syncBottomNavVisibility = syncBottomNavVisibility;
       const avatarEl = document.getElementById("profileAvatar");
       if(!nameEl || !emailEl || !avatarEl) return;
 
-      const d = getProfileDisplay();
-      nameEl.textContent = d.name || "Utilisateur";
-      emailEl.textContent = d.email || "";
-      avatarEl.textContent = d.initials || "U";
-    }catch(e){}
+      // ✅ sources réelles de TON app
+      const u = (typeof currentUser !== "undefined") ? currentUser : null;
+      const p = window.eliteProfile || window.firestoreProfile || null;
+
+      const email = String(u?.email || p?.email || "").trim();
+
+      // Ton wizard utilise "displayName" (pas firstName) dans le profil par défaut :contentReference[oaicite:4]{index=4}
+      let first =
+        String(p?.firstName || p?.prenom || p?.displayName || "").trim() ||
+        String(u?.displayName || "").trim();
+
+      if(first) first = first.split(" ")[0];
+      if(!first && email.includes("@")) first = email.split("@")[0];
+      if(!first) first = "Utilisateur";
+
+      // Initiales
+      const parts = String(first).trim().split(/\s+/).filter(Boolean);
+      const initials = (parts[0]?.[0] || "U").toUpperCase().slice(0,1);
+
+      nameEl.textContent = first;
+      emailEl.textContent = email || "—";
+      avatarEl.textContent = initials || "U";
+    }catch(e){
+      // safe
+    }
   }
 
   window.showScreen = function(name){
