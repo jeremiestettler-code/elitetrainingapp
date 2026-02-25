@@ -7574,22 +7574,27 @@ function syncBottomNavVisibility(){
   const id = String(active?.id || "").toLowerCase();
   const isLogin = id.includes("login");
 
-  // ✅ important: la classe pilote un display:none !important dans le CSS
+  // classe CSS fallback (évite les flash)
   document.body.classList.toggle("screenLoginActive", isLogin);
+
+  // ✅ important : si on n’est plus dans une séance, on enlève inWorkout
+  // (sinon le CSS body.inWorkout cache la nav en !important)
+  if(!id.includes("session") && !id.includes("workout")){
+    document.body.classList.remove("inWorkout");
+  }
 
   if(isLogin){
     nav.style.display = "none";
   }else{
-    // ✅ enlève le display inline pour revenir au CSS (.bottomNav { display:flex })
+    // revient au CSS (.bottomNav { display:flex })
     nav.style.removeProperty("display");
   }
 }
-
 window.syncBottomNavVisibility = syncBottomNavVisibility;
 
-// Refresh quand on revient sur Home (après auth, après une séance, etc.)
+// Refresh quand on change d’écran
 (function(){
-  const _showScreen = (typeof showScreen === "function") ? showScreen : null;
+  const _showScreen = (typeof window.showScreen === "function") ? window.showScreen : null;
   if(!_showScreen) return;
 
   window.showScreen = function(name){
@@ -7601,9 +7606,7 @@ window.syncBottomNavVisibility = syncBottomNavVisibility;
       setTimeout(()=>updateHomePremiumUI(), 50);
     }
 
-    // ✅ show/hide bottom nav selon si l'écran login est actif
     syncBottomNavVisibility();
-
     return r;
   };
 })();
