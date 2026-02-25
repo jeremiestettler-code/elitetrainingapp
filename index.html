@@ -7434,9 +7434,21 @@ function setBottomNavActive(which){
   bProfile.classList.toggle("active", which === "profile");
 }
 
-function openProfileModalSafe(){
+function openProfileEntrySafe(){
   // ferme réglages si ouverts
   try{ document.getElementById("settingsModal")?.classList.add("hidden"); }catch(e){}
+
+  // ✅ Si la page Profil (screen) existe, on l’ouvre
+  try{
+    const hasScreen = !!document.getElementById("screenProfile");
+    const hasScreensMap = (typeof window.screens === "object" && window.screens && window.screens.profile);
+    if(hasScreen && hasScreensMap && typeof window.showScreen === "function"){
+      window.showScreen("profile");
+      return;
+    }
+  }catch(e){}
+
+  // Fallback SAFE : on garde le comportement actuel (modal)
   const pm = document.getElementById("profileModal");
   if(pm) pm.classList.remove("hidden");
 }
@@ -7468,7 +7480,7 @@ function initBottomNav(){
   if(bProfile){
     bProfile.addEventListener("click", ()=>{
       setBottomNavActive("profile");
-      openProfileModalSafe();
+      openProfileEntrySafe();
     });
   }
 
