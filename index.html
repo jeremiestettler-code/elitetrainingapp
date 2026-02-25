@@ -1855,6 +1855,87 @@ body.inWorkout .bottomNav{ display:none !important; }
   }
 }
 
+/* =========================
+   PROFILE PREMIUM
+   ========================= */
+
+.profileHeroCard{
+  background: linear-gradient(
+    180deg,
+    rgba(139,195,74,.08),
+    rgba(0,0,0,0)
+  ),
+  var(--card);
+
+  border: 1px solid rgba(139,195,74,.28);
+  border-radius: 24px;
+  padding: 22px;
+  box-shadow:
+    0 16px 36px rgba(0,0,0,.28),
+    0 0 0 3px rgba(139,195,74,.08) inset;
+}
+
+.profileHeroTop{
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+
+.profileAvatarPremium{
+  width:72px;
+  height:72px;
+  border-radius:22px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  font-size:22px;
+  font-weight:900;
+
+  background: linear-gradient(
+    135deg,
+    rgba(139,195,74,.35),
+    rgba(124,179,66,.55)
+  );
+
+  color:#061224;
+
+  box-shadow:
+    0 12px 26px rgba(0,0,0,.35),
+    0 0 0 3px rgba(139,195,74,.25);
+}
+
+.profileHeroText{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.profileHeroName{
+  font-size:22px;
+  font-weight:900;
+  letter-spacing:.2px;
+}
+
+.profileHeroEmail{
+  font-size:14px;
+  opacity:.7;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.profileHeroDivider{
+  height:1px;
+  margin:20px 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(139,195,74,.35),
+    transparent
+  );
+}
+
 </style>
   <link rel="stylesheet" href="theme.css?v=20260221">
 
@@ -2133,32 +2214,28 @@ body.inWorkout .bottomNav{ display:none !important; }
     <!-- PROFILE (NEW SCREEN) -->
     <section class="screen" id="screenProfile">
       <!-- Header premium -->
-      <div class="card" style="padding:16px; border-radius:22px;">
-        <div class="row" style="align-items:center;">
-          <div id="profileAvatar" style="
-            width:56px; height:56px; border-radius:18px;
-            display:flex; align-items:center; justify-content:center;
-            background: rgba(139,195,74,.14);
-            border: 1px solid rgba(139,195,74,.28);
-            box-shadow: 0 10px 26px rgba(0,0,0,.22);
-            font-weight:950; letter-spacing:.2px;
-          ">ET</div>
+    <div class="profileHeroCard">
 
-          <div class="grow" style="min-width:0;">
-            <div class="h1" style="margin:0; line-height:1.05;">
-              <span id="profileName">Profil</span>
-            </div>
-            <div class="muted small" style="margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-              <span id="profileEmail">—</span>
-            </div>
-          </div>
+      <div class="profileHeroTop">
+
+        <div class="profileAvatarPremium" id="profileAvatar">
+          ET
         </div>
 
-        <div style="height:10px"></div>
-        <div class="muted small" style="opacity:.85;">
-          Page profil premium — structure en place (binding données + actions à l’étape suivante).
+        <div class="profileHeroText">
+          <div class="profileHeroName" id="profileName">Elite Training</div>
+          <div class="profileHeroEmail" id="profileEmail">email@email.com</div>
         </div>
-      </div>
+
+    </div>
+
+      <div class="profileHeroDivider"></div>
+
+      <button class="btn primary" id="profileEditOpen">
+        Modifier le profil
+      </button>
+
+    </div>
 
       <div style="height:12px"></div>
 
