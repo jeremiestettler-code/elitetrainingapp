@@ -7633,6 +7633,42 @@ function openProfileEntrySafe(){
       if(fitGoal) fitGoal.textContent = p?.goal || p?.objectif || "—";
       if(fitLevel) fitLevel.textContent = p?.level || p?.niveau || "—";
 
+// ===== MATERIEL (preview chips) =====
+const eqWrap = document.getElementById("equipmentChipsPreview");
+if(eqWrap){
+  const labelMap = {
+    halteres: "Haltères",
+    barre: "Barre",
+    banc: "Banc",
+    poulie: "Poulie",
+    elastiques: "Élastiques",
+    kettlebell: "Kettlebell"
+  };
+
+  // p.equipment attendu = ["halteres","banc",...]
+  let eq = p?.equipment || p?.equipments || p?.materiel || p?.matos || [];
+  if(typeof eq === "string") eq = eq.split(",").map(s=>s.trim()).filter(Boolean);
+  if(!Array.isArray(eq)) eq = [];
+
+  eqWrap.innerHTML = "";
+
+  if(eq.length === 0){
+    const empty = document.createElement("div");
+    empty.className = "muted small";
+    empty.textContent = "Aucun matériel sélectionné.";
+    eqWrap.appendChild(empty);
+  }else{
+    eq.forEach((key)=>{
+      const k = String(key || "").trim();
+      if(!k) return;
+      const chip = document.createElement("span");
+      chip.className = "chip";
+      chip.textContent = labelMap[k] || k;
+      eqWrap.appendChild(chip);
+    });
+  }
+}
+
 
       // âge calculé depuis dob
       let age = "—";
