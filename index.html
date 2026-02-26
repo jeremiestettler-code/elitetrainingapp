@@ -3144,8 +3144,9 @@ function setMsg(txt){ $("loginMsg").textContent = txt || ""; }
           await saveProfile();
           setProfileMsg("Enregistré ✅");
 
-window.refreshProfileScreen?.();
-          
+          setTimeout(()=>window.refreshProfileScreen?.(), 0);
+          closeModal();
+
         }catch(e){
           setProfileMsg("Erreur : " + (e?.message || e));
         }
