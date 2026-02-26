@@ -7765,16 +7765,18 @@ function openProfileEntrySafe(){
       if(fitGoal) fitGoal.textContent = p?.goal || p?.objectif || "—";
       if(fitLevel) fitLevel.textContent = p?.level || p?.niveau || "—";
 
-// ===== MATERIEL (preview chips) =====
+// ===== MATERIEL (preview cards) =====
 const eqWrap = document.getElementById("equipmentChipsPreview");
 if(eqWrap){
   const labelMap = {
     halteres: "Haltères",
-    barre: "Barre",
+    barre: "Barre + disques",
     banc: "Banc",
     poulie: "Poulie",
     elastiques: "Élastiques",
-    kettlebell: "Kettlebell"
+    kettlebell: "Kettlebell",
+    rameur: "Rameur",
+    trx: "TRX"
   };
 
   // p.equipment attendu = ["halteres","banc",...]
@@ -7783,6 +7785,7 @@ if(eqWrap){
   if(!Array.isArray(eq)) eq = [];
 
   eqWrap.innerHTML = "";
+  eqWrap.classList.add("pwEquipmentGrid"); // on réutilise le layout du wizard si dispo
 
   if(eq.length === 0){
     const empty = document.createElement("div");
@@ -7793,10 +7796,14 @@ if(eqWrap){
     eq.forEach((key)=>{
       const k = String(key || "").trim();
       if(!k) return;
-      const chip = document.createElement("span");
-      chip.className = "chip";
-      chip.textContent = labelMap[k] || k;
-      eqWrap.appendChild(chip);
+
+      const card = document.createElement("div");
+      card.className = "pwEquipCard active";
+      card.innerHTML = `
+        <img src="images/equipment/${k}.jpg" alt="${labelMap[k] || k}">
+        <span>${labelMap[k] || k}</span>
+      `;
+      eqWrap.appendChild(card);
     });
   }
 }
