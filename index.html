@@ -3109,6 +3109,8 @@ function setMsg(txt){ $("loginMsg").textContent = txt || ""; }
         const ref = doc(db, "users", currentUser.uid, "profile", "main");
         const data = readForm();
         await setDoc(ref, data, { merge: true });
+        window.firestoreProfile = { ...(window.firestoreProfile||{}), ...data };
+        window.eliteProfile = { ...(window.eliteProfile||{}), ...data };
       }
 
       function openModal(){
