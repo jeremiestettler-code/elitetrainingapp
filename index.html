@@ -1764,8 +1764,9 @@ body.inWorkout .bottomNav{ display:none !important; }
 
 #profileWizardModal .pwEquipmentGrid{
   display:grid;
-  grid-template-columns: 1fr 1fr; /* toujours 2 colonnes */
+  grid-template-columns: repeat(2, minmax(140px, 160px));
   gap:14px;
+  justify-content:center;   /* centre horizontalement */
 }
 
 #profileWizardModal .pwEquipCard{
@@ -1854,8 +1855,9 @@ body.inWorkout .bottomNav{ display:none !important; }
 
 .pwEquipmentGrid{
   display:grid;
-  grid-template-columns: 1fr 1fr; /* toujours 2 colonnes */
+  grid-template-columns: repeat(2, minmax(140px, 160px));
   gap:14px;
+  justify-content:center;
 }
 
 .pwEquipCard{
