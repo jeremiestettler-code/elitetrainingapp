@@ -2387,16 +2387,22 @@ body.inWorkout .bottomNav{ display:none !important; }
 
       <div style="height:12px"></div>
 
-      <div class="card">
-        <div class="row">
+            <div class="card" id="profilePrefsCard">
+        <div class="row" style="align-items:center;">
           <div class="grow">
             <div class="h2">Préférences</div>
-            <div class="muted small">Thème (dark/light).</div>
+            <div class="muted small">Thème de l’application.</div>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div class="muted small" id="profileThemeLabel" style="min-width:54px; text-align:right;">—</div>
+            <label class="switch" title="Basculer le thème">
+              <input type="checkbox" id="themeToggleProfile">
+              <span class="slider"></span>
+            </label>
           </div>
         </div>
       </div>
-    </section>
-    <!-- /PROFILE (NEW SCREEN) -->
     
     <!-- HISTORY -->
     <section class="screen" id="screenHistory">
@@ -3105,6 +3111,22 @@ function setMsg(txt){ $("loginMsg").textContent = txt || ""; }
           applyTheme(themeT.checked ? "dark" : "light");
         });
       }
+
+      // Switch thème (Profil screen)
+      const themeP = $("themeToggleProfile");
+      const themeLabel = $("profileThemeLabel");
+
+      // init état
+      if(themeP) themeP.checked = (document.documentElement.getAttribute("data-theme") === "dark");
+      if(themeLabel) themeLabel.textContent = (document.documentElement.getAttribute("data-theme") === "dark") ? "Sombre" : "Clair";
+
+      if(themeP){
+        themeP.addEventListener("change", ()=>{
+          applyTheme(themeP.checked ? "dark" : "light");
+          if(themeLabel) themeLabel.textContent = themeP.checked ? "Sombre" : "Clair";
+        });
+      }
+      
       if(coachT){
         coachT.addEventListener("change", ()=>{
           coachMode = coachT.checked;
