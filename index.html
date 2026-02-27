@@ -7766,6 +7766,50 @@ document.addEventListener("DOMContentLoaded", ()=>{
   initHomePremiumButtons();
   initBottomNav();
   syncBottomNavVisibility(); // ✅ cache sur login au load, montre ailleurs
+
+  // =========================
+  // Profile — inline edit bindings (SAFE)
+  // =========================
+  (function initProfileEditModeOnce(){
+    if(window.__profileEditBound) return;
+    window.__profileEditBound = true;
+
+    window.setProfileEditMode = function(on){
+      document.documentElement.setAttribute("data-profile-edit", on ? "1" : "0");
+
+      // show/hide edit bar (au cas où il a la classe hidden par défaut)
+      const bar = document.getElementById("profileEditBar");
+      if(bar) bar.classList.toggle("hidden", !on);
+    };
+
+    const btnOpen   = document.getElementById("profileEditOpen");
+    const btnCancel = document.getElementById("profileEditCancel");
+    const btnSave   = document.getElementById("profileEditSave");
+
+    if(btnOpen){
+      btnOpen.addEventListener("click", ()=>{
+        window.setProfileEditMode(true);
+      });
+    }
+
+    if(btnCancel){
+      btnCancel.addEventListener("click", ()=>{
+        window.setProfileEditMode(false);
+        window.refreshProfileScreen?.();
+      });
+    }
+
+    if(btnSave){
+      btnSave.addEventListener("click", ()=>{
+        // Pour l’instant: on sort juste du mode edit (on branchera la vraie sauvegarde ensuite)
+        window.setProfileEditMode(false);
+        window.refreshProfileScreen?.();
+      });
+    }
+
+    // état initial
+    window.setProfileEditMode(false);
+  })();
 });
 
 // =======================
