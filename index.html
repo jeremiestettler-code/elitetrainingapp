@@ -7864,20 +7864,34 @@ window.setProfileEditMode = function(on){
 if(btnSave){
   btnSave.addEventListener("click", async ()=>{
     try{
-      const inp = document.getElementById("editFirstName");
-      const v = String(inp?.value || "").trim();
+      const p0 = window.eliteProfile || window.firestoreProfile || {};
+
+      // Valeurs inputs
+      const vFirst = String(document.getElementById("editFirstName")?.value || "").trim();
+      const vDob  = String(document.getElementById("editDob")?.value || "").trim();   // "YYYY-MM-DD"
+      const vSex  = String(document.getElementById("editSex")?.value || "").trim();
+
+      // Patch minimal (on n’écrase pas tout)
+      const patch = { updatedAt: new Date().toISOString() };
+
+      if(vFirst){
+        patch.firstName = vFirst;
+        patch.displayName = vFirst;
+      }
+      // autorise aussi “vider” la date/sexe si l’utilisateur efface
+      patch.dob = vDob ? vDob : null;
+      patch.sex = vSex ? vSex : null;
 
       // 1) patch mémoire (UI immédiate)
-      if(v){
-        window.eliteProfile = { ...(window.eliteProfile||{}), firstName: v, displayName: v };
-        window.firestoreProfile = { ...(window.firestoreProfile||{}), firstName: v, displayName: v };
-      }
+      window.eliteProfile = { ...(window.eliteProfile||p0), ...patch };
+      window.firestoreProfile = { ...(window.firestoreProfile||p0), ...patch };
 
       // 2) patch Firestore (SAFE, merge)
       try{
-        if(typeof currentUser !== "undefined" && currentUser && typeof db !== "undefined" && typeof doc === "function" && typeof setDoc === "function"){
+        if(typeof currentUser !== "undefined" && currentUser &&
+           typeof db !== "undefined" && typeof doc === "function" && typeof setDoc === "function"){
           const ref = doc(db, "users", currentUser.uid, "profile", "main");
-          await setDoc(ref, { firstName: v, displayName: v, updatedAt: new Date().toISOString() }, { merge:true });
+          await setDoc(ref, patch, { merge:true });
         }
       }catch(e){ /* offline / non dispo -> ok */ }
 
