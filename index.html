@@ -7837,34 +7837,35 @@ document.addEventListener("DOMContentLoaded", ()=>{
 if(btnSave){
   btnSave.addEventListener("click", async ()=>{
     try{
-      const p0 = window.eliteProfile || window.firestoreProfile || {};
+      const u = window.currentUser || (typeof currentUser !== "undefined" ? currentUser : null);
+      const uid = u?.uid || null;
 
-      // Valeurs inputs (inline)
-      const vFirst = String(document.getElementById("editFirstName")?.value || "").trim();
-      const vDob   = String(document.getElementById("editDob")?.value || "").trim(); // "YYYY-MM-DD"
-      const vSex   = String(document.getElementById("editSex")?.value || "").trim();
-
-      // Patch minimal (on n’écrase pas tout)
-      const patch = { updatedAt: new Date().toISOString() };
-
-      if(vFirst){
-        patch.firstName = vFirst;
-        patch.displayName = vFirst;
+      const inp = document.getElementById("editFirstName");
+      const v = String(inp?.value || "").trim();
+      if(!v){
+        window.setProfileEditMode(false);
+        window.refreshProfileScreen?.();
+        return;
       }
 
-      // Autorise aussi “vider” si l’utilisateur efface
-      patch.dob = vDob ? vDob : null;
-      patch.sex = vSex ? vSex : null;
+      const patch = { firstName: v, displayName: v, updatedAt: new Date().toISOString() };
 
       // 1) patch mémoire (UI immédiate)
-      window.eliteProfile = { ...(window.eliteProfile||p0), ...patch };
-      window.firestoreProfile = { ...(window.firestoreProfile||p0), ...patch };
+      window.eliteProfile = { ...(window.eliteProfile||{}), ...patch };
+      window.firestoreProfile = { ...(window.firestoreProfile||{}), ...patch };
+
+      // 1bis) patch localStorage (profil onboarding) si dispo
+      try{
+        if(uid && typeof saveEtProfile === "function"){
+          const prev = (typeof loadEtProfile === "function") ? (loadEtProfile(uid) || {}) : {};
+          saveEtProfile(uid, { ...prev, ...patch });
+        }
+      }catch(e){ /* ok */ }
 
       // 2) patch Firestore (SAFE, merge)
       try{
-        if(typeof currentUser !== "undefined" && currentUser &&
-           typeof db !== "undefined" && typeof doc === "function" && typeof setDoc === "function"){
-          const ref = doc(db, "users", currentUser.uid, "profile", "main");
+        if(uid && typeof db !== "undefined" && typeof doc === "function" && typeof setDoc === "function"){
+          const ref = doc(db, "users", uid, "profile", "main");
           await setDoc(ref, patch, { merge:true });
         }
       }catch(e){ /* offline / non dispo -> ok */ }
