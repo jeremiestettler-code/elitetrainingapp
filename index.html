@@ -8119,9 +8119,54 @@ setTimeout(()=>{
 
   if(btnSave && !btnSave.__saveBound){
     btnSave.__saveBound = true;
-    btnSave.addEventListener("click", ()=>{
-      window.setProfileEditMode(false);
-      window.refreshProfileScreen?.();
+    btnSave.addEventListener("click", async ()=>{
+      try{
+        // user
+        const u = (typeof currentUser !== "undefined" && currentUser) ? currentUser : (window.currentUser || null);
+        const uid = u?.uid || null;
+
+        // read inputs
+        const vFirst = String(document.getElementById("editFirstName")?.value || "").trim();
+        const vDob   = String(document.getElementById("editDob")?.value || "").trim(); // YYYY-MM-DD
+        const vSex   = String(document.getElementById("editSex")?.value || "").trim();
+
+        // patch
+        const patch = {
+          updatedAt: new Date().toISOString(),
+          // on garde displayName aligné au prénom
+          ...(vFirst ? { firstName: vFirst, displayName: vFirst } : {}),
+          dob: vDob || null,
+          sex: vSex || null
+        };
+
+        // 1) mémoire (UI immédiate)
+        window.eliteProfile = { ...(window.eliteProfile||{}), ...patch };
+        window.firestoreProfile = { ...(window.firestoreProfile||{}), ...patch };
+
+        // 2) localStorage (CRUCIAL pour survivre au redémarrage)
+        try{
+          if(uid && typeof loadEtProfile === "function" && typeof saveEtProfile === "function"){
+            const prev = loadEtProfile(uid) || {};
+            const merged = { ...prev, ...patch };
+            saveEtProfile(uid, merged);
+            window.eliteProfile = merged; // ✅ ce sera ce qui est rechargé au boot
+          }
+        }catch(e){}
+
+        // 3) Firestore (si dispo, sinon OK offline)
+        try{
+          if(uid && typeof db !== "undefined" && typeof doc === "function" && typeof setDoc === "function"){
+            const ref = doc(db, "users", uid, "profile", "main");
+            await setDoc(ref, patch, { merge:true });
+          }
+        }catch(e){}
+
+      }finally{
+        window.setProfileEditMode(false);
+        window.refreshProfileScreen?.();
+        try{ updateProfilePremiumUI?.(); }catch(e){}
+        try{ updateHomePremiumUI?.(); }catch(e){}
+      }
     });
   }
 },0);
