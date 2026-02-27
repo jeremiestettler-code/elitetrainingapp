@@ -7861,6 +7861,10 @@ window.setProfileEditMode = function(on){
   }
 };
 
+const btnOpen   = document.getElementById("profileEditOpen");
+const btnCancel = document.getElementById("profileEditCancel");
+const btnSave   = document.getElementById("profileEditSave");
+
 if(btnSave){
   btnSave.addEventListener("click", async ()=>{
     try{
