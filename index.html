@@ -2102,6 +2102,25 @@ html[data-profile-edit="1"] #profileEditBar{
   display:flex;
 }
 
+/* ===== Profile inline fields (view vs edit) ===== */
+.profileInfoRight{
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  gap:10px;
+  min-width: 160px;
+}
+
+.profileViewOnly{ display:inline; }
+.profileEditOnly{ display:none; }
+
+html[data-profile-edit="1"] .profileViewOnly{ display:none; }
+html[data-profile-edit="1"] .profileEditOnly{ display:block; }
+
+.profileInlineInput{
+  max-width: 180px;
+  text-align:right;
+}
 
 </style>
   <link rel="stylesheet" href="theme.css?v=20260221">
@@ -2420,7 +2439,17 @@ html[data-profile-edit="1"] #profileEditBar{
 
   <div class="profileInfoRow">
     <span>Prénom</span>
-    <span id="infoFirstName">—</span>
+
+    <div class="profileInfoRight">
+      <span class="profileViewOnly" id="infoFirstName">—</span>
+      <input
+        class="input profileEditOnly profileInlineInput"
+        id="editFirstName"
+        type="text"
+        autocomplete="given-name"
+        placeholder="Ton prénom"
+      >
+    </div>
   </div>
 
   <div class="profileInfoRow">
@@ -7805,13 +7834,37 @@ document.addEventListener("DOMContentLoaded", ()=>{
       });
     }
 
-    if(btnSave){
-      btnSave.addEventListener("click", ()=>{
-        // Pour l’instant: on sort juste du mode edit (on branchera la vraie sauvegarde ensuite)
-        window.setProfileEditMode(false);
-        window.refreshProfileScreen?.();
-      });
+if(btnSave){
+  btnSave.addEventListener("click", async ()=>{
+    try{
+      const inp = document.getElementById("editFirstName");
+      const v = String(inp?.value || "").trim();
+
+      // 1) patch mémoire (UI immédiate)
+      if(v){
+        window.eliteProfile = { ...(window.eliteProfile||{}), firstName: v, displayName: v };
+        window.firestoreProfile = { ...(window.firestoreProfile||{}), firstName: v, displayName: v };
+      }
+
+      // 2) patch Firestore (SAFE, merge)
+      try{
+        if(typeof currentUser !== "undefined" && currentUser && typeof db !== "undefined" && typeof doc === "function" && typeof setDoc === "function"){
+          const ref = doc(db, "users", currentUser.uid, "profile", "main");
+          await setDoc(ref, { firstName: v, displayName: v, updatedAt: new Date().toISOString() }, { merge:true });
+        }
+      }catch(e){ /* offline / non dispo -> ok */ }
+
+      // 3) exit edit + refresh UI
+      window.setProfileEditMode(false);
+      window.refreshProfileScreen?.();
+      try{ updateHomePremiumUI?.(); }catch(e){}
+    }catch(e){
+      // en cas de souci: on sort quand même du mode edit
+      window.setProfileEditMode(false);
+      window.refreshProfileScreen?.();
     }
+  });
+}
 
     // état initial
     window.setProfileEditMode(false);
@@ -7999,6 +8052,18 @@ window.setProfileEditMode = function(on){
 
   const btn = document.getElementById("profileEditOpen");
   if(btn) btn.style.display = on ? "none" : "";
+
+  // Prefill Prénom à l’entrée en mode edit
+  if(on){
+    const inp = document.getElementById("editFirstName");
+    if(inp){
+      const p = window.eliteProfile || window.firestoreProfile || {};
+      const val = String(p.firstName || p.prenom || p.displayName || "").trim();
+      inp.value = val;
+      setTimeout(()=>{ try{ inp.focus(); inp.select?.(); }catch(e){} }, 0);
+    }
+  }
+
 };
 setTimeout(()=>{
   const btnOpen   = document.getElementById("profileEditOpen");
