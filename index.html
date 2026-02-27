@@ -8164,18 +8164,20 @@ setTimeout(()=>{
 
 if(btnSave && !btnSave.__saveBound){
   btnSave.__saveBound = true;
+
   btnSave.addEventListener("click", async ()=>{
     try{
       const vFirst = String(document.getElementById("editFirstName")?.value || "").trim();
-
-      // On sauvegarde uniquement ce qui existe (safe)
-      const patch = {};
-      if(vFirst){
-        patch.firstName = vFirst;
-        patch.displayName = vFirst;
+      if(!vFirst){
+        window.setProfileEditMode(false);
+        window.refreshProfileScreen?.();
+        return;
       }
 
-      await saveEliteProfile(patch);
+      await saveEliteProfile({
+        firstName: vFirst,
+        displayName: vFirst
+      });
 
     }catch(e){
       console.warn("[profile] save failed", e);
@@ -8186,60 +8188,6 @@ if(btnSave && !btnSave.__saveBound){
     }
   });
 }
-    try{
-      // user/uid (robuste)
-      const u = (typeof currentUser !== "undefined" && currentUser) ? currentUser : (window.currentUser || null);
-      const uid = u?.uid || null;
-
-      // lis ce qui existe (on ne casse rien si un champ n'existe pas dans le HTML)
-      const vFirst = String(document.getElementById("editFirstName")?.value || "").trim();
-      const vDob   = String(document.getElementById("editDob")?.value || "").trim(); // YYYY-MM-DD
-      const vSex   = String(document.getElementById("editSex")?.value || "").trim();
-
-      // patch minimal + safe
-      const patch = { updatedAt: new Date().toISOString() };
-      if(vFirst) patch.firstName = vFirst, patch.displayName = vFirst;
-      if(document.getElementById("editDob")) patch.dob = vDob || null;
-      if(document.getElementById("editSex")) patch.sex = vSex || null;
-
-      // 1) mémoire (UI immédiate)
-      window.eliteProfile = { ...(window.eliteProfile||{}), ...patch };
-      window.firestoreProfile = { ...(window.firestoreProfile||{}), ...patch };
-
-      // 2) localStorage (CRUCIAL pour survivre au redémarrage)
-      try{
-        if(uid && typeof loadEtProfile === "function" && typeof saveEtProfile === "function"){
-          const prev = loadEtProfile(uid) || {};
-          const merged = { ...prev, ...patch };
-          saveEtProfile(uid, merged);
-          window.eliteProfile = merged;
-        }
-      }catch(e){
-        console.warn("[profile] localStorage persist failed (ok)", e);
-      }
-
-      // 3) Firestore (SAFE, merge, ok offline)
-      try{
-        if(uid && typeof db !== "undefined" && typeof doc === "function" && typeof setDoc === "function"){
-          await setDoc(doc(db, "users", uid, "profile", "main"), patch, { merge:true });
-        }
-      }catch(e){
-        console.warn("[profile] Firestore persist failed (ok/offline)", e);
-      }
-
-      // 4) exit edit + refresh UI
-      window.setProfileEditMode(false);
-      window.refreshProfileScreen?.();
-
-      // refresh Home premium si dispo
-      try{ window.updateHomePremiumUI?.(); }catch(e){}
-    }catch(e){
-      console.warn("[profile] save failed", e);
-      window.setProfileEditMode(false);
-      window.refreshProfileScreen?.();
-    }
-  });
-
 
   try{ updateHeaderNow(); }catch(e){}
 };
