@@ -8142,55 +8142,99 @@ window.setProfileEditMode = function(on){
   }
 
 };
+
+
 setTimeout(()=>{
   const btnOpen   = document.getElementById("profileEditOpen");
   const btnCancel = document.getElementById("profileEditCancel");
   const btnSave   = document.getElementById("profileEditSave");
 
+  // Ouvrir edit
   if(btnOpen && !btnOpen.__editBound){
     btnOpen.__editBound = true;
     btnOpen.addEventListener("click", ()=>{
       window.setProfileEditMode(true);
+
+      // prefill prénom si input existe
+      try{
+        const p = window.eliteProfile || window.firestoreProfile || {};
+        const inp = document.getElementById("editFirstName");
+        if(inp){
+          const val = String(p.firstName || p.prenom || p.displayName || "").trim();
+          inp.value = val;
+        }
+      }catch(e){}
     });
   }
 
+  // Annuler
   if(btnCancel && !btnCancel.__cancelBound){
     btnCancel.__cancelBound = true;
     btnCancel.addEventListener("click", ()=>{
       window.setProfileEditMode(false);
       window.refreshProfileScreen?.();
+      try{ updateHomePremiumUI?.(); }catch(e){}
     });
   }
 
-if(btnSave && !btnSave.__saveBound){
-  btnSave.__saveBound = true;
+  // Enregistrer (prénom) — persiste localStorage + Firestore si dispo
+  if(btnSave && !btnSave.__saveBound){
+    btnSave.__saveBound = true;
+    btnSave.addEventListener("click", async ()=>{
+      try{
+        const inp = document.getElementById("editFirstName");
+        const vFirst = String(inp?.value || "").trim();
+        if(!vFirst){
+          window.setProfileEditMode(false);
+          window.refreshProfileScreen?.();
+          return;
+        }
 
-  btnSave.addEventListener("click", async ()=>{
-    try{
-      const vFirst = String(document.getElementById("editFirstName")?.value || "").trim();
-      if(!vFirst){
+        const u = window.currentUser || (typeof currentUser !== "undefined" ? currentUser : null);
+        const uid = u?.uid || null;
+
+        const patch = {
+          firstName: vFirst,
+          displayName: vFirst,
+          updatedAt: new Date().toISOString()
+        };
+
+        // 1) mémoire (UI immédiate)
+        window.eliteProfile = { ...(window.eliteProfile||{}), ...patch };
+        window.firestoreProfile = { ...(window.firestoreProfile||{}), ...patch };
+
+        // 2) localStorage (survit au redémarrage)
+        try{
+          if(uid && typeof loadEtProfile === "function" && typeof saveEtProfile === "function"){
+            const prev = loadEtProfile(uid) || {};
+            const merged = { ...prev, ...patch };
+            saveEtProfile(uid, merged);
+            window.eliteProfile = merged;
+          }
+        }catch(e){
+          console.warn("[profile] localStorage persist failed (ok)", e);
+        }
+
+        // 3) Firestore (si dispo)
+        try{
+          if(uid && typeof db !== "undefined" && typeof doc === "function" && typeof setDoc === "function"){
+            const ref = doc(db, "users", uid, "profile", "main");
+            await setDoc(ref, patch, { merge:true });
+          }
+        }catch(e){
+          console.warn("[profile] Firestore persist failed (ok/offline)", e);
+        }
+
+      }catch(e){
+        console.warn("[profile] save failed", e);
+      }finally{
         window.setProfileEditMode(false);
         window.refreshProfileScreen?.();
-        return;
+        try{ updateHomePremiumUI?.(); }catch(e){}
       }
-
-      await saveEliteProfile({
-        firstName: vFirst,
-        displayName: vFirst
-      });
-
-    }catch(e){
-      console.warn("[profile] save failed", e);
-    }finally{
-      window.setProfileEditMode(false);
-      window.refreshProfileScreen?.();
-      try{ updateHomePremiumUI?.(); }catch(e){}
-    }
-  });
-}
-
-  try{ updateHeaderNow(); }catch(e){}
-};
+    });
+  }
+}, 0);
 
   // ✅ Si la page Profil (screen) existe, on l’ouvre
   try{
