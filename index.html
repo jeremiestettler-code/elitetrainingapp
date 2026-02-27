@@ -65,10 +65,10 @@
   position: fixed;
   left: 0;
   right: 0;
-  bottom: var(--safe-bot); /* ✅ remonte au-dessus de la safe-area iPhone */
+  bottom: 0;
   z-index: 9999;
 
-  padding: 10px 14px 10px; /* ✅ plus besoin d’ajouter safe-bot ici */
+  padding: 10px 14px calc(var(--safe-bot) + 10px);
   display: flex;
   justify-content: center;
 }
@@ -2071,23 +2071,17 @@ body.inWorkout .bottomNav{ display:none !important; }
 /* ===== Profile inline edit mode ===== */
 
 .profileEditBar{
-  position: fixed;
-  left: 16px;
-  right: 16px;
-  bottom: calc(var(--nav-h, 0px) + var(--safe-bot, 0px) + 16px);
-  z-index: 50;
-
+  position: sticky;
+  bottom: calc(var(--nav-h, 0px) + var(--safe-bot, 0px) + 12px);
+  z-index: 5;
   display:flex;
   gap:10px;
   padding:14px;
   border-radius:18px;
-
-  background: rgba(0,0,0,.75);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-
+  background: rgba(0,0,0,.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255,255,255,.08);
-  box-shadow: 0 10px 30px rgba(0,0,0,.4);
 }
 
 .profileEditBar.hidden{
@@ -2102,25 +2096,6 @@ html[data-profile-edit="1"] #profileEditBar{
   display:flex;
 }
 
-/* ===== Profile inline fields (view vs edit) ===== */
-.profileInfoRight{
-  display:flex;
-  justify-content:flex-end;
-  align-items:center;
-  gap:10px;
-  min-width: 160px;
-}
-
-.profileViewOnly{ display:inline; }
-.profileEditOnly{ display:none; }
-
-html[data-profile-edit="1"] .profileViewOnly{ display:none; }
-html[data-profile-edit="1"] .profileEditOnly{ display:block; }
-
-.profileInlineInput{
-  max-width: 180px;
-  text-align:right;
-}
 
 </style>
   <link rel="stylesheet" href="theme.css?v=20260221">
@@ -2439,17 +2414,7 @@ html[data-profile-edit="1"] .profileEditOnly{ display:block; }
 
   <div class="profileInfoRow">
     <span>Prénom</span>
-
-    <div class="profileInfoRight">
-      <span class="profileViewOnly" id="infoFirstName">—</span>
-      <input
-        class="input profileEditOnly profileInlineInput"
-        id="editFirstName"
-        type="text"
-        autocomplete="given-name"
-        placeholder="Ton prénom"
-      >
-    </div>
+    <span id="infoFirstName">—</span>
   </div>
 
   <div class="profileInfoRow">
@@ -2457,34 +2422,14 @@ html[data-profile-edit="1"] .profileEditOnly{ display:block; }
     <span id="infoEmail">—</span>
   </div>
 
-<div class="profileInfoRow">
-  <span>Date de naissance</span>
-
-  <div class="profileInfoRight">
-    <span class="profileViewOnly" id="infoAge">—</span>
-    <input
-      class="input profileEditOnly profileInlineInput"
-      id="editDob"
-      type="date"
-    >
+  <div class="profileInfoRow">
+    <span>Âge</span>
+    <span id="infoAge">—</span>
   </div>
-</div>
 
-<div class="profileInfoRow">
-  <span>Sexe</span>
-
-  <div class="profileInfoRight">
-    <span class="profileViewOnly" id="infoSexe">—</span>
-
-    <select
-      class="input profileEditOnly profileInlineInput"
-      id="editSex"
-    >
-      <option value="">—</option>
-      <option value="Homme">Homme</option>
-      <option value="Femme">Femme</option>
-      <option value="Autre">Autre</option>
-    </select>
+  <div class="profileInfoRow">
+    <span>Sexe</span>
+    <span id="infoSexe">—</span>
   </div>
 </div>
 
@@ -7826,112 +7771,85 @@ document.addEventListener("DOMContentLoaded", ()=>{
   // Profile — inline edit bindings (SAFE)
   // =========================
   (function initProfileEditModeOnce(){
-    try{
-      if(window.__profileEditBound) return;
-      window.__profileEditBound = true;
+    if(window.__profileEditBound) return;
+    window.__profileEditBound = true;
 
-      // Mode edit (on/off)
-      window.setProfileEditMode = function(on){
-        const root = document.documentElement;
+    window.setProfileEditMode = function(on){
+      document.documentElement.setAttribute("data-profile-edit", on ? "1" : "0");
 
-        if(on) root.setAttribute("data-profile-edit", "1");
-        else root.removeAttribute("data-profile-edit");
+      // show/hide edit bar (au cas où il a la classe hidden par défaut)
+      const bar = document.getElementById("profileEditBar");
+      if(bar) bar.classList.toggle("hidden", !on);
+    };
 
-        const bar = document.getElementById("profileEditBar");
-        if(bar) bar.classList.toggle("hidden", !on);
+    const btnOpen   = document.getElementById("profileEditOpen");
+    const btnCancel = document.getElementById("profileEditCancel");
+    const btnSave   = document.getElementById("profileEditSave");
 
-        const btn = document.getElementById("profileEditOpen");
-        if(btn) btn.style.display = on ? "none" : "";
-
-        // Prefill quand on entre en mode edit
-        if(on){
-          const p = window.eliteProfile || window.firestoreProfile || {};
-
-          const inpFirst = document.getElementById("editFirstName");
-          if(inpFirst){
-            const val = String(p.firstName || p.prenom || p.displayName || "").trim();
-            inpFirst.value = val;
-          }
-
-          const inpDob = document.getElementById("editDob");
-          if(inpDob){
-            inpDob.value = p.dob || "";
-          }
-
-          const selSex = document.getElementById("editSex");
-          if(selSex){
-            selSex.value = p.sex || p.gender || "";
-          }
-        }
-      };
-
-      const btnOpen   = document.getElementById("profileEditOpen");
-      const btnCancel = document.getElementById("profileEditCancel");
-      const btnSave   = document.getElementById("profileEditSave");
-
-      if(btnOpen){
-        btnOpen.addEventListener("click", ()=>{
-          window.setProfileEditMode(true);
-        });
-      }
-
-      if(btnCancel){
-        btnCancel.addEventListener("click", ()=>{
-          window.setProfileEditMode(false);
-          window.refreshProfileScreen?.();
-        });
-      }
-
-      if(btnSave){
-        btnSave.addEventListener("click", async ()=>{
-          try{
-            const p0 = window.eliteProfile || window.firestoreProfile || {};
-
-            const vFirst = String(document.getElementById("editFirstName")?.value || "").trim();
-            const vDob   = String(document.getElementById("editDob")?.value || "").trim();
-            const vSex   = String(document.getElementById("editSex")?.value || "").trim();
-
-            const patch = { updatedAt: new Date().toISOString() };
-
-            if(vFirst){
-              patch.firstName = vFirst;
-              patch.displayName = vFirst;
-            }
-            patch.dob = vDob ? vDob : null;
-            patch.sex = vSex ? vSex : null;
-
-            // 1) patch mémoire (UI immédiate)
-            window.eliteProfile = { ...(window.eliteProfile||p0), ...patch };
-            window.firestoreProfile = { ...(window.firestoreProfile||p0), ...patch };
-
-            // 2) patch Firestore (SAFE, merge)
-            try{
-              const u = window.currentUser || (typeof currentUser !== "undefined" ? currentUser : null);
-              if(u && typeof db !== "undefined" && typeof doc === "function" && typeof setDoc === "function"){
-                const ref = doc(db, "users", u.uid, "profile", "main");
-                await setDoc(ref, patch, { merge:true });
-              }
-            }catch(e){ /* offline -> ok */ }
-
-            // 3) exit edit + refresh UI
-            window.setProfileEditMode(false);
-            window.refreshProfileScreen?.();
-            try{ updateHomePremiumUI?.(); }catch(e){}
-          }catch(e){
-            window.setProfileEditMode(false);
-            window.refreshProfileScreen?.();
-          }
-        });
-      }
-
-      // état initial
-      window.setProfileEditMode(false);
-    }catch(e){
-      // si quoi que ce soit plante, on évite de casser le reste de l’app
-      try{ document.documentElement.removeAttribute("data-profile-edit"); }catch(_){}
+    if(btnOpen){
+      btnOpen.addEventListener("click", ()=>{
+        window.setProfileEditMode(true);
+      });
     }
+
+    if(btnCancel){
+      btnCancel.addEventListener("click", ()=>{
+        window.setProfileEditMode(false);
+        window.refreshProfileScreen?.();
+      });
+    }
+
+    if(btnSave){
+      btnSave.addEventListener("click", ()=>{
+        // Pour l’instant: on sort juste du mode edit (on branchera la vraie sauvegarde ensuite)
+        window.setProfileEditMode(false);
+        window.refreshProfileScreen?.();
+      });
+    }
+
+    // état initial
+    window.setProfileEditMode(false);
   })();
 });
+
+// =======================
+// Bottom nav visibility watcher (bulletproof)
+// =======================
+(function(){
+  function apply(){
+    const nav = document.getElementById("bottomNav");
+    const login = document.getElementById("screenLogin");
+    if(!nav || !login) return;
+
+    const isLogin = login.classList.contains("active");
+    document.body.classList.toggle("screenLoginActive", isLogin);
+
+    // évite que la nav reste cachée à cause d’un display inline précédent
+    if(isLogin) nav.style.display = "none";
+    else nav.style.removeProperty("display");
+  }
+
+  // Applique une première fois (au load + après auth)
+  apply();
+  setTimeout(apply, 50);
+  setTimeout(apply, 300);
+
+  // Observe les changements de classe sur les screens
+  const root = document.body;
+  const obs = new MutationObserver((mutations)=>{
+    for(const m of mutations){
+      if(m.type === "attributes" && m.attributeName === "class"){
+        apply();
+        break;
+      }
+    }
+  });
+
+  // Observe les screens (c’est là que "active" change)
+  document.querySelectorAll(".screen").forEach(el=>{
+    obs.observe(el, { attributes:true, attributeFilter:["class"] });
+  });
+})();
 
 function setBottomNavActive(which){
   const bSessions = document.getElementById("navSessions");
@@ -8062,30 +7980,7 @@ window.refreshProfileScreen = function(){
 
 // ===== INLINE EDIT MODE (foundation) =====
 window.setProfileEditMode = function(on){
-  const root = document.documentElement;
-
-  // ✅ ON: data-profile-edit="1"
-  // ✅ OFF: on retire l’attribut (évite les états bizarres)
-  if(on) root.setAttribute("data-profile-edit", "1");
-  else root.removeAttribute("data-profile-edit");
-
-  // synchro UI (ne dépend pas uniquement du CSS)
-  const bar = document.getElementById("profileEditBar");
-  if(bar) bar.classList.toggle("hidden", !on);
-
-  const btn = document.getElementById("profileEditOpen");
-  if(btn) btn.style.display = on ? "none" : "";
-
-  // Prefill Prénom à l’entrée en mode edit
-  if(on){
-    const inp = document.getElementById("editFirstName");
-    if(inp){
-      const p = window.eliteProfile || window.firestoreProfile || {};
-      const val = String(p.firstName || p.prenom || p.displayName || "").trim();
-      inp.value = val;
-      setTimeout(()=>{ try{ inp.focus(); inp.select?.(); }catch(e){} }, 0);
-    }
-  }
+  document.documentElement.setAttribute("data-profile-edit", on ? "1" : "0");
 };
 
 setTimeout(()=>{
