@@ -2804,6 +2804,51 @@ function saveEtProfile(uid, profile){
   }
 }
 
+// ======================
+// ✅ One true save function (single source of truth)
+// ======================
+async function saveEliteProfile(patch){
+  const u = window.currentUser || null;
+  const uid = u?.uid || null;
+  if(!uid) return null;
+
+  const merged = {
+    ...(window.eliteProfile || {}),
+    ...(window.firestoreProfile || {}),
+    ...(patch || {}),
+    updatedAt: new Date().toISOString()
+  };
+
+  // 1) mémoire (UI immédiate)
+  window.eliteProfile = merged;
+  window.firestoreProfile = merged;
+
+  // 2) localStorage (source relue au boot)
+  try{
+    saveEtProfile(uid, merged);
+  }catch(e){}
+
+  // 3) Firestore (si dispo)
+  try{
+    if(typeof db !== "undefined" && typeof doc === "function" && typeof setDoc === "function"){
+      const ref = doc(db, "users", uid, "profile", "main");
+      await setDoc(ref, merged, { merge:true });
+    }
+  }catch(e){ /* offline ok */ }
+
+  // 4) Firebase Auth displayName (pour Home, car getAthleteName() priorise displayName)
+  try{
+    const first = String(merged.firstName || merged.displayName || "").trim();
+    if(first && typeof auth !== "undefined" && auth?.currentUser && typeof updateProfile === "function"){
+      await updateProfile(auth.currentUser, { displayName: first });
+      // update immédiat côté window.currentUser (pour éviter d'attendre un reload)
+      try{ window.currentUser.displayName = first; }catch(e){}
+    }
+  }catch(e){ /* ok */ }
+
+  return merged;
+}
+
 const PW_LEVELS = ["Débutant","Intermédiaire","Avancé"];
 const PW_GOALS  = ["Force","Hypertrophie","Perte de gras","Recomp","Mobilité"];
 const PW_EQUIPMENT = [
@@ -8120,6 +8165,27 @@ setTimeout(()=>{
 if(btnSave && !btnSave.__saveBound){
   btnSave.__saveBound = true;
   btnSave.addEventListener("click", async ()=>{
+    try{
+      const vFirst = String(document.getElementById("editFirstName")?.value || "").trim();
+
+      // On sauvegarde uniquement ce qui existe (safe)
+      const patch = {};
+      if(vFirst){
+        patch.firstName = vFirst;
+        patch.displayName = vFirst;
+      }
+
+      await saveEliteProfile(patch);
+
+    }catch(e){
+      console.warn("[profile] save failed", e);
+    }finally{
+      window.setProfileEditMode(false);
+      window.refreshProfileScreen?.();
+      try{ updateHomePremiumUI?.(); }catch(e){}
+    }
+  });
+}
     try{
       // user/uid (robuste)
       const u = (typeof currentUser !== "undefined" && currentUser) ? currentUser : (window.currentUser || null);
