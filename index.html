@@ -2068,6 +2068,35 @@ body.inWorkout .bottomNav{ display:none !important; }
   );
 }
 
+/* ===== Profile inline edit mode ===== */
+
+.profileEditBar{
+  position: sticky;
+  bottom: calc(var(--nav-h, 0px) + var(--safe-bot, 0px) + 12px);
+  z-index: 5;
+  display:flex;
+  gap:10px;
+  padding:14px;
+  border-radius:18px;
+  background: rgba(0,0,0,.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+.profileEditBar.hidden{
+  display:none;
+}
+
+html[data-profile-edit="1"] #profileEditOpen{
+  display:none;
+}
+
+html[data-profile-edit="1"] #profileEditBar{
+  display:flex;
+}
+
+
 </style>
   <link rel="stylesheet" href="theme.css?v=20260221">
 
@@ -2367,6 +2396,17 @@ body.inWorkout .bottomNav{ display:none !important; }
     </div>
 
       <div style="height:12px"></div>
+
+  <!-- PROFILE INLINE EDIT BAR -->
+  <div id="profileEditBar" class="profileEditBar hidden">
+    <button class="btn secondary" id="profileEditCancel" type="button">
+      Annuler
+    </button>
+    <button class="btn primary" id="profileEditSave" type="button">
+      Enregistrer
+    </button>
+  </div>
+
 
       <!-- Sections (placeholders pour l’instant) -->
 <div class="card" id="profileInfosCard">
@@ -7893,6 +7933,41 @@ if(eqWrap){
 
 // Expose un refresh global (utile après edit/save)
 window.refreshProfileScreen = function(){
+
+// ===== INLINE EDIT MODE (foundation) =====
+window.setProfileEditMode = function(on){
+  document.documentElement.setAttribute("data-profile-edit", on ? "1" : "0");
+};
+
+setTimeout(()=>{
+  const btnOpen   = document.getElementById("profileEditOpen");
+  const btnCancel = document.getElementById("profileEditCancel");
+  const btnSave   = document.getElementById("profileEditSave");
+
+  if(btnOpen && !btnOpen.__editBound){
+    btnOpen.__editBound = true;
+    btnOpen.addEventListener("click", ()=>{
+      window.setProfileEditMode(true);
+    });
+  }
+
+  if(btnCancel && !btnCancel.__cancelBound){
+    btnCancel.__cancelBound = true;
+    btnCancel.addEventListener("click", ()=>{
+      window.setProfileEditMode(false);
+      window.refreshProfileScreen?.();
+    });
+  }
+
+  if(btnSave && !btnSave.__saveBound){
+    btnSave.__saveBound = true;
+    btnSave.addEventListener("click", ()=>{
+      window.setProfileEditMode(false);
+      window.refreshProfileScreen?.();
+    });
+  }
+},0);
+
   try{ updateHeaderNow(); }catch(e){}
 };
 
