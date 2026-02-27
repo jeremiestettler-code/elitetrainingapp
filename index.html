@@ -7854,6 +7854,23 @@ if(btnSave){
       window.eliteProfile = { ...(window.eliteProfile||{}), ...patch };
       window.firestoreProfile = { ...(window.firestoreProfile||{}), ...patch };
 
+      // ✅ Persist localStorage (profil onboarding) — indispensable pour survivre au redémarrage
+      try{
+        const uid = (window.currentUser?.uid) || (typeof currentUser !== "undefined" ? currentUser?.uid : null);
+        if(uid && typeof loadEtProfile === "function" && typeof saveEtProfile === "function"){
+          const prev = loadEtProfile(uid) || {};
+          const merged = {
+            ...prev,
+            ...window.eliteProfile,          // inclut ton prénom édité
+            updatedAt: new Date().toISOString()
+          };
+          saveEtProfile(uid, merged);
+          window.eliteProfile = merged;      // ✅ s’aligne avec ce qui sera rechargé au prochain boot
+        }
+      }catch(e){
+        console.warn("[profile] localStorage persist failed (ok)", e);
+      }
+
       // 1bis) patch localStorage (profil onboarding) si dispo
       try{
         if(uid && typeof saveEtProfile === "function"){
