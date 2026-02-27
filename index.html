@@ -7826,144 +7826,112 @@ document.addEventListener("DOMContentLoaded", ()=>{
   // Profile — inline edit bindings (SAFE)
   // =========================
   (function initProfileEditModeOnce(){
-    if(window.__profileEditBound) return;
-    window.__profileEditBound = true;
-
-window.setProfileEditMode = function(on){
-  const root = document.documentElement;
-
-  if(on) root.setAttribute("data-profile-edit", "1");
-  else root.removeAttribute("data-profile-edit");
-
-  // show/hide edit bar
-  const bar = document.getElementById("profileEditBar");
-  if(bar) bar.classList.toggle("hidden", !on);
-
-  // Prefill champs quand on entre en mode edit
-  if(on){
-    const p = window.eliteProfile || window.firestoreProfile || {};
-
-    const inp = document.getElementById("editFirstName");
-    if(inp){
-      const val = String(p.firstName || p.prenom || p.displayName || "").trim();
-      inp.value = val;
-    }
-
-    const dobInp = document.getElementById("editDob");
-    if(dobInp){
-      dobInp.value = p.dob || "";
-    }
-
-    const sexSel = document.getElementById("editSex");
-    if(sexSel){
-      sexSel.value = p.sex || p.gender || "";
-    }
-  }
-};
-
-const btnOpen   = document.getElementById("profileEditOpen");
-const btnCancel = document.getElementById("profileEditCancel");
-const btnSave   = document.getElementById("profileEditSave");
-
-if(btnSave){
-  btnSave.addEventListener("click", async ()=>{
     try{
-      const p0 = window.eliteProfile || window.firestoreProfile || {};
+      if(window.__profileEditBound) return;
+      window.__profileEditBound = true;
 
-      // Valeurs inputs
-      const vFirst = String(document.getElementById("editFirstName")?.value || "").trim();
-      const vDob  = String(document.getElementById("editDob")?.value || "").trim();   // "YYYY-MM-DD"
-      const vSex  = String(document.getElementById("editSex")?.value || "").trim();
+      // Mode edit (on/off)
+      window.setProfileEditMode = function(on){
+        const root = document.documentElement;
 
-      // Patch minimal (on n’écrase pas tout)
-      const patch = { updatedAt: new Date().toISOString() };
+        if(on) root.setAttribute("data-profile-edit", "1");
+        else root.removeAttribute("data-profile-edit");
 
-      if(vFirst){
-        patch.firstName = vFirst;
-        patch.displayName = vFirst;
-      }
-      // autorise aussi “vider” la date/sexe si l’utilisateur efface
-      patch.dob = vDob ? vDob : null;
-      patch.sex = vSex ? vSex : null;
+        const bar = document.getElementById("profileEditBar");
+        if(bar) bar.classList.toggle("hidden", !on);
 
-      // 1) patch mémoire (UI immédiate)
-      window.eliteProfile = { ...(window.eliteProfile||p0), ...patch };
-      window.firestoreProfile = { ...(window.firestoreProfile||p0), ...patch };
+        const btn = document.getElementById("profileEditOpen");
+        if(btn) btn.style.display = on ? "none" : "";
 
-      // 2) patch Firestore (SAFE, merge)
-      try{
-        if(typeof currentUser !== "undefined" && currentUser &&
-           typeof db !== "undefined" && typeof doc === "function" && typeof setDoc === "function"){
-          const ref = doc(db, "users", currentUser.uid, "profile", "main");
-          await setDoc(ref, patch, { merge:true });
+        // Prefill quand on entre en mode edit
+        if(on){
+          const p = window.eliteProfile || window.firestoreProfile || {};
+
+          const inpFirst = document.getElementById("editFirstName");
+          if(inpFirst){
+            const val = String(p.firstName || p.prenom || p.displayName || "").trim();
+            inpFirst.value = val;
+          }
+
+          const inpDob = document.getElementById("editDob");
+          if(inpDob){
+            inpDob.value = p.dob || "";
+          }
+
+          const selSex = document.getElementById("editSex");
+          if(selSex){
+            selSex.value = p.sex || p.gender || "";
+          }
         }
-      }catch(e){ /* offline / non dispo -> ok */ }
+      };
 
-      // 3) exit edit + refresh UI
+      const btnOpen   = document.getElementById("profileEditOpen");
+      const btnCancel = document.getElementById("profileEditCancel");
+      const btnSave   = document.getElementById("profileEditSave");
+
+      if(btnOpen){
+        btnOpen.addEventListener("click", ()=>{
+          window.setProfileEditMode(true);
+        });
+      }
+
+      if(btnCancel){
+        btnCancel.addEventListener("click", ()=>{
+          window.setProfileEditMode(false);
+          window.refreshProfileScreen?.();
+        });
+      }
+
+      if(btnSave){
+        btnSave.addEventListener("click", async ()=>{
+          try{
+            const p0 = window.eliteProfile || window.firestoreProfile || {};
+
+            const vFirst = String(document.getElementById("editFirstName")?.value || "").trim();
+            const vDob   = String(document.getElementById("editDob")?.value || "").trim();
+            const vSex   = String(document.getElementById("editSex")?.value || "").trim();
+
+            const patch = { updatedAt: new Date().toISOString() };
+
+            if(vFirst){
+              patch.firstName = vFirst;
+              patch.displayName = vFirst;
+            }
+            patch.dob = vDob ? vDob : null;
+            patch.sex = vSex ? vSex : null;
+
+            // 1) patch mémoire (UI immédiate)
+            window.eliteProfile = { ...(window.eliteProfile||p0), ...patch };
+            window.firestoreProfile = { ...(window.firestoreProfile||p0), ...patch };
+
+            // 2) patch Firestore (SAFE, merge)
+            try{
+              const u = window.currentUser || (typeof currentUser !== "undefined" ? currentUser : null);
+              if(u && typeof db !== "undefined" && typeof doc === "function" && typeof setDoc === "function"){
+                const ref = doc(db, "users", u.uid, "profile", "main");
+                await setDoc(ref, patch, { merge:true });
+              }
+            }catch(e){ /* offline -> ok */ }
+
+            // 3) exit edit + refresh UI
+            window.setProfileEditMode(false);
+            window.refreshProfileScreen?.();
+            try{ updateHomePremiumUI?.(); }catch(e){}
+          }catch(e){
+            window.setProfileEditMode(false);
+            window.refreshProfileScreen?.();
+          }
+        });
+      }
+
+      // état initial
       window.setProfileEditMode(false);
-      window.refreshProfileScreen?.();
-      try{ updateHomePremiumUI?.(); }catch(e){}
     }catch(e){
-      // en cas de souci: on sort quand même du mode edit
-      window.setProfileEditMode(false);
-      window.refreshProfileScreen?.();
+      // si quoi que ce soit plante, on évite de casser le reste de l’app
+      try{ document.documentElement.removeAttribute("data-profile-edit"); }catch(_){}
     }
-  });
-}
-
-    // état initial
-    window.setProfileEditMode(false);
   })();
 });
-
-// =======================
-// Bottom nav visibility watcher (bulletproof)
-// =======================
-(function(){
-  function apply(){
-    const nav = document.getElementById("bottomNav");
-    const login = document.getElementById("screenLogin");
-    if(!nav || !login) return;
-
-    // Screen active (sert à retirer inWorkout si besoin)
-    const active = document.querySelector(".screen.active");
-    const id = String(active?.id || "").toLowerCase();
-
-    // ✅ important : si on n’est plus dans une séance, on enlève inWorkout
-    // (sinon le CSS body.inWorkout cache la nav en !important)
-    if(!id.includes("session") && !id.includes("workout")){
-      document.body.classList.remove("inWorkout");
-    }
-
-    const isLogin = login.classList.contains("active");
-    document.body.classList.toggle("screenLoginActive", isLogin);
-
-    // évite que la nav reste cachée à cause d’un display inline précédent
-    if(isLogin) nav.style.display = "none";
-    else nav.style.removeProperty("display");
-  }
-
-  // Applique une première fois (au load + après auth)
-  apply();
-  setTimeout(apply, 50);
-  setTimeout(apply, 300);
-
-  // Observe les changements de classe sur les screens
-  const root = document.body;
-  const obs = new MutationObserver((mutations)=>{
-    for(const m of mutations){
-      if(m.type === "attributes" && m.attributeName === "class"){
-        apply();
-        break;
-      }
-    }
-  });
-
-  // Observe les screens (c’est là que "active" change)
-  document.querySelectorAll(".screen").forEach(el=>{
-    obs.observe(el, { attributes:true, attributeFilter:["class"] });
-  });
-})();
 
 function setBottomNavActive(which){
   const bSessions = document.getElementById("navSessions");
