@@ -2071,17 +2071,23 @@ body.inWorkout .bottomNav{ display:none !important; }
 /* ===== Profile inline edit mode ===== */
 
 .profileEditBar{
-  position: sticky;
-  bottom: calc(var(--nav-h, 0px) + var(--safe-bot, 0px) + 12px);
-  z-index: 5;
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: calc(var(--nav-h, 0px) + var(--safe-bot, 0px) + 16px);
+  z-index: 50;
+
   display:flex;
   gap:10px;
   padding:14px;
   border-radius:18px;
-  background: rgba(0,0,0,.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+
+  background: rgba(0,0,0,.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+
   border: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 10px 30px rgba(0,0,0,.4);
 }
 
 .profileEditBar.hidden{
@@ -7980,9 +7986,20 @@ window.refreshProfileScreen = function(){
 
 // ===== INLINE EDIT MODE (foundation) =====
 window.setProfileEditMode = function(on){
-  document.documentElement.setAttribute("data-profile-edit", on ? "1" : "0");
-};
+  const root = document.documentElement;
 
+  // ✅ ON: data-profile-edit="1"
+  // ✅ OFF: on retire l’attribut (évite les états bizarres)
+  if(on) root.setAttribute("data-profile-edit", "1");
+  else root.removeAttribute("data-profile-edit");
+
+  // synchro UI (ne dépend pas uniquement du CSS)
+  const bar = document.getElementById("profileEditBar");
+  if(bar) bar.classList.toggle("hidden", !on);
+
+  const btn = document.getElementById("profileEditOpen");
+  if(btn) btn.style.display = on ? "none" : "";
+};
 setTimeout(()=>{
   const btnOpen   = document.getElementById("profileEditOpen");
   const btnCancel = document.getElementById("profileEditCancel");
