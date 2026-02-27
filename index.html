@@ -7921,6 +7921,16 @@ if(btnSave){
     const login = document.getElementById("screenLogin");
     if(!nav || !login) return;
 
+    // Screen active (sert à retirer inWorkout si besoin)
+    const active = document.querySelector(".screen.active");
+    const id = String(active?.id || "").toLowerCase();
+
+    // ✅ important : si on n’est plus dans une séance, on enlève inWorkout
+    // (sinon le CSS body.inWorkout cache la nav en !important)
+    if(!id.includes("session") && !id.includes("workout")){
+      document.body.classList.remove("inWorkout");
+    }
+
     const isLogin = login.classList.contains("active");
     document.body.classList.toggle("screenLoginActive", isLogin);
 
