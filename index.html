@@ -280,6 +280,10 @@ body.inWorkout .bottomNav{ display:none !important; }
     .screen{display:none}
     .screen.active{display:block}
 
+    /* ✅ Profil : évite que le bas soit caché derrière la bottom nav */
+    #screenProfile{
+      padding-bottom: calc(var(--nav-h, 0px) + var(--safe-bot) + 26px);
+    }
     .loginBox{margin-top:14px}
     input{
       width:100%;
