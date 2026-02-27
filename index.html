@@ -7986,9 +7986,20 @@ window.refreshProfileScreen = function(){
 
 // ===== INLINE EDIT MODE (foundation) =====
 window.setProfileEditMode = function(on){
-  document.documentElement.setAttribute("data-profile-edit", on ? "1" : "0");
-};
+  const root = document.documentElement;
 
+  // ✅ ON: data-profile-edit="1"
+  // ✅ OFF: on retire l’attribut (évite les états bizarres)
+  if(on) root.setAttribute("data-profile-edit", "1");
+  else root.removeAttribute("data-profile-edit");
+
+  // synchro UI (ne dépend pas uniquement du CSS)
+  const bar = document.getElementById("profileEditBar");
+  if(bar) bar.classList.toggle("hidden", !on);
+
+  const btn = document.getElementById("profileEditOpen");
+  if(btn) btn.style.display = on ? "none" : "";
+};
 setTimeout(()=>{
   const btnOpen   = document.getElementById("profileEditOpen");
   const btnCancel = document.getElementById("profileEditCancel");
