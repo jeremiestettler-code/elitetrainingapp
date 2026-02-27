@@ -2427,6 +2427,12 @@ body.inWorkout .bottomNav{ display:none !important; }
 
       <div style="height:12px"></div>
 
+      <div class="card" style="margin-top:10px;">
+  <button class="btn primary" id="profileEditOpen" style="width:100%;">
+    Modifier le profil
+  </button>
+</div>
+
             <div class="card" id="profilePrefsCard">
         <div class="row" style="align-items:center;">
           <div class="grow">
@@ -3166,7 +3172,7 @@ function setMsg(txt){ $("loginMsg").textContent = txt || ""; }
           if(themeLabel) themeLabel.textContent = themeP.checked ? "Sombre" : "Clair";
         });
       }
-      
+
       if(coachT){
         coachT.addEventListener("change", ()=>{
           coachMode = coachT.checked;
@@ -7153,8 +7159,6 @@ await reloadProgramsIntoSESSIONS();
         </div>
       </div>
 
-
-      <button class="btn secondary" id="profileEditOpen" type="button">Modifier</button>
     </div>
     <div class="setting-row" style="align-items:flex-start;">
       <span>Objectif</span>
