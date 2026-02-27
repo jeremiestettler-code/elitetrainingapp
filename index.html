@@ -2457,14 +2457,34 @@ html[data-profile-edit="1"] .profileEditOnly{ display:block; }
     <span id="infoEmail">—</span>
   </div>
 
-  <div class="profileInfoRow">
-    <span>Âge</span>
-    <span id="infoAge">—</span>
-  </div>
+<div class="profileInfoRow">
+  <span>Date de naissance</span>
 
-  <div class="profileInfoRow">
-    <span>Sexe</span>
-    <span id="infoSexe">—</span>
+  <div class="profileInfoRight">
+    <span class="profileViewOnly" id="infoAge">—</span>
+    <input
+      class="input profileEditOnly profileInlineInput"
+      id="editDob"
+      type="date"
+    >
+  </div>
+</div>
+
+<div class="profileInfoRow">
+  <span>Sexe</span>
+
+  <div class="profileInfoRight">
+    <span class="profileViewOnly" id="infoSexe">—</span>
+
+    <select
+      class="input profileEditOnly profileInlineInput"
+      id="editSex"
+    >
+      <option value="">—</option>
+      <option value="Homme">Homme</option>
+      <option value="Femme">Femme</option>
+      <option value="Autre">Autre</option>
+    </select>
   </div>
 </div>
 
@@ -7809,30 +7829,37 @@ document.addEventListener("DOMContentLoaded", ()=>{
     if(window.__profileEditBound) return;
     window.__profileEditBound = true;
 
-    window.setProfileEditMode = function(on){
-      document.documentElement.setAttribute("data-profile-edit", on ? "1" : "0");
+window.setProfileEditMode = function(on){
+  const root = document.documentElement;
 
-      // show/hide edit bar (au cas où il a la classe hidden par défaut)
-      const bar = document.getElementById("profileEditBar");
-      if(bar) bar.classList.toggle("hidden", !on);
-    };
+  if(on) root.setAttribute("data-profile-edit", "1");
+  else root.removeAttribute("data-profile-edit");
 
-    const btnOpen   = document.getElementById("profileEditOpen");
-    const btnCancel = document.getElementById("profileEditCancel");
-    const btnSave   = document.getElementById("profileEditSave");
+  // show/hide edit bar
+  const bar = document.getElementById("profileEditBar");
+  if(bar) bar.classList.toggle("hidden", !on);
 
-    if(btnOpen){
-      btnOpen.addEventListener("click", ()=>{
-        window.setProfileEditMode(true);
-      });
+  // Prefill champs quand on entre en mode edit
+  if(on){
+    const p = window.eliteProfile || window.firestoreProfile || {};
+
+    const inp = document.getElementById("editFirstName");
+    if(inp){
+      const val = String(p.firstName || p.prenom || p.displayName || "").trim();
+      inp.value = val;
     }
 
-    if(btnCancel){
-      btnCancel.addEventListener("click", ()=>{
-        window.setProfileEditMode(false);
-        window.refreshProfileScreen?.();
-      });
+    const dobInp = document.getElementById("editDob");
+    if(dobInp){
+      dobInp.value = p.dob || "";
     }
+
+    const sexSel = document.getElementById("editSex");
+    if(sexSel){
+      sexSel.value = p.sex || p.gender || "";
+    }
+  }
+};
 
 if(btnSave){
   btnSave.addEventListener("click", async ()=>{
@@ -8063,8 +8090,8 @@ window.setProfileEditMode = function(on){
       setTimeout(()=>{ try{ inp.focus(); inp.select?.(); }catch(e){} }, 0);
     }
   }
-
 };
+
 setTimeout(()=>{
   const btnOpen   = document.getElementById("profileEditOpen");
   const btnCancel = document.getElementById("profileEditCancel");
