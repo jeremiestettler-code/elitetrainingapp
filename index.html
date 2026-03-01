@@ -8113,6 +8113,8 @@ if(eqWrap){
 
 // Expose un refresh global (utile après edit/save)
 window.refreshProfileScreen = function(){
+  try{ updateHeaderNow(); }catch(e){}
+};
 
 // ===== INLINE EDIT MODE (foundation) =====
 window.setProfileEditMode = function(on){
