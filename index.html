@@ -7882,11 +7882,8 @@ function initHomePremiumButtons(){
 
   if(trending){
     trending.addEventListener("click", ()=>{
-      // Affiche simplement le legacy (liste des séances)
       const legacy = document.getElementById("homeLegacy");
-      if(legacy){
-        legacy.scrollIntoView({behavior:"smooth"});
-      }
+      if(legacy) legacy.scrollIntoView({behavior:"smooth"});
     });
   }
 
@@ -7903,22 +7900,19 @@ function initHomePremiumButtons(){
     });
   }
 
-if(trophies){
-  trophies.addEventListener("click", ()=>{
-    // Tes trophées sont dans l'écran Historique (section trophySection)
-    if(typeof window.openHistory === "function") window.openHistory();
-
-    setTimeout(()=>{
-      const sec = document.getElementById("trophySection");
-      if(sec){
-        sec.style.display = ""; // au cas où
-        sec.scrollIntoView({behavior:"smooth", block:"start"});
-      }
-    }, 200);
-  });
+  if(trophies){
+    trophies.addEventListener("click", ()=>{
+      if(typeof window.openHistory === "function") window.openHistory();
+      setTimeout(()=>{
+        const sec = document.getElementById("trophySection");
+        if(sec){
+          sec.style.display = "";
+          sec.scrollIntoView({behavior:"smooth", block:"start"});
+        }
+      }, 200);
+    });
+  }
 }
-
-} // <-- ferme initHomePremiumButtons()
 
 /* ======================================================
    AUTO INIT
@@ -7928,112 +7922,117 @@ document.addEventListener("DOMContentLoaded", ()=>{
   updateHomePremiumUI();
   initHomePremiumButtons();
   initBottomNav();
-  syncBottomNavVisibility(); // ✅ cache sur login au load, montre ailleurs
+  syncBottomNavVisibility();
 
-// =========================
-// ✅ Profile — inline edit bindings (CLEAN, single source)
-// =========================
-(function initProfileEditModeOnce(){
-  if(window.__profileEditBound) return;
-  window.__profileEditBound = true;
+  // =========================
+  // ✅ Profile — inline edit bindings (ONE, clean)
+  // =========================
+  (function initProfileEditModeOnce(){
+    if(window.__profileEditBound) return;
+    window.__profileEditBound = true;
 
-  window.setProfileEditMode = function(on){
-    const root = document.documentElement;
+    window.setProfileEditMode = function(on){
+      const root = document.documentElement;
 
-    // ✅ ON: data-profile-edit="1"
-    // ✅ OFF: remove (évite les états bizarres)
-    if(on) root.setAttribute("data-profile-edit", "1");
-    else root.removeAttribute("data-profile-edit");
+      if(on) root.setAttribute("data-profile-edit", "1");
+      else root.removeAttribute("data-profile-edit");
 
-    const bar = document.getElementById("profileEditBar");
-    if(bar) bar.classList.toggle("hidden", !on);
+      const bar = document.getElementById("profileEditBar");
+      if(bar) bar.classList.toggle("hidden", !on);
 
-    const btn = document.getElementById("profileEditOpen");
-    if(btn) btn.style.display = on ? "none" : "";
+      const btn = document.getElementById("profileEditOpen");
+      if(btn) btn.style.display = on ? "none" : "";
 
-    // Prefill + focus
-    if(on){
-      const inp = document.getElementById("editFirstName");
-      if(inp){
+      if(on){
         const p = window.eliteProfile || window.firestoreProfile || {};
-          const dob = String(p.dob || "").trim(); // attendu: YYYY-MM-DD
-  dobInp.value = (/^\d{4}-\d{2}-\d{2}$/).test(dob) ? dob : "";
-        inp.value = String(p.firstName || p.prenom || p.displayName || "").trim();
-        setTimeout(()=>{ try{ inp.focus(); inp.select?.(); }catch(e){} }, 0);
-      }
-    }
-  };
 
-  const btnOpen   = document.getElementById("profileEditOpen");
-  const btnCancel = document.getElementById("profileEditCancel");
-  const btnSave   = document.getElementById("profileEditSave");
-
-  function refreshAll(){
-    try{ window.refreshTopbarUser?.(); }catch(e){}
-    try{ window.updateHomePremiumUI?.(); }catch(e){}
-    try{ window.renderProfileUI?.(); }catch(e){}
-  }
-  function refreshAllAfterPaint(){
-    requestAnimationFrame(()=>{ refreshAll(); });
-  }
-
-  if(btnOpen){
-    btnOpen.addEventListener("click", ()=>{
-      window.setProfileEditMode(true);
-    });
-  }
-
-  if(btnCancel){
-    btnCancel.addEventListener("click", ()=>{
-      window.setProfileEditMode(false);
-      refreshAll();
-      refreshAllAfterPaint();
-    });
-  }
-
-  if(btnSave){
-    btnSave.addEventListener("click", async ()=>{
-      try{
+        // prefill prénom
         const inp = document.getElementById("editFirstName");
-        const vFirst = String(inp?.value || "").trim();
-        if(!vFirst) return;
-
-        // ✅ Unique persistance : saveEliteProfile()
-        if(typeof window.saveEliteProfile === "function"){
-          const dobInp = document.getElementById("editDob");
-const vDob = String(dobInp?.value || "").trim(); // "" ou "YYYY-MM-DD"
-
-await window.saveEliteProfile({
-  firstName: vFirst,
-  displayName: vFirst,
-  prenom: vFirst,
-  dob: vDob || null
-});
-        }else if(typeof saveEliteProfile === "function"){
-          await saveEliteProfile({ firstName: vFirst, displayName: vFirst });
-        }else{
-          // fallback (ne devrait pas arriver)
-          const patch = { firstName: vFirst, displayName: vFirst, updatedAt: new Date().toISOString() };
-          window.eliteProfile = { ...(window.eliteProfile||{}), ...patch };
+        if(inp){
+          inp.value = String(p.firstName || p.prenom || p.displayName || "").trim();
+          setTimeout(()=>{ try{ inp.focus(); inp.select?.(); }catch(e){} }, 0);
         }
-      }catch(e){
-        console.warn("[profile] save failed", e);
-      }finally{
+
+        // prefill DOB (YYYY-MM-DD)
+        const dobInp = document.getElementById("editDob");
+        if(dobInp){
+          const dob = String(p.dob || "").trim();
+          dobInp.value = (/^\d{4}-\d{2}-\d{2}$/).test(dob) ? dob : "";
+        }
+      }
+    };
+
+    const btnOpen   = document.getElementById("profileEditOpen");
+    const btnCancel = document.getElementById("profileEditCancel");
+    const btnSave   = document.getElementById("profileEditSave");
+
+    function refreshAll(){
+      try{ window.refreshTopbarUser?.(); }catch(e){}
+      try{ window.updateHomePremiumUI?.(); }catch(e){}
+      try{ window.renderProfileUI?.(); }catch(e){}
+    }
+
+    if(btnOpen){
+      btnOpen.addEventListener("click", ()=> window.setProfileEditMode(true));
+    }
+
+    if(btnCancel){
+      btnCancel.addEventListener("click", ()=>{
         window.setProfileEditMode(false);
         refreshAll();
-        refreshAllAfterPaint();
-      }
-    });
-  }
+        requestAnimationFrame(refreshAll);
+      });
+    }
 
-  // état initial
-  window.setProfileEditMode(false);
-})();
-}); // <-- ferme document.addEventListener("DOMContentLoaded", ...)
+    if(btnSave){
+      btnSave.addEventListener("click", async ()=>{
+        try{
+          const inp = document.getElementById("editFirstName");
+          const vFirst = String(inp?.value || "").trim();
+          if(!vFirst) return;
 
-// =======================
-// Bottom nav visibility watcher (bulletproof)
-// =======================
+          const dobInp = document.getElementById("editDob");
+          const vDob = String(dobInp?.value || "").trim(); // "" ou "YYYY-MM-DD"
+
+          if(typeof window.saveEliteProfile === "function"){
+            await window.saveEliteProfile({
+              firstName: vFirst,
+              displayName: vFirst,
+              prenom: vFirst,
+              dob: vDob || null
+            });
+          }else{
+            // fallback minimal (ne devrait pas arriver)
+            const patch = {
+              firstName: vFirst,
+              displayName: vFirst,
+              prenom: vFirst,
+              dob: vDob || null,
+              updatedAt: new Date().toISOString()
+            };
+            window.eliteProfile = { ...(window.eliteProfile||{}), ...patch };
+            window.firestoreProfile = { ...(window.firestoreProfile||{}), ...patch };
+          }
+
+        }catch(e){
+          console.warn("[profile] save failed", e);
+        }finally{
+          window.setProfileEditMode(false);
+          refreshAll();
+          requestAnimationFrame(refreshAll);
+        }
+      });
+    }
+
+    window.setProfileEditMode(false);
+  })();
+});
+
+
+/* ======================================================
+   Bottom nav visibility watcher (bulletproof)
+====================================================== */
+
 (function(){
   function apply(){
     const nav = document.getElementById("bottomNav");
@@ -8043,17 +8042,14 @@ await window.saveEliteProfile({
     const isLogin = login.classList.contains("active");
     document.body.classList.toggle("screenLoginActive", isLogin);
 
-    // évite que la nav reste cachée à cause d’un display inline précédent
     if(isLogin) nav.style.display = "none";
     else nav.style.removeProperty("display");
   }
 
-  // Applique une première fois (au load + après auth)
   apply();
   setTimeout(apply, 50);
   setTimeout(apply, 300);
 
-  // Observe les changements de classe sur les screens
   const obs = new MutationObserver((mutations)=>{
     for(const m of mutations){
       if(m.type === "attributes" && m.attributeName === "class"){
@@ -8063,7 +8059,6 @@ await window.saveEliteProfile({
     }
   });
 
-  // Observe les screens (c’est là que "active" change)
   document.querySelectorAll(".screen").forEach(el=>{
     obs.observe(el, { attributes:true, attributeFilter:["class"] });
   });
@@ -8080,16 +8075,16 @@ function setBottomNavActive(which){
   bProfile.classList.toggle("active", which === "profile");
 }
 
-// =======================
-// ✅ Profile renderer (single place)
-// =======================
+
+/* ======================================================
+   ✅ Profile renderer (single place) — FIXED try/catch
+====================================================== */
+
 window.renderProfileUI = function renderProfileUI(){
   try{
     const nameEl = document.getElementById("profileName");
     const emailEl = document.getElementById("profileEmail");
     const avatarEl = document.getElementById("profileAvatar");
-
-    // Si la screen profil n’est pas montée, on ne fait rien
     if(!nameEl || !emailEl || !avatarEl) return;
 
     const u = window.currentUser || null;
@@ -8097,24 +8092,19 @@ window.renderProfileUI = function renderProfileUI(){
 
     const email = String(u?.email || p?.email || "").trim();
 
-    // prénom robuste
     let raw =
       String(p?.firstName || p?.prenom || p?.displayName || p?.name || p?.firstname || "").trim() ||
       String(u?.displayName || "").trim();
 
-    // fallback sur email avant @
     if(!raw && email.includes("@")) raw = email.split("@")[0];
     if(!raw) raw = "Utilisateur";
 
     const first = raw.split(" ")[0];
-
-    // initiales (1 ou 2 lettres)
     const parts = raw.split(/\s+/).filter(Boolean);
     const initials = (parts.length >= 2)
       ? (parts[0][0] + parts[1][0]).toUpperCase()
       : (first[0] || "U").toUpperCase();
 
-    // Hero
     nameEl.textContent = first;
     emailEl.textContent = email || "—";
     avatarEl.textContent = initials || "U";
@@ -8122,9 +8112,9 @@ window.renderProfileUI = function renderProfileUI(){
     // Infos card
     const infoFirst = document.getElementById("infoFirstName");
     const infoEmail = document.getElementById("infoEmail");
-    const infoAge = document.getElementById("infoAge");
-    const infoSexe = document.getElementById("infoSexe");
-    const infoDob = document.getElementById("infoDob");
+    const infoAge   = document.getElementById("infoAge");
+    const infoSexe  = document.getElementById("infoSexe");
+    const infoDob   = document.getElementById("infoDob");
 
     if(infoFirst) infoFirst.textContent = first;
     if(infoEmail) infoEmail.textContent = email || "—";
@@ -8132,11 +8122,10 @@ window.renderProfileUI = function renderProfileUI(){
     // Fitness card
     const fitGoal = document.getElementById("fitGoal");
     const fitLevel = document.getElementById("fitLevel");
-
     if(fitGoal) fitGoal.textContent = p?.goal || p?.objectif || "—";
     if(fitLevel) fitLevel.textContent = p?.level || p?.niveau || "—";
 
-    // Matériel preview (cards)
+    // Matériel preview
     const eqWrap = document.getElementById("equipmentChipsPreview");
     if(eqWrap){
       const labelMap = {
@@ -8178,153 +8167,56 @@ window.renderProfileUI = function renderProfileUI(){
       }
     }
 
- // DOB + âge calculé depuis dob
-let age = "—";
-let dobLabel = "—";
+    // DOB + âge
+    let age = "—";
+    let dobLabel = "—";
+    const dob = String(p?.dob || "").trim();
+    if(dob){
+      const birth = new Date(dob + "T00:00:00");
+      if(Number.isFinite(birth.getTime())){
+        dobLabel = birth.toLocaleDateString("fr-CH");
 
-try{
-  const dob = String(p?.dob || "").trim(); // attendu: "YYYY-MM-DD" (wizard)
-  if(dob){
-    // ✅ Affichage DOB (fr-CH / fr-FR friendly)
-    // On force "T00:00:00" pour éviter les décalages de timezone
-    const birth = new Date(dob + "T00:00:00");
-    if(Number.isFinite(birth.getTime())){
-      dobLabel = birth.toLocaleDateString("fr-CH"); // ex: 05.02.2002
-
-      // ✅ Âge
-      const now = new Date();
-      let years = now.getFullYear() - birth.getFullYear();
-      const m = now.getMonth() - birth.getMonth();
-      if(m < 0 || (m === 0 && now.getDate() < birth.getDate())) years--;
-      age = years;
+        const now = new Date();
+        let years = now.getFullYear() - birth.getFullYear();
+        const m = now.getMonth() - birth.getMonth();
+        if(m < 0 || (m === 0 && now.getDate() < birth.getDate())) years--;
+        age = years;
+      }
     }
-  }
-}catch(e){}
 
-// ✅ inject UI
-if(infoDob) infoDob.textContent = dobLabel;
-if(infoAge) infoAge.textContent = age;
-if(infoSexe) infoSexe.textContent = p?.sex || p?.gender || "—";
+    if(infoDob) infoDob.textContent = dobLabel;
+    if(infoAge) infoAge.textContent = age;
+    if(infoSexe) infoSexe.textContent = p?.sex || p?.gender || "—";
+
+  }catch(e){
+    console.warn("[profile] renderProfileUI failed", e);
+  }
 };
 
-// ✅ Refresh global profil (source unique)
 window.refreshProfileScreen = function(){
   try{ window.renderProfileUI?.(); }catch(e){}
 };
 
+
+/* ======================================================
+   Navigation helpers
+====================================================== */
+
 function openProfileEntrySafe(){
-  // ferme réglages si ouverts
   try{ document.getElementById("settingsModal")?.classList.add("hidden"); }catch(e){}
 
-  function updateHeaderNow(){
-    try{ window.renderProfileUI?.(); }catch(e){}
-  }
-
-  // ===== INLINE EDIT MODE (foundation) =====
-  window.setProfileEditMode = function(on){
-    const root = document.documentElement;
-
-    // ✅ ON: data-profile-edit="1"
-    // ✅ OFF: on retire l’attribut (évite les états bizarres)
-    if(on) root.setAttribute("data-profile-edit", "1");
-    else root.removeAttribute("data-profile-edit");
-
-    // synchro UI (ne dépend pas uniquement du CSS)
-    const bar = document.getElementById("profileEditBar");
-    if(bar) bar.classList.toggle("hidden", !on);
-
-    const btn = document.getElementById("profileEditOpen");
-    if(btn) btn.style.display = on ? "none" : "";
-
-    // Prefill Prénom à l’entrée en mode edit
-    if(on){
-  const p = window.eliteProfile || window.firestoreProfile || {};
-
-  // Prefill Prénom
-  const inp = document.getElementById("editFirstName");
-  if(inp){
-    inp.value = String(p.firstName || p.prenom || p.displayName || "").trim();
-    setTimeout(()=>{ try{ inp.focus(); inp.select?.(); }catch(e){} }, 0);
-  }
-
-  // Prefill DOB
-  const dobInp = document.getElementById("editDob");
-  if(dobInp){
-    const dob = String(p.dob || "").trim(); // attendu: YYYY-MM-DD
-    dobInp.value = (/^\d{4}-\d{2}-\d{2}$/).test(dob) ? dob : "";
-  }
-}
-  };
-
-  // Bind buttons (once)
-  setTimeout(()=>{
-    const btnOpen   = document.getElementById("profileEditOpen");
-    const btnCancel = document.getElementById("profileEditCancel");
-    const btnSave   = document.getElementById("profileEditSave");
-
-    // Ouvrir edit
-    if(btnOpen && !btnOpen.__editBound){
-      btnOpen.__editBound = true;
-      btnOpen.addEventListener("click", ()=>{
-        window.setProfileEditMode(true);
-      });
-    }
-
-    // Annuler
-    if(btnCancel && !btnCancel.__cancelBound){
-      btnCancel.__cancelBound = true;
-      btnCancel.addEventListener("click", ()=>{
-        window.setProfileEditMode(false);
-        window.refreshProfileScreen?.();
-        try{ updateHomePremiumUI?.(); }catch(e){}
-      });
-    }
-
-    // Enregistrer (prénom) — ✅ ONE TRUE SAVE
-    if(btnSave && !btnSave.__saveBound){
-      btnSave.__saveBound = true;
-      btnSave.addEventListener("click", async ()=>{
-        try{
-          const inp = document.getElementById("editFirstName");
-          const vFirst = String(inp?.value || "").trim();
-
-          if(!vFirst){
-            // optionnel: feedback user
-            return;
-          }
-
-          if(typeof saveEliteProfile === "function"){
-            await saveEliteProfile({ firstName: vFirst, displayName: vFirst });
-          }else{
-            // fallback ultra safe (au cas où)
-            const patch = { firstName: vFirst, displayName: vFirst, updatedAt: new Date().toISOString() };
-            window.eliteProfile = { ...(window.eliteProfile || {}), ...patch };
-            window.firestoreProfile = { ...(window.firestoreProfile || {}), ...patch };
-          }
-        }catch(e){
-          console.warn("[profile] save failed", e);
-        }finally{
-          window.setProfileEditMode(false);
-          window.refreshProfileScreen?.();
-          try{ updateHomePremiumUI?.(); }catch(e){}
-        }
-      });
-    }
-  }, 0);
-
-  // ✅ Si la page Profil (screen) existe, on l’ouvre
+  // ✅ Si screen profil existe, utilise showScreen
   try{
     const hasScreen = !!document.getElementById("screenProfile");
     const hasScreensMap = (typeof window.screens === "object" && window.screens && window.screens.profile);
     if(hasScreen && hasScreensMap && typeof window.showScreen === "function"){
       window.showScreen("profile");
-      // IMPORTANT: on force le refresh après le changement d'écran
-      setTimeout(updateHeaderNow, 0);
+      setTimeout(()=>{ try{ window.renderProfileUI?.(); }catch(e){} }, 0);
       return;
     }
   }catch(e){}
 
-  // Fallback SAFE : on garde le comportement actuel (modal)
+  // fallback modal
   const pm = document.getElementById("profileModal");
   if(pm) pm.classList.remove("hidden");
 }
@@ -8360,7 +8252,6 @@ function initBottomNav(){
     });
   }
 
-  // défaut
   setBottomNavActive("home");
 }
 
@@ -8372,32 +8263,22 @@ function syncBottomNavVisibility(){
   const id = String(active?.id || "").toLowerCase();
   const isLogin = id.includes("login");
 
-  // classe CSS fallback (évite les flash)
   document.body.classList.toggle("screenLoginActive", isLogin);
 
-  // ✅ important : si on n’est plus dans une séance, on enlève inWorkout
-  // (sinon le CSS body.inWorkout cache la nav en !important)
   if(!id.includes("session") && !id.includes("workout")){
     document.body.classList.remove("inWorkout");
   }
 
-  if(isLogin){
-    nav.style.display = "none";
-  }else{
-    // revient au CSS (.bottomNav { display:flex })
-    nav.style.removeProperty("display");
-  }
+  if(isLogin) nav.style.display = "none";
+  else nav.style.removeProperty("display");
 }
 window.syncBottomNavVisibility = syncBottomNavVisibility;
+
 
 // Refresh quand on change d’écran
 (function(){
   const _showScreen = (typeof window.showScreen === "function") ? window.showScreen : null;
   if(!_showScreen) return;
-
-function updateProfileHeaderSafe(){
-  try{ window.renderProfileUI?.(); }catch(e){}
-}
 
   window.showScreen = function(name){
     const r = _showScreen(name);
@@ -8407,10 +8288,9 @@ function updateProfileHeaderSafe(){
       setBottomNavActive("home");
       setTimeout(()=>{ try{ updateHomePremiumUI?.(); }catch(e){} }, 50);
     }
-
     if(n === "profile"){
       setBottomNavActive("profile");
-      setTimeout(updateProfileHeaderSafe, 0);
+      setTimeout(()=>{ try{ window.renderProfileUI?.(); }catch(e){} }, 0);
     }
 
     syncBottomNavVisibility();
@@ -8418,15 +8298,16 @@ function updateProfileHeaderSafe(){
   };
 })();
 
-// ======================
-// ✅ Global one true save (exposed)
-// ======================
+
+/* ======================================================
+   ✅ Global one true save (exposed)
+====================================================== */
+
 window.saveEliteProfile = async function saveEliteProfile(patch){
   const u = window.currentUser || null;
   const uid = u?.uid || null;
   if(!uid) return null;
 
-  // anti double-save
   if(window.__profileSavingNow) return window.eliteProfile || null;
   window.__profileSavingNow = true;
   setTimeout(()=>{ window.__profileSavingNow = false; }, 500);
@@ -8439,27 +8320,24 @@ window.saveEliteProfile = async function saveEliteProfile(patch){
     updatedAt: nowIso
   };
 
-  // 1) mémoire
   window.eliteProfile = merged;
   window.firestoreProfile = merged;
 
-  // 2) localStorage (GARANTI)
+  // localStorage (source du boot)
   try{
     const key = "et_profile_v1_" + uid;
-
     let prev = {};
     try{ prev = JSON.parse(localStorage.getItem(key) || "{}") || {}; }catch(e){ prev = {}; }
 
     const finalObj = { ...prev, ...merged, updatedAt: nowIso };
     localStorage.setItem(key, JSON.stringify(finalObj));
-
     window.eliteProfile = finalObj;
     window.firestoreProfile = finalObj;
   }catch(e){
     console.warn("[profile] localStorage persist failed", e);
   }
 
-  // 3) Firestore main
+  // Firestore main
   try{
     if(typeof db !== "undefined" && typeof doc === "function" && typeof setDoc === "function"){
       await setDoc(doc(db, "users", uid, "profile", "main"), window.eliteProfile, { merge:true });
@@ -8468,7 +8346,7 @@ window.saveEliteProfile = async function saveEliteProfile(patch){
     console.warn("[profile] Firestore main persist failed (offline/rights?)", e);
   }
 
-  // 4) Firestore config displayName
+  // Firestore config displayName
   try{
     const first = String(window.eliteProfile?.firstName || window.eliteProfile?.displayName || "").trim();
     if(first && typeof db !== "undefined" && typeof doc === "function" && typeof setDoc === "function"){
@@ -8478,13 +8356,13 @@ window.saveEliteProfile = async function saveEliteProfile(patch){
     console.warn("[profile] Firestore config persist failed (offline/rights?)", e);
   }
 
-  // 5) aligne Auth local
+  // aligne Auth local (UI)
   try{
     const first = String(window.eliteProfile?.firstName || window.eliteProfile?.displayName || "").trim();
     if(first && window.currentUser) window.currentUser.displayName = first;
   }catch(e){}
 
-  // 6) refresh UI
+  // refresh UI
   try{ window.refreshTopbarUser?.(); }catch(e){}
   try{ window.updateHomePremiumUI?.(); }catch(e){}
   try{ window.renderProfileUI?.(); }catch(e){}
