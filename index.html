@@ -2839,32 +2839,33 @@ async function saveEliteProfile(patch){
   window.firestoreProfile = merged;
 
   // 2) localStorage (source relue au boot)
-  try{
-    saveEtProfile(uid, merged);
-  }catch(e){}
+  try{ saveEtProfile(uid, merged); }catch(e){}
 
-  // 3) Firestore (si dispo)
+  // 3) Firestore: profil principal
   try{
     if(typeof db !== "undefined" && typeof doc === "function" && typeof setDoc === "function"){
-      const ref = doc(db, "users", uid, "profile", "main");
-      await setDoc(ref, merged, { merge:true });
+      await setDoc(doc(db, "users", uid, "profile", "main"), merged, { merge:true });
     }
   }catch(e){ /* offline ok */ }
 
-  // 4) Firebase Auth displayName (pour Home, car getAthleteName() priorise displayName)
+  // ✅ 4) Firestore: config displayName (évite le retour à l'ancien prénom au reload)
   try{
     const first = String(merged.firstName || merged.displayName || "").trim();
-    if(first && typeof auth !== "undefined" && auth?.currentUser && typeof updateProfile === "function"){
-      await updateProfile(auth.currentUser, { displayName: first });
-      // update immédiat côté window.currentUser (pour éviter d'attendre un reload)
-      try{ window.currentUser.displayName = first; }catch(e){}
+    if(first && typeof db !== "undefined" && typeof doc === "function" && typeof setDoc === "function"){
+      await setDoc(doc(db, `users/${uid}/profile/config`), { displayName: first }, { merge:true });
     }
-  }catch(e){ /* ok */ }
+  }catch(e){ /* offline ok */ }
 
-      // ✅ sync UI immédiat (header + home + profil)
-try{ window.refreshTopbarUser?.(); }catch(e){}
-try{ window.refreshProfileScreen?.(); }catch(e){}
-try{ window.updateHomePremiumUI?.(); }catch(e){}
+  // ✅ 5) mémoire: aligne aussi currentUser.displayName (UI immédiate même si Auth n’est pas updaté)
+  try{
+    const first = String(merged.firstName || merged.displayName || "").trim();
+    if(first && window.currentUser) window.currentUser.displayName = first;
+  }catch(e){}
+
+  // ✅ 6) refresh UI immédiat (header + home + profil)
+  try{ window.refreshTopbarUser?.(); }catch(e){}
+  try{ window.refreshProfileScreen?.(); }catch(e){}
+  try{ window.updateHomePremiumUI?.(); }catch(e){}
 
   return merged;
 }
@@ -7619,20 +7620,23 @@ window.showToast = function(message, duration=2500){
 
 function getAthleteName(){
   const u = window.currentUser || (typeof currentUser !== "undefined" ? currentUser : null);
-  const p = window.eliteProfile || window.firestoreProfile || null;
+  const p = window.eliteProfile || window.firestoreProfile || {};
 
-  // ✅ priorité à eliteProfile (source de vérité côté client)
+  // ✅ PRIORITÉ AU PROFIL LOCAL (source de vérité côté client)
   let raw =
-    String(p?.firstName || "").trim() ||
-    String(p?.displayName || "").trim() ||
-    String(u?.displayName || "").trim();
+    String(p.firstName || p.prenom || p.displayName || p.name || p.firstname || "").trim();
 
+  // ensuite seulement Auth
+  if(!raw){
+    raw = String(u?.displayName || "").trim();
+  }
+
+  // fallback email
   const email = String(u?.email || p?.email || "").trim();
-
   if(!raw && email.includes("@")) raw = email.split("@")[0];
   if(!raw) raw = "Utilisateur";
 
-  return raw.split(/\s+/)[0]; // juste le prénom
+  return raw.split(/\s+/)[0]; // prénom only
 }
 
 function formatTimeFromSeconds(totalSec){
