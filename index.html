@@ -2482,6 +2482,15 @@ html[data-profile-edit="1"] .profileEditOnly{ display:block; }
   </div>
 </div>
 
+<div class="profileEditRow">
+  <label for="editSex">Sexe</label>
+  <select id="editSex" class="profileEditInput">
+    <option value="">—</option>
+    <option value="male">Homme</option>
+    <option value="female">Femme</option>
+    <option value="other">Autre</option>
+  </select>
+</div>
       <div style="height:12px"></div>
 
             <div class="card" id="profileFitnessCard">
@@ -7907,108 +7916,131 @@ document.addEventListener("DOMContentLoaded", ()=>{
   initBottomNav();
   syncBottomNavVisibility();
 
-  // =========================
-  // ✅ Profile — inline edit bindings (ONE, clean)
-  // =========================
-  (function initProfileEditModeOnce(){
-    if(window.__profileEditBound) return;
-    window.__profileEditBound = true;
+// =========================
+// ✅ Profile — inline edit bindings (CLEAN, single source)
+// =========================
+(function initProfileEditModeOnce(){
+  if(window.__profileEditBound) return;
+  window.__profileEditBound = true;
 
-    window.setProfileEditMode = function(on){
-      const root = document.documentElement;
+  function normalizeSex(v){
+    const s = String(v || "").trim().toLowerCase();
+    if(!s) return "";
+    if(["m","male","homme","h"].includes(s)) return "male";
+    if(["f","female","femme"].includes(s)) return "female";
+    if(["other","autre","x","nonbinary","non-binary"].includes(s)) return "other";
+    return "";
+  }
 
-      if(on) root.setAttribute("data-profile-edit", "1");
-      else root.removeAttribute("data-profile-edit");
+  window.setProfileEditMode = function(on){
+    const root = document.documentElement;
+    if(on) root.setAttribute("data-profile-edit", "1");
+    else root.removeAttribute("data-profile-edit");
 
-      const bar = document.getElementById("profileEditBar");
-      if(bar) bar.classList.toggle("hidden", !on);
+    const bar = document.getElementById("profileEditBar");
+    if(bar) bar.classList.toggle("hidden", !on);
 
-      const btn = document.getElementById("profileEditOpen");
-      if(btn) btn.style.display = on ? "none" : "";
+    const btn = document.getElementById("profileEditOpen");
+    if(btn) btn.style.display = on ? "none" : "";
 
-      if(on){
-        const p = window.eliteProfile || window.firestoreProfile || {};
+    if(!on) return;
 
-        // prefill prénom
+    const p = window.eliteProfile || window.firestoreProfile || {};
+
+    // Prefill Prénom
+    const inp = document.getElementById("editFirstName");
+    if(inp){
+      inp.value = String(p.firstName || p.prenom || p.displayName || "").trim();
+      setTimeout(()=>{ try{ inp.focus(); inp.select?.(); }catch(e){} }, 0);
+    }
+
+    // Prefill DOB
+    const dobInp = document.getElementById("editDob");
+    if(dobInp){
+      const dob = String(p.dob || "").trim(); // YYYY-MM-DD
+      dobInp.value = (/^\d{4}-\d{2}-\d{2}$/).test(dob) ? dob : "";
+    }
+
+    // Prefill Sexe
+    const sexSel = document.getElementById("editSex");
+    if(sexSel){
+      sexSel.value = normalizeSex(p.sex || p.gender);
+    }
+  };
+
+  const btnOpen   = document.getElementById("profileEditOpen");
+  const btnCancel = document.getElementById("profileEditCancel");
+  const btnSave   = document.getElementById("profileEditSave");
+
+  function refreshAll(){
+    try{ window.refreshTopbarUser?.(); }catch(e){}
+    try{ window.updateHomePremiumUI?.(); }catch(e){}
+    try{ window.renderProfileUI?.(); }catch(e){}
+  }
+  function refreshAllAfterPaint(){
+    requestAnimationFrame(()=>{ refreshAll(); });
+  }
+
+  if(btnOpen){
+    btnOpen.addEventListener("click", ()=> window.setProfileEditMode(true));
+  }
+
+  if(btnCancel){
+    btnCancel.addEventListener("click", ()=>{
+      window.setProfileEditMode(false);
+      refreshAll();
+      refreshAllAfterPaint();
+    });
+  }
+
+  if(btnSave){
+    btnSave.addEventListener("click", async ()=>{
+      try{
         const inp = document.getElementById("editFirstName");
-        if(inp){
-          inp.value = String(p.firstName || p.prenom || p.displayName || "").trim();
-          setTimeout(()=>{ try{ inp.focus(); inp.select?.(); }catch(e){} }, 0);
-        }
+        const vFirst = String(inp?.value || "").trim();
+        if(!vFirst) return;
 
-        // prefill DOB (YYYY-MM-DD)
         const dobInp = document.getElementById("editDob");
-        if(dobInp){
-          const dob = String(p.dob || "").trim();
-          dobInp.value = (/^\d{4}-\d{2}-\d{2}$/).test(dob) ? dob : "";
+        const vDob = String(dobInp?.value || "").trim(); // "" ou "YYYY-MM-DD"
+
+        const sexSel = document.getElementById("editSex");
+        const vSex = normalizeSex(sexSel?.value);
+
+        // ✅ Unique persistance : saveEliteProfile()
+        if(typeof window.saveEliteProfile === "function"){
+          await window.saveEliteProfile({
+            firstName: vFirst,
+            displayName: vFirst,
+            prenom: vFirst,
+            dob: vDob || null,
+            sex: vSex || null,
+            gender: vSex || null
+          });
+        }else{
+          // fallback ultra safe
+          const patch = {
+            firstName: vFirst,
+            displayName: vFirst,
+            dob: vDob || null,
+            sex: vSex || null,
+            gender: vSex || null,
+            updatedAt: new Date().toISOString()
+          };
+          window.eliteProfile = { ...(window.eliteProfile||{}), ...patch };
+          window.firestoreProfile = { ...(window.firestoreProfile||{}), ...patch };
         }
-      }
-    };
-
-    const btnOpen   = document.getElementById("profileEditOpen");
-    const btnCancel = document.getElementById("profileEditCancel");
-    const btnSave   = document.getElementById("profileEditSave");
-
-    function refreshAll(){
-      try{ window.refreshTopbarUser?.(); }catch(e){}
-      try{ window.updateHomePremiumUI?.(); }catch(e){}
-      try{ window.renderProfileUI?.(); }catch(e){}
-    }
-
-    if(btnOpen){
-      btnOpen.addEventListener("click", ()=> window.setProfileEditMode(true));
-    }
-
-    if(btnCancel){
-      btnCancel.addEventListener("click", ()=>{
+      }catch(e){
+        console.warn("[profile] save failed", e);
+      }finally{
         window.setProfileEditMode(false);
         refreshAll();
-        requestAnimationFrame(refreshAll);
-      });
-    }
+        refreshAllAfterPaint();
+      }
+    });
+  }
 
-    if(btnSave){
-      btnSave.addEventListener("click", async ()=>{
-        try{
-          const inp = document.getElementById("editFirstName");
-          const vFirst = String(inp?.value || "").trim();
-          if(!vFirst) return;
-
-          const dobInp = document.getElementById("editDob");
-          const vDob = String(dobInp?.value || "").trim(); // "" ou "YYYY-MM-DD"
-
-          if(typeof window.saveEliteProfile === "function"){
-            await window.saveEliteProfile({
-              firstName: vFirst,
-              displayName: vFirst,
-              prenom: vFirst,
-              dob: vDob || null
-            });
-          }else{
-            // fallback minimal (ne devrait pas arriver)
-            const patch = {
-              firstName: vFirst,
-              displayName: vFirst,
-              prenom: vFirst,
-              dob: vDob || null,
-              updatedAt: new Date().toISOString()
-            };
-            window.eliteProfile = { ...(window.eliteProfile||{}), ...patch };
-            window.firestoreProfile = { ...(window.firestoreProfile||{}), ...patch };
-          }
-
-        }catch(e){
-          console.warn("[profile] save failed", e);
-        }finally{
-          window.setProfileEditMode(false);
-          refreshAll();
-          requestAnimationFrame(refreshAll);
-        }
-      });
-    }
-
-    window.setProfileEditMode(false);
-  })();
+  window.setProfileEditMode(false);
+})();
 });
 
 
