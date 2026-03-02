@@ -2457,6 +2457,37 @@ html[data-profile-edit="1"] .profileEditOnly{ display:block; }
     <span id="infoEmail">—</span>
   </div>
 
+<div class="profileInfoRow">
+  <span>Date de naissance</span>
+
+  <div class="profileInfoRight">
+    <span class="profileViewOnly" id="infoDob">—</span>
+    <input
+      class="input profileEditOnly profileInlineInput"
+      id="editDob"
+      type="date"
+      autocomplete="bday"
+    >
+  </div>
+</div>
+
+<div class="profileInfoRow">
+  <span>Date de naissance</span>
+
+  <div class="profileInfoRight">
+    <!-- view mode -->
+    <span class="profileViewOnly" id="infoDob">—</span>
+
+    <!-- edit mode -->
+    <input
+      id="editDob"
+      class="input profileEditOnly profileInlineInput"
+      type="date"
+      autocomplete="bday"
+    />
+  </div>
+</div>
+
   <div class="profileInfoRow">
     <span>Âge</span>
     <span id="infoAge">—</span>
@@ -7925,6 +7956,8 @@ document.addEventListener("DOMContentLoaded", ()=>{
       const inp = document.getElementById("editFirstName");
       if(inp){
         const p = window.eliteProfile || window.firestoreProfile || {};
+          const dob = String(p.dob || "").trim(); // attendu: YYYY-MM-DD
+  dobInp.value = (/^\d{4}-\d{2}-\d{2}$/).test(dob) ? dob : "";
         inp.value = String(p.firstName || p.prenom || p.displayName || "").trim();
         setTimeout(()=>{ try{ inp.focus(); inp.select?.(); }catch(e){} }, 0);
       }
@@ -7967,7 +8000,15 @@ document.addEventListener("DOMContentLoaded", ()=>{
 
         // ✅ Unique persistance : saveEliteProfile()
         if(typeof window.saveEliteProfile === "function"){
-          await window.saveEliteProfile({ firstName: vFirst, displayName: vFirst, prenom: vFirst });
+          const dobInp = document.getElementById("editDob");
+const vDob = String(dobInp?.value || "").trim(); // "" ou "YYYY-MM-DD"
+
+await window.saveEliteProfile({
+  firstName: vFirst,
+  displayName: vFirst,
+  prenom: vFirst,
+  dob: vDob || null
+});
         }else if(typeof saveEliteProfile === "function"){
           await saveEliteProfile({ firstName: vFirst, displayName: vFirst });
         }else{
@@ -8083,6 +8124,7 @@ window.renderProfileUI = function renderProfileUI(){
     const infoEmail = document.getElementById("infoEmail");
     const infoAge = document.getElementById("infoAge");
     const infoSexe = document.getElementById("infoSexe");
+    const infoDob = document.getElementById("infoDob");
 
     if(infoFirst) infoFirst.textContent = first;
     if(infoEmail) infoEmail.textContent = email || "—";
@@ -8136,24 +8178,33 @@ window.renderProfileUI = function renderProfileUI(){
       }
     }
 
-    // âge calculé depuis dob
-    let age = "—";
-    try{
-      const dob = p?.dob;
-      if(dob){
-        const birth = new Date(dob);
-        const diff = Date.now() - birth.getTime();
-        const years = new Date(diff).getUTCFullYear() - 1970;
-        age = years;
-      }
-    }catch(e){}
+ // DOB + âge calculé depuis dob
+let age = "—";
+let dobLabel = "—";
 
-    if(infoAge) infoAge.textContent = age;
-    if(infoSexe) infoSexe.textContent = p?.sex || p?.gender || "—";
+try{
+  const dob = String(p?.dob || "").trim(); // attendu: "YYYY-MM-DD" (wizard)
+  if(dob){
+    // ✅ Affichage DOB (fr-CH / fr-FR friendly)
+    // On force "T00:00:00" pour éviter les décalages de timezone
+    const birth = new Date(dob + "T00:00:00");
+    if(Number.isFinite(birth.getTime())){
+      dobLabel = birth.toLocaleDateString("fr-CH"); // ex: 05.02.2002
 
-  }catch(e){
-    // silent
+      // ✅ Âge
+      const now = new Date();
+      let years = now.getFullYear() - birth.getFullYear();
+      const m = now.getMonth() - birth.getMonth();
+      if(m < 0 || (m === 0 && now.getDate() < birth.getDate())) years--;
+      age = years;
+    }
   }
+}catch(e){}
+
+// ✅ inject UI
+if(infoDob) infoDob.textContent = dobLabel;
+if(infoAge) infoAge.textContent = age;
+if(infoSexe) infoSexe.textContent = p?.sex || p?.gender || "—";
 };
 
 // ✅ Refresh global profil (source unique)
