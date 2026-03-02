@@ -2843,11 +2843,28 @@ async function saveEliteProfile(patch){
   window.eliteProfile = merged;
   window.firestoreProfile = merged;
 
-  // 2) localStorage (source relue au boot)
-  try{
-    if(typeof saveEtProfile === "function") saveEtProfile(uid, merged);
-    else localStorage.setItem("et_profile_v1_" + uid, JSON.stringify(merged));
-  }catch(e){}
+// 2) localStorage (GARANTI — on bypass saveEtProfile si il merge mal)
+try{
+  const key = "et_profile_v1_" + uid;
+
+  // garde ce qui existe déjà + applique merged par-dessus
+  let prev = {};
+  try{ prev = JSON.parse(localStorage.getItem(key) || "{}") || {}; }catch(e){ prev = {}; }
+
+  const finalObj = { ...prev, ...merged, updatedAt: merged.updatedAt };
+
+  // ✅ écriture directe (source du boot)
+  localStorage.setItem(key, JSON.stringify(finalObj));
+
+  // synchro mémoire sur la vraie valeur persistée
+  window.eliteProfile = finalObj;
+  window.firestoreProfile = finalObj;
+
+  // (optionnel) compat si tu utilises encore saveEtProfile ailleurs
+  try{ if(typeof saveEtProfile === "function") saveEtProfile(uid, finalObj); }catch(e){}
+}catch(e){
+  console.warn("[profile] localStorage persist failed", e);
+}
 
   // 3) Firestore: profil principal
   try{
