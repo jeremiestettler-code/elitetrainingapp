@@ -7618,25 +7618,23 @@ window.showToast = function(message, duration=2500){
    HOME PREMIUM — INIT
 ====================================================== */
 
+// ✅ getAthleteName() — single source of truth
 function getAthleteName(){
   const u = window.currentUser || (typeof currentUser !== "undefined" ? currentUser : null);
   const p = window.eliteProfile || window.firestoreProfile || {};
 
-  // ✅ PRIORITÉ AU PROFIL LOCAL (source de vérité côté client)
-  let raw =
-    String(p.firstName || p.prenom || p.displayName || p.name || p.firstname || "").trim();
+  // ✅ PRIORITÉ PROFIL (eliteProfile)
+  let raw = String(p.firstName || p.prenom || p.displayName || p.name || p.firstname || "").trim();
 
-  // ensuite seulement Auth
-  if(!raw){
-    raw = String(u?.displayName || "").trim();
-  }
+  // fallback Auth
+  if(!raw) raw = String(u?.displayName || "").trim();
 
   // fallback email
   const email = String(u?.email || p?.email || "").trim();
   if(!raw && email.includes("@")) raw = email.split("@")[0];
   if(!raw) raw = "Utilisateur";
 
-  return raw.split(/\s+/)[0]; // prénom only
+  return raw.split(/\s+/)[0];
 }
 
 function formatTimeFromSeconds(totalSec){
@@ -8117,10 +8115,7 @@ window.renderProfileUI = function renderProfileUI(){
   }
 };
 
-// Expose un refresh global (utile après edit/save)
-window.refreshProfileScreen = function(){
-  try{ window.renderProfileUI?.(); }catch(e){}
-};
+
 
 function openProfileEntrySafe(){
   // ferme réglages si ouverts
