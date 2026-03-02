@@ -7967,7 +7967,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
 
         // ✅ Unique persistance : saveEliteProfile()
         if(typeof window.saveEliteProfile === "function"){
-          await window.saveEliteProfile({ firstName: vFirst, displayName: vFirst });
+          await window.saveEliteProfile({ firstName: vFirst, displayName: vFirst, prenom: vFirst });
         }else if(typeof saveEliteProfile === "function"){
           await saveEliteProfile({ firstName: vFirst, displayName: vFirst });
         }else{
@@ -8359,6 +8359,80 @@ function updateProfileHeaderSafe(){
   };
 })();
 
+// ======================
+// ✅ Global one true save (exposed)
+// ======================
+window.saveEliteProfile = async function saveEliteProfile(patch){
+  const u = window.currentUser || null;
+  const uid = u?.uid || null;
+  if(!uid) return null;
+
+  // anti double-save
+  if(window.__profileSavingNow) return window.eliteProfile || null;
+  window.__profileSavingNow = true;
+  setTimeout(()=>{ window.__profileSavingNow = false; }, 500);
+
+  const nowIso = new Date().toISOString();
+  const merged = {
+    ...(window.eliteProfile || {}),
+    ...(window.firestoreProfile || {}),
+    ...(patch || {}),
+    updatedAt: nowIso
+  };
+
+  // 1) mémoire
+  window.eliteProfile = merged;
+  window.firestoreProfile = merged;
+
+  // 2) localStorage (GARANTI)
+  try{
+    const key = "et_profile_v1_" + uid;
+
+    let prev = {};
+    try{ prev = JSON.parse(localStorage.getItem(key) || "{}") || {}; }catch(e){ prev = {}; }
+
+    const finalObj = { ...prev, ...merged, updatedAt: nowIso };
+    localStorage.setItem(key, JSON.stringify(finalObj));
+
+    window.eliteProfile = finalObj;
+    window.firestoreProfile = finalObj;
+  }catch(e){
+    console.warn("[profile] localStorage persist failed", e);
+  }
+
+  // 3) Firestore main
+  try{
+    if(typeof db !== "undefined" && typeof doc === "function" && typeof setDoc === "function"){
+      await setDoc(doc(db, "users", uid, "profile", "main"), window.eliteProfile, { merge:true });
+    }
+  }catch(e){
+    console.warn("[profile] Firestore main persist failed (offline/rights?)", e);
+  }
+
+  // 4) Firestore config displayName
+  try{
+    const first = String(window.eliteProfile?.firstName || window.eliteProfile?.displayName || "").trim();
+    if(first && typeof db !== "undefined" && typeof doc === "function" && typeof setDoc === "function"){
+      await setDoc(doc(db, `users/${uid}/profile/config`), { displayName: first }, { merge:true });
+    }
+  }catch(e){
+    console.warn("[profile] Firestore config persist failed (offline/rights?)", e);
+  }
+
+  // 5) aligne Auth local
+  try{
+    const first = String(window.eliteProfile?.firstName || window.eliteProfile?.displayName || "").trim();
+    if(first && window.currentUser) window.currentUser.displayName = first;
+  }catch(e){}
+
+  // 6) refresh UI
+  try{ window.refreshTopbarUser?.(); }catch(e){}
+  try{ window.updateHomePremiumUI?.(); }catch(e){}
+  try{ window.renderProfileUI?.(); }catch(e){}
+  requestAnimationFrame(()=>{ try{ window.renderProfileUI?.(); }catch(e){} });
+
+  return window.eliteProfile;
+};
 
 </script>
 </body>
