@@ -7971,7 +7971,6 @@ if(btnSave){
   setTimeout(apply, 300);
 
   // Observe les changements de classe sur les screens
-  const root = document.body;
   const obs = new MutationObserver((mutations)=>{
     for(const m of mutations){
       if(m.type === "attributes" && m.attributeName === "class"){
@@ -7998,245 +7997,219 @@ function setBottomNavActive(which){
   bProfile.classList.toggle("active", which === "profile");
 }
 
+// =======================
+// ✅ Profile renderer (single place)
+// =======================
+window.renderProfileUI = function renderProfileUI(){
+  try{
+    const nameEl = document.getElementById("profileName");
+    const emailEl = document.getElementById("profileEmail");
+    const avatarEl = document.getElementById("profileAvatar");
+
+    // Si la screen profil n’est pas montée, on ne fait rien
+    if(!nameEl || !emailEl || !avatarEl) return;
+
+    const u = window.currentUser || null;
+    const p = window.eliteProfile || window.firestoreProfile || {};
+
+    const email = String(u?.email || p?.email || "").trim();
+
+    // prénom robuste
+    let raw =
+      String(p?.firstName || p?.prenom || p?.displayName || p?.name || p?.firstname || "").trim() ||
+      String(u?.displayName || "").trim();
+
+    // fallback sur email avant @
+    if(!raw && email.includes("@")) raw = email.split("@")[0];
+    if(!raw) raw = "Utilisateur";
+
+    const first = raw.split(" ")[0];
+
+    // initiales (1 ou 2 lettres)
+    const parts = raw.split(/\s+/).filter(Boolean);
+    const initials = (parts.length >= 2)
+      ? (parts[0][0] + parts[1][0]).toUpperCase()
+      : (first[0] || "U").toUpperCase();
+
+    // Hero
+    nameEl.textContent = first;
+    emailEl.textContent = email || "—";
+    avatarEl.textContent = initials || "U";
+
+    // Infos card
+    const infoFirst = document.getElementById("infoFirstName");
+    const infoEmail = document.getElementById("infoEmail");
+    const infoAge = document.getElementById("infoAge");
+    const infoSexe = document.getElementById("infoSexe");
+
+    if(infoFirst) infoFirst.textContent = first;
+    if(infoEmail) infoEmail.textContent = email || "—";
+
+    // Fitness card
+    const fitGoal = document.getElementById("fitGoal");
+    const fitLevel = document.getElementById("fitLevel");
+
+    if(fitGoal) fitGoal.textContent = p?.goal || p?.objectif || "—";
+    if(fitLevel) fitLevel.textContent = p?.level || p?.niveau || "—";
+
+    // Matériel preview (cards)
+    const eqWrap = document.getElementById("equipmentChipsPreview");
+    if(eqWrap){
+      const labelMap = {
+        halteres: "Haltères",
+        barre: "Barre + disques",
+        banc: "Banc",
+        poulie: "Poulie",
+        elastiques: "Élastiques",
+        kettlebell: "Kettlebell",
+        rameur: "Rameur",
+        trx: "TRX"
+      };
+
+      let eq = p?.equipment || p?.equipments || p?.materiel || p?.matos || [];
+      if(typeof eq === "string") eq = eq.split(",").map(s=>s.trim()).filter(Boolean);
+      if(!Array.isArray(eq)) eq = [];
+
+      eqWrap.innerHTML = "";
+      eqWrap.classList.add("pwEquipmentGrid");
+
+      if(eq.length === 0){
+        const empty = document.createElement("div");
+        empty.className = "muted small";
+        empty.textContent = "Aucun matériel sélectionné.";
+        eqWrap.appendChild(empty);
+      }else{
+        eq.forEach((key)=>{
+          const k = String(key || "").trim();
+          if(!k) return;
+
+          const card = document.createElement("div");
+          card.className = "pwEquipCard active";
+          card.innerHTML = `
+            <img src="images/equipment/${k}.jpg" alt="${labelMap[k] || k}">
+            <span>${labelMap[k] || k}</span>
+          `;
+          eqWrap.appendChild(card);
+        });
+      }
+    }
+
+    // âge calculé depuis dob
+    let age = "—";
+    try{
+      const dob = p?.dob;
+      if(dob){
+        const birth = new Date(dob);
+        const diff = Date.now() - birth.getTime();
+        const years = new Date(diff).getUTCFullYear() - 1970;
+        age = years;
+      }
+    }catch(e){}
+
+    if(infoAge) infoAge.textContent = age;
+    if(infoSexe) infoSexe.textContent = p?.sex || p?.gender || "—";
+
+  }catch(e){
+    // silent
+  }
+};
+
+// Expose un refresh global (utile après edit/save)
+window.refreshProfileScreen = function(){
+  try{ window.renderProfileUI?.(); }catch(e){}
+};
+
 function openProfileEntrySafe(){
   // ferme réglages si ouverts
   try{ document.getElementById("settingsModal")?.classList.add("hidden"); }catch(e){}
 
   function updateHeaderNow(){
-    try{
-      const nameEl = document.getElementById("profileName");
-      const emailEl = document.getElementById("profileEmail");
-      const avatarEl = document.getElementById("profileAvatar");
-      if(!nameEl || !emailEl || !avatarEl) return;
+    try{ window.renderProfileUI?.(); }catch(e){}
+  }
 
-      const u = window.currentUser || null;
-      const p = window.eliteProfile || window.firestoreProfile || null;
+  // ===== INLINE EDIT MODE (foundation) =====
+  window.setProfileEditMode = function(on){
+    const root = document.documentElement;
 
-      const email = String(u?.email || p?.email || "").trim();
+    // ✅ ON: data-profile-edit="1"
+    // ✅ OFF: on retire l’attribut (évite les états bizarres)
+    if(on) root.setAttribute("data-profile-edit", "1");
+    else root.removeAttribute("data-profile-edit");
 
-      // On récupère un "prénom" robuste (ton eliteProfile contient dob/age etc, donc on couvre plusieurs clés)
-      let raw =
-        String(p?.firstName || p?.prenom || p?.displayName || p?.name || p?.firstname || "").trim() ||
-        String(u?.displayName || "").trim();
+    // synchro UI (ne dépend pas uniquement du CSS)
+    const bar = document.getElementById("profileEditBar");
+    if(bar) bar.classList.toggle("hidden", !on);
 
-      // fallback sur email avant @
-      if(!raw && email.includes("@")) raw = email.split("@")[0];
-      if(!raw) raw = "Utilisateur";
+    const btn = document.getElementById("profileEditOpen");
+    if(btn) btn.style.display = on ? "none" : "";
 
-      const first = raw.split(" ")[0];
-
-      // Initiales (1 ou 2 lettres si 2 mots)
-      const parts = raw.split(/\s+/).filter(Boolean);
-      const initials = (parts.length >= 2)
-        ? (parts[0][0] + parts[1][0]).toUpperCase()
-        : (first[0] || "U").toUpperCase();
-
-      nameEl.textContent = first;
-      emailEl.textContent = email || "—";
-      avatarEl.textContent = initials || "U";
-      // ===== INFOS CARD =====
-      const infoFirst = document.getElementById("infoFirstName");
-      const infoEmail = document.getElementById("infoEmail");
-      const infoAge = document.getElementById("infoAge");
-      const infoSexe = document.getElementById("infoSexe");
-
-      if(infoFirst) infoFirst.textContent = first;
-      if(infoEmail) infoEmail.textContent = email || "—";
-
-      // ===== FITNESS CARD =====
-      const fitGoal = document.getElementById("fitGoal");
-      const fitLevel = document.getElementById("fitLevel");
-
-      if(fitGoal) fitGoal.textContent = p?.goal || p?.objectif || "—";
-      if(fitLevel) fitLevel.textContent = p?.level || p?.niveau || "—";
-
-// ===== MATERIEL (preview cards) =====
-const eqWrap = document.getElementById("equipmentChipsPreview");
-if(eqWrap){
-  const labelMap = {
-    halteres: "Haltères",
-    barre: "Barre + disques",
-    banc: "Banc",
-    poulie: "Poulie",
-    elastiques: "Élastiques",
-    kettlebell: "Kettlebell",
-    rameur: "Rameur",
-    trx: "TRX"
+    // Prefill Prénom à l’entrée en mode edit
+    if(on){
+      const inp = document.getElementById("editFirstName");
+      if(inp){
+        const p = window.eliteProfile || window.firestoreProfile || {};
+        const val = String(p.firstName || p.prenom || p.displayName || "").trim();
+        inp.value = val;
+        setTimeout(()=>{ try{ inp.focus(); inp.select?.(); }catch(e){} }, 0);
+      }
+    }
   };
 
-  // p.equipment attendu = ["halteres","banc",...]
-  let eq = p?.equipment || p?.equipments || p?.materiel || p?.matos || [];
-  if(typeof eq === "string") eq = eq.split(",").map(s=>s.trim()).filter(Boolean);
-  if(!Array.isArray(eq)) eq = [];
+  // Bind buttons (once)
+  setTimeout(()=>{
+    const btnOpen   = document.getElementById("profileEditOpen");
+    const btnCancel = document.getElementById("profileEditCancel");
+    const btnSave   = document.getElementById("profileEditSave");
 
-  eqWrap.innerHTML = "";
-  eqWrap.classList.add("pwEquipmentGrid"); // on réutilise le layout du wizard si dispo
-
-  if(eq.length === 0){
-    const empty = document.createElement("div");
-    empty.className = "muted small";
-    empty.textContent = "Aucun matériel sélectionné.";
-    eqWrap.appendChild(empty);
-  }else{
-    eq.forEach((key)=>{
-      const k = String(key || "").trim();
-      if(!k) return;
-
-      const card = document.createElement("div");
-      card.className = "pwEquipCard active";
-      card.innerHTML = `
-        <img src="images/equipment/${k}.jpg" alt="${labelMap[k] || k}">
-        <span>${labelMap[k] || k}</span>
-      `;
-      eqWrap.appendChild(card);
-    });
-  }
-}
-
-
-      // âge calculé depuis dob
-      let age = "—";
-      try{
-        const dob = p?.dob;
-        if(dob){
-          const birth = new Date(dob);
-          const diff = Date.now() - birth.getTime();
-          const years = new Date(diff).getUTCFullYear() - 1970;
-          age = years;
-        }
-      }catch(e){}
-
-      if(infoAge) infoAge.textContent = age;
-      if(infoSexe) infoSexe.textContent = p?.sex || p?.gender || "—";
-    }catch(e){}
-  }
-
-// Expose un refresh global (utile après edit/save)
-window.refreshProfileScreen = function(){
-  try{ updateHeaderNow(); }catch(e){}
-};
-
-// ===== INLINE EDIT MODE (foundation) =====
-window.setProfileEditMode = function(on){
-  const root = document.documentElement;
-
-  // ✅ ON: data-profile-edit="1"
-  // ✅ OFF: on retire l’attribut (évite les états bizarres)
-  if(on) root.setAttribute("data-profile-edit", "1");
-  else root.removeAttribute("data-profile-edit");
-
-  // synchro UI (ne dépend pas uniquement du CSS)
-  const bar = document.getElementById("profileEditBar");
-  if(bar) bar.classList.toggle("hidden", !on);
-
-  const btn = document.getElementById("profileEditOpen");
-  if(btn) btn.style.display = on ? "none" : "";
-
-  // Prefill Prénom à l’entrée en mode edit
-  if(on){
-    const inp = document.getElementById("editFirstName");
-    if(inp){
-      const p = window.eliteProfile || window.firestoreProfile || {};
-      const val = String(p.firstName || p.prenom || p.displayName || "").trim();
-      inp.value = val;
-      setTimeout(()=>{ try{ inp.focus(); inp.select?.(); }catch(e){} }, 0);
+    // Ouvrir edit
+    if(btnOpen && !btnOpen.__editBound){
+      btnOpen.__editBound = true;
+      btnOpen.addEventListener("click", ()=>{
+        window.setProfileEditMode(true);
+      });
     }
-  }
 
-};
-
-
-setTimeout(()=>{
-  const btnOpen   = document.getElementById("profileEditOpen");
-  const btnCancel = document.getElementById("profileEditCancel");
-  const btnSave   = document.getElementById("profileEditSave");
-
-  // Ouvrir edit
-  if(btnOpen && !btnOpen.__editBound){
-    btnOpen.__editBound = true;
-    btnOpen.addEventListener("click", ()=>{
-      window.setProfileEditMode(true);
-
-      // prefill prénom si input existe
-      try{
-        const p = window.eliteProfile || window.firestoreProfile || {};
-        const inp = document.getElementById("editFirstName");
-        if(inp){
-          const val = String(p.firstName || p.prenom || p.displayName || "").trim();
-          inp.value = val;
-        }
-      }catch(e){}
-    });
-  }
-
-  // Annuler
-  if(btnCancel && !btnCancel.__cancelBound){
-    btnCancel.__cancelBound = true;
-    btnCancel.addEventListener("click", ()=>{
-      window.setProfileEditMode(false);
-      window.refreshProfileScreen?.();
-      try{ updateHomePremiumUI?.(); }catch(e){}
-    });
-  }
-
-  // Enregistrer (prénom) — persiste localStorage + Firestore si dispo
-  if(btnSave && !btnSave.__saveBound){
-    btnSave.__saveBound = true;
-    btnSave.addEventListener("click", async ()=>{
-      try{
-        const inp = document.getElementById("editFirstName");
-        const vFirst = String(inp?.value || "").trim();
-        if(!vFirst){
-          window.setProfileEditMode(false);
-          window.refreshProfileScreen?.();
-          return;
-        }
-
-        const u = window.currentUser || (typeof currentUser !== "undefined" ? currentUser : null);
-        const uid = u?.uid || null;
-
-        const patch = {
-          firstName: vFirst,
-          displayName: vFirst,
-          updatedAt: new Date().toISOString()
-        };
-
-        // 1) mémoire (UI immédiate)
-        window.eliteProfile = { ...(window.eliteProfile||{}), ...patch };
-        window.firestoreProfile = { ...(window.firestoreProfile||{}), ...patch };
-
-        // 2) localStorage (survit au redémarrage)
-        try{
-          if(uid && typeof loadEtProfile === "function" && typeof saveEtProfile === "function"){
-            const prev = loadEtProfile(uid) || {};
-            const merged = { ...prev, ...patch };
-            saveEtProfile(uid, merged);
-            window.eliteProfile = merged;
-          }
-        }catch(e){
-          console.warn("[profile] localStorage persist failed (ok)", e);
-        }
-
-        // 3) Firestore (si dispo)
-        try{
-          if(uid && typeof db !== "undefined" && typeof doc === "function" && typeof setDoc === "function"){
-            const ref = doc(db, "users", uid, "profile", "main");
-            await setDoc(ref, patch, { merge:true });
-          }
-        }catch(e){
-          console.warn("[profile] Firestore persist failed (ok/offline)", e);
-        }
-
-      }catch(e){
-        console.warn("[profile] save failed", e);
-      }finally{
+    // Annuler
+    if(btnCancel && !btnCancel.__cancelBound){
+      btnCancel.__cancelBound = true;
+      btnCancel.addEventListener("click", ()=>{
         window.setProfileEditMode(false);
         window.refreshProfileScreen?.();
         try{ updateHomePremiumUI?.(); }catch(e){}
-      }
-    });
-  }
-}, 0);
+      });
+    }
+
+    // Enregistrer (prénom) — ✅ ONE TRUE SAVE
+    if(btnSave && !btnSave.__saveBound){
+      btnSave.__saveBound = true;
+      btnSave.addEventListener("click", async ()=>{
+        try{
+          const inp = document.getElementById("editFirstName");
+          const vFirst = String(inp?.value || "").trim();
+
+          if(!vFirst){
+            // optionnel: feedback user
+            return;
+          }
+
+          if(typeof saveEliteProfile === "function"){
+            await saveEliteProfile({ firstName: vFirst, displayName: vFirst });
+          }else{
+            // fallback ultra safe (au cas où)
+            const patch = { firstName: vFirst, displayName: vFirst, updatedAt: new Date().toISOString() };
+            window.eliteProfile = { ...(window.eliteProfile||{}), ...patch };
+            window.firestoreProfile = { ...(window.firestoreProfile||{}), ...patch };
+          }
+        }catch(e){
+          console.warn("[profile] save failed", e);
+        }finally{
+          window.setProfileEditMode(false);
+          window.refreshProfileScreen?.();
+          try{ updateHomePremiumUI?.(); }catch(e){}
+        }
+      });
+    }
+  }, 0);
 
   // ✅ Si la page Profil (screen) existe, on l’ouvre
   try{
@@ -8289,6 +8262,7 @@ function initBottomNav(){
   // défaut
   setBottomNavActive("home");
 }
+
 function syncBottomNavVisibility(){
   const nav = document.getElementById("bottomNav");
   if(!nav) return;
@@ -8321,32 +8295,7 @@ window.syncBottomNavVisibility = syncBottomNavVisibility;
   if(!_showScreen) return;
 
   function updateProfileHeaderSafe(){
-    try{
-      const nameEl = document.getElementById("profileName");
-      const emailEl = document.getElementById("profileEmail");
-      const avatarEl = document.getElementById("profileAvatar");
-      if(!nameEl || !emailEl || !avatarEl) return;
-
-      // Sources “safe” (peu importe comment ton auth les expose)
-      const u = window.currentUser || (typeof currentUser !== "undefined" ? currentUser : null);
-      const p = window.eliteProfile || window.firestoreProfile || null;
-
-      const email = String(u?.email || p?.email || "").trim();
-
-      let first =
-        String(p?.firstName || p?.prenom || p?.displayName || "").trim() ||
-        String(u?.displayName || "").trim();
-
-      if(first) first = first.split(" ")[0];
-      if(!first && email.includes("@")) first = email.split("@")[0];
-      if(!first) first = "Utilisateur";
-
-      const initial = (first[0] || "U").toUpperCase();
-
-      nameEl.textContent = first;
-      emailEl.textContent = email || "—";
-      avatarEl.textContent = initial;
-    }catch(e){}
+    try{ window.renderProfileUI?.(); }catch(e){}
   }
 
   window.showScreen = function(name){
@@ -8355,12 +8304,12 @@ window.syncBottomNavVisibility = syncBottomNavVisibility;
 
     if(n === "home"){
       setBottomNavActive("home");
-      setTimeout(()=>updateHomePremiumUI(), 50);
+      setTimeout(()=>{ try{ updateHomePremiumUI?.(); }catch(e){} }, 50);
     }
 
     if(n === "profile"){
       setBottomNavActive("profile");
-      setTimeout(()=>updateProfileHeaderSafe(), 0);
+      setTimeout(updateProfileHeaderSafe, 0);
     }
 
     syncBottomNavVisibility();
