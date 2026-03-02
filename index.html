@@ -7595,22 +7595,26 @@ window.showToast = function(message, duration=2500){
 ====================================================== */
 
 function getAthleteName(){
-  // 1) Firebase Auth (priorité)
+  // ✅ 1) Source de vérité : eliteProfile / firestoreProfile
   try{
-      const u = window.currentUser || null;
-      if(u){
-      const dn = String(u.displayName || "").trim();
-      if(dn) return dn.split(" ")[0]; // Prénom
-      const em = String(u.email || "").trim();
-      if(em && em.includes("@")) return em.split("@")[0]; // fallback email prefix
+    const p = window.eliteProfile || window.firestoreProfile || null;
+    if(p){
+      const raw = String(
+        p.firstName || p.prenom || p.displayName || p.name || p.firstname || ""
+      ).trim();
+      if(raw) return raw.split(" ")[0];
     }
   }catch(e){}
 
-  // 2) Fallback : profile wizard local (n’a pas de prénom mais au cas où tu l’ajoutes plus tard)
+  // 2) Fallback : Firebase Auth
   try{
-    const p = window.eliteProfile || null;
-    const maybe = String(p?.firstName || p?.prenom || p?.name || "").trim();
-    if(maybe) return maybe.split(" ")[0];
+    const u = window.currentUser || null;
+    if(u){
+      const dn = String(u.displayName || "").trim();
+      if(dn) return dn.split(" ")[0];
+      const em = String(u.email || "").trim();
+      if(em && em.includes("@")) return em.split("@")[0];
+    }
   }catch(e){}
 
   return "—";
