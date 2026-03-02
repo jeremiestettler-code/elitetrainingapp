@@ -8029,7 +8029,6 @@ await window.saveEliteProfile({
   // état initial
   window.setProfileEditMode(false);
 })();
-});
 
 // =======================
 // Bottom nav visibility watcher (bulletproof)
@@ -8238,14 +8237,22 @@ function openProfileEntrySafe(){
 
     // Prefill Prénom à l’entrée en mode edit
     if(on){
-      const inp = document.getElementById("editFirstName");
-      if(inp){
-        const p = window.eliteProfile || window.firestoreProfile || {};
-        const val = String(p.firstName || p.prenom || p.displayName || "").trim();
-        inp.value = val;
-        setTimeout(()=>{ try{ inp.focus(); inp.select?.(); }catch(e){} }, 0);
-      }
-    }
+  const p = window.eliteProfile || window.firestoreProfile || {};
+
+  // Prefill Prénom
+  const inp = document.getElementById("editFirstName");
+  if(inp){
+    inp.value = String(p.firstName || p.prenom || p.displayName || "").trim();
+    setTimeout(()=>{ try{ inp.focus(); inp.select?.(); }catch(e){} }, 0);
+  }
+
+  // Prefill DOB
+  const dobInp = document.getElementById("editDob");
+  if(dobInp){
+    const dob = String(p.dob || "").trim(); // attendu: YYYY-MM-DD
+    dobInp.value = (/^\d{4}-\d{2}-\d{2}$/).test(dob) ? dob : "";
+  }
+}
   };
 
   // Bind buttons (once)
