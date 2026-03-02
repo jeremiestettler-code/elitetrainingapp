@@ -8337,6 +8337,7 @@ function updateProfileHeaderSafe(){
       const n = btnOpen.cloneNode(true);
       btnOpen.parentNode.replaceChild(n, btnOpen);
     }
+
     if(btnCancel){
       const n = btnCancel.cloneNode(true);
       btnCancel.parentNode.replaceChild(n, btnCancel);
@@ -8355,50 +8356,46 @@ function updateProfileHeaderSafe(){
     if(cancel){
       cancel.addEventListener("click", ()=>{
         window.setProfileEditMode?.(false);
-        window.refreshProfileScreen?.();
+        window.renderProfileUI?.();
         window.refreshTopbarUser?.();
         window.updateHomePremiumUI?.();
       });
     }
-// ✅ ONE TRUE SAVE
-save.addEventListener("click", async ()=>{
-  try{
-    const inp = document.getElementById("editFirstName");
-    const vFirst = String(inp?.value || "").trim();
-    if(!vFirst) return;
 
-    if(typeof window.saveEliteProfile === "function"){
-      await window.saveEliteProfile({ firstName: vFirst, displayName: vFirst });
-    }else{
-      // fallback: écrit au moins localStorage
-      const u = window.currentUser || null;
-      const uid = u?.uid || null;
-      const patch = { firstName: vFirst, displayName: vFirst, updatedAt: new Date().toISOString() };
-      window.eliteProfile = { ...(window.eliteProfile||{}), ...patch };
-      if(uid){
-        try{
-          localStorage.setItem("et_profile_v1_" + uid, JSON.stringify(window.eliteProfile));
-        }catch(e){}
+    save.addEventListener("click", async ()=>{
+      try{
+        const inp = document.getElementById("editFirstName");
+        const vFirst = String(inp?.value || "").trim();
+        if(!vFirst) return;
+
+        if(typeof window.saveEliteProfile === "function"){
+          await window.saveEliteProfile({
+            firstName: vFirst,
+            displayName: vFirst
+          });
+        }
+
+      }catch(e){
+        console.warn("[profile] save override failed", e);
+      }finally{
+        window.setProfileEditMode?.(false);
+        window.refreshTopbarUser?.();
+        window.updateHomePremiumUI?.();
+        window.renderProfileUI?.();
+
+        requestAnimationFrame(()=>{
+          window.renderProfileUI?.();
+        });
       }
-    }
-  }catch(e){
-    console.warn("[profile] save override failed", e);
-  } finally {
-    try{ window.setProfileEditMode?.(false); }catch(e){}
-
-    // 🔁 Force un double refresh (immédiat + après repaint)
-    try{ window.refreshTopbarUser?.(); }catch(e){}
-    try{ window.updateHomePremiumUI?.(); }catch(e){}
-
-    // refresh immédiat
-    try{ window.refreshProfileScreen?.(); }catch(e){}
-
-    // refresh après repaint (corrige ton cas actuel)
-    requestAnimationFrame(()=>{
-      try{ window.refreshProfileScreen?.(); }catch(e){}
     });
   }
-});
+
+  // bind proprement
+  bind();
+  setTimeout(bind, 0);
+  setTimeout(bind, 250);
+
+})();
 </script>
 </body>
 </html>
