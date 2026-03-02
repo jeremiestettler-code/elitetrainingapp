@@ -8383,13 +8383,20 @@ window.syncBottomNavVisibility = syncBottomNavVisibility;
         }
       }catch(e){
         console.warn("[profile] save override failed", e);
-      }finally{
+      } finally {
         try{ window.setProfileEditMode?.(false); }catch(e){}
-        try{ window.refreshProfileScreen?.(); }catch(e){}
+
+        // 🔁 Force un double refresh (immédiat + après repaint)
         try{ window.refreshTopbarUser?.(); }catch(e){}
         try{ window.updateHomePremiumUI?.(); }catch(e){}
-      }
-    });
+
+        // refresh immédiat
+        try{ window.refreshProfileScreen?.(); }catch(e){}
+
+        // refresh après repaint (corrige ton cas actuel)
+        requestAnimationFrame(()=>{
+          try{ window.refreshProfileScreen?.(); }catch(e){}
+        });
 
     console.log("✅ Profile save override bound");
   }
