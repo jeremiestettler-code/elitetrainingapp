@@ -2827,6 +2827,11 @@ async function saveEliteProfile(patch){
   const uid = u?.uid || null;
   if(!uid) return null;
 
+  // ✅ anti double-save / handlers concurrents
+  if(window.__profileSavingNow) return window.eliteProfile || null;
+  window.__profileSavingNow = true;
+  setTimeout(()=>{ window.__profileSavingNow = false; }, 500);
+
   const merged = {
     ...(window.eliteProfile || {}),
     ...(window.firestoreProfile || {}),
@@ -2839,7 +2844,10 @@ async function saveEliteProfile(patch){
   window.firestoreProfile = merged;
 
   // 2) localStorage (source relue au boot)
-  try{ saveEtProfile(uid, merged); }catch(e){}
+  try{
+    if(typeof saveEtProfile === "function") saveEtProfile(uid, merged);
+    else localStorage.setItem("et_profile_v1_" + uid, JSON.stringify(merged));
+  }catch(e){}
 
   // 3) Firestore: profil principal
   try{
@@ -2848,7 +2856,7 @@ async function saveEliteProfile(patch){
     }
   }catch(e){ /* offline ok */ }
 
-  // ✅ 4) Firestore: config displayName (évite le retour à l'ancien prénom au reload)
+  // 4) Firestore: config displayName
   try{
     const first = String(merged.firstName || merged.displayName || "").trim();
     if(first && typeof db !== "undefined" && typeof doc === "function" && typeof setDoc === "function"){
@@ -2856,16 +2864,22 @@ async function saveEliteProfile(patch){
     }
   }catch(e){ /* offline ok */ }
 
-  // ✅ 5) mémoire: aligne aussi currentUser.displayName (UI immédiate même si Auth n’est pas updaté)
+  // 5) aligne Auth local
   try{
     const first = String(merged.firstName || merged.displayName || "").trim();
     if(first && window.currentUser) window.currentUser.displayName = first;
   }catch(e){}
 
-  // ✅ 6) refresh UI immédiat (header + home + profil)
+  // 6) refresh UI
   try{ window.refreshTopbarUser?.(); }catch(e){}
   try{ window.refreshProfileScreen?.(); }catch(e){}
   try{ window.updateHomePremiumUI?.(); }catch(e){}
+
+  // ✅ FINAL GUARANTEE: localStorage = mémoire finale
+  try{
+    const key = "et_profile_v1_" + uid;
+    localStorage.setItem(key, JSON.stringify(window.eliteProfile || merged));
+  }catch(e){}
 
   return merged;
 }
