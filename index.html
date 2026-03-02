@@ -8115,7 +8115,10 @@ window.renderProfileUI = function renderProfileUI(){
   }
 };
 
-
+// ✅ Refresh global profil (source unique)
+window.refreshProfileScreen = function(){
+  try{ window.renderProfileUI?.(); }catch(e){}
+};
 
 function openProfileEntrySafe(){
   // ferme réglages si ouverts
@@ -8292,9 +8295,9 @@ window.syncBottomNavVisibility = syncBottomNavVisibility;
   const _showScreen = (typeof window.showScreen === "function") ? window.showScreen : null;
   if(!_showScreen) return;
 
-  function updateProfileHeaderSafe(){
-    try{ window.renderProfileUI?.(); }catch(e){}
-  }
+function updateProfileHeaderSafe(){
+  try{ window.renderProfileUI?.(); }catch(e){}
+}
 
   window.showScreen = function(name){
     const r = _showScreen(name);
@@ -8357,58 +8360,45 @@ window.syncBottomNavVisibility = syncBottomNavVisibility;
         window.updateHomePremiumUI?.();
       });
     }
+// ✅ ONE TRUE SAVE
+save.addEventListener("click", async ()=>{
+  try{
+    const inp = document.getElementById("editFirstName");
+    const vFirst = String(inp?.value || "").trim();
+    if(!vFirst) return;
 
-    save.addEventListener("click", async ()=>{
-      try{
-        const inp = document.getElementById("editFirstName");
-        const vFirst = String(inp?.value || "").trim();
-        if(!vFirst) return;
-
-        if(typeof window.saveEliteProfile === "function"){
-          await window.saveEliteProfile({
-            firstName: vFirst,
-            displayName: vFirst
-          });
-        }else{
-          const u = window.currentUser || null;
-          const uid = u?.uid || null;
-          const patch = {
-            firstName: vFirst,
-            displayName: vFirst,
-            updatedAt: new Date().toISOString()
-          };
-
-          window.eliteProfile = { ...(window.eliteProfile||{}), ...patch };
-
-          if(uid){
-            localStorage.setItem(
-              "et_profile_v1_" + uid,
-              JSON.stringify(window.eliteProfile)
-            );
-          }
-        }
-
-      }catch(e){
-        console.warn("[profile] save override failed", e);
-      }finally{
-        window.setProfileEditMode?.(false);
-        window.refreshTopbarUser?.();
-        window.updateHomePremiumUI?.();
-        window.refreshProfileScreen?.();
-
-        requestAnimationFrame(()=>{
-          window.refreshProfileScreen?.();
-        });
+    if(typeof window.saveEliteProfile === "function"){
+      await window.saveEliteProfile({ firstName: vFirst, displayName: vFirst });
+    }else{
+      // fallback: écrit au moins localStorage
+      const u = window.currentUser || null;
+      const uid = u?.uid || null;
+      const patch = { firstName: vFirst, displayName: vFirst, updatedAt: new Date().toISOString() };
+      window.eliteProfile = { ...(window.eliteProfile||{}), ...patch };
+      if(uid){
+        try{
+          localStorage.setItem("et_profile_v1_" + uid, JSON.stringify(window.eliteProfile));
+        }catch(e){}
       }
+    }
+  }catch(e){
+    console.warn("[profile] save override failed", e);
+  } finally {
+    try{ window.setProfileEditMode?.(false); }catch(e){}
+
+    // 🔁 Force un double refresh (immédiat + après repaint)
+    try{ window.refreshTopbarUser?.(); }catch(e){}
+    try{ window.updateHomePremiumUI?.(); }catch(e){}
+
+    // refresh immédiat
+    try{ window.refreshProfileScreen?.(); }catch(e){}
+
+    // refresh après repaint (corrige ton cas actuel)
+    requestAnimationFrame(()=>{
+      try{ window.refreshProfileScreen?.(); }catch(e){}
     });
   }
-
-  // bind safe
-  bind();
-  setTimeout(bind, 0);
-  setTimeout(bind, 250);
-
-})();
+});
 </script>
 </body>
 </html>
