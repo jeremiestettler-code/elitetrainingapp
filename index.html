@@ -7869,15 +7869,17 @@ document.addEventListener("DOMContentLoaded", ()=>{
   syncBottomNavVisibility(); // ✅ cache sur login au load, montre ailleurs
 
 // =========================
-// ✅ Profile — inline edit bindings (ONE TRUE SAVE)
+// ✅ Profile — inline edit bindings (CLEAN, single source)
 // =========================
-(function bindProfileEditModeOnce(){
+(function initProfileEditModeOnce(){
   if(window.__profileEditBound) return;
   window.__profileEditBound = true;
 
   window.setProfileEditMode = function(on){
-    // on garde ton système robuste (data attr + hidden bar)
     const root = document.documentElement;
+
+    // ✅ ON: data-profile-edit="1"
+    // ✅ OFF: remove (évite les états bizarres)
     if(on) root.setAttribute("data-profile-edit", "1");
     else root.removeAttribute("data-profile-edit");
 
@@ -7887,7 +7889,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
     const btn = document.getElementById("profileEditOpen");
     if(btn) btn.style.display = on ? "none" : "";
 
-    // prefill
+    // Prefill + focus
     if(on){
       const inp = document.getElementById("editFirstName");
       if(inp){
@@ -7902,15 +7904,26 @@ document.addEventListener("DOMContentLoaded", ()=>{
   const btnCancel = document.getElementById("profileEditCancel");
   const btnSave   = document.getElementById("profileEditSave");
 
+  function refreshAll(){
+    try{ window.refreshTopbarUser?.(); }catch(e){}
+    try{ window.updateHomePremiumUI?.(); }catch(e){}
+    try{ window.renderProfileUI?.(); }catch(e){}
+  }
+  function refreshAllAfterPaint(){
+    requestAnimationFrame(()=>{ refreshAll(); });
+  }
+
   if(btnOpen){
-    btnOpen.addEventListener("click", ()=> window.setProfileEditMode(true));
+    btnOpen.addEventListener("click", ()=>{
+      window.setProfileEditMode(true);
+    });
   }
 
   if(btnCancel){
     btnCancel.addEventListener("click", ()=>{
       window.setProfileEditMode(false);
-      window.refreshProfileScreen?.();
-      try{ updateHomePremiumUI?.(); }catch(e){}
+      refreshAll();
+      refreshAllAfterPaint();
     });
   }
 
@@ -7921,25 +7934,22 @@ document.addEventListener("DOMContentLoaded", ()=>{
         const vFirst = String(inp?.value || "").trim();
         if(!vFirst) return;
 
-        // ✅ One true save (écrit localStorage et Firestore)
-        if(typeof saveEliteProfile === "function"){
+        // ✅ Unique persistance : saveEliteProfile()
+        if(typeof window.saveEliteProfile === "function"){
+          await window.saveEliteProfile({ firstName: vFirst, displayName: vFirst });
+        }else if(typeof saveEliteProfile === "function"){
           await saveEliteProfile({ firstName: vFirst, displayName: vFirst });
         }else{
-          // fallback minimal
+          // fallback (ne devrait pas arriver)
           const patch = { firstName: vFirst, displayName: vFirst, updatedAt: new Date().toISOString() };
           window.eliteProfile = { ...(window.eliteProfile||{}), ...patch };
-          window.firestoreProfile = { ...(window.firestoreProfile||{}), ...patch };
-          try{
-            const uid = window.currentUser?.uid || null;
-            if(uid && typeof saveEtProfile === "function") saveEtProfile(uid, window.eliteProfile);
-          }catch(e){}
         }
       }catch(e){
         console.warn("[profile] save failed", e);
       }finally{
         window.setProfileEditMode(false);
-        window.refreshProfileScreen?.();
-        try{ updateHomePremiumUI?.(); }catch(e){}
+        refreshAll();
+        refreshAllAfterPaint();
       }
     });
   }
@@ -8318,129 +8328,7 @@ function updateProfileHeaderSafe(){
   };
 })();
 
-// =========================
-// ✅ PROFILE SAVE OVERRIDE (bulletproof)
-// =========================
-(function(){
 
-  function bind(){
-    const btnSave = document.getElementById("profileEditSave");
-    const btnOpen = document.getElementById("profileEditOpen");
-    const btnCancel = document.getElementById("profileEditCancel");
-    if(!btnSave) return;
-
-    // neutralise anciens handlers
-    const newSave = btnSave.cloneNode(true);
-    btnSave.parentNode.replaceChild(newSave, btnSave);
-
-    if(btnOpen){
-      const n = btnOpen.cloneNode(true);
-      btnOpen.parentNode.replaceChild(n, btnOpen);
-    }
-
-    if(btnCancel){
-      const n = btnCancel.cloneNode(true);
-      btnCancel.parentNode.replaceChild(n, btnCancel);
-    }
-
-    const save = document.getElementById("profileEditSave");
-    const open = document.getElementById("profileEditOpen");
-    const cancel = document.getElementById("profileEditCancel");
-
-    if(open){
-      open.addEventListener("click", ()=>{
-        window.setProfileEditMode?.(true);
-      });
-    }
-
-    if(cancel){
-      cancel.addEventListener("click", ()=>{
-        window.setProfileEditMode?.(false);
-        window.renderProfileUI?.();
-        window.refreshTopbarUser?.();
-        window.updateHomePremiumUI?.();
-      });
-    }
-
-save.addEventListener("click", async ()=>{
-  try{
-    const inp = document.getElementById("editFirstName");
-    const vFirst = String(inp?.value || "").trim();
-    if(!vFirst) return;
-
-    const u = window.currentUser || null;
-    const uid = u?.uid || null;
-
-    const patch = {
-      firstName: vFirst,
-      displayName: vFirst,
-      updatedAt: new Date().toISOString()
-    };
-
-    // 1) mémoire
-    window.eliteProfile = { ...(window.eliteProfile||{}), ...patch };
-    window.firestoreProfile = { ...(window.firestoreProfile||{}), ...patch };
-
-    // 2) localStorage (garanti)
-    try{
-      if(uid){
-        const prev = (typeof loadEtProfile === "function") ? (loadEtProfile(uid) || {}) : {};
-        const merged = { ...prev, ...window.eliteProfile, updatedAt: patch.updatedAt };
-        if(typeof saveEtProfile === "function") saveEtProfile(uid, merged);
-        else localStorage.setItem("et_profile_v1_" + uid, JSON.stringify(merged));
-        window.eliteProfile = merged;
-      }
-    }catch(e){
-      console.warn("[profile] localStorage persist failed", e);
-    }
-
-    // 3) Firestore main (garanti si dispo)
-    try{
-      if(uid && typeof db !== "undefined" && typeof doc === "function" && typeof setDoc === "function"){
-        await setDoc(doc(db, "users", uid, "profile", "main"), patch, { merge:true });
-      }
-    }catch(e){
-      console.warn("[profile] Firestore main persist failed (offline/rights?)", e);
-    }
-
-    // 4) Firestore config displayName (évite retour au reload si cfg est priorisé ailleurs)
-    try{
-      if(uid && typeof db !== "undefined" && typeof doc === "function" && typeof setDoc === "function"){
-        await setDoc(doc(db, `users/${uid}/profile/config`), { displayName: vFirst }, { merge:true });
-      }
-    }catch(e){
-      console.warn("[profile] Firestore config persist failed (offline/rights?)", e);
-    }
-
-    // 5) aligne Auth local (UI immédiate)
-    try{ if(window.currentUser) window.currentUser.displayName = vFirst; }catch(e){}
-
-  }catch(e){
-    console.warn("[profile] save override failed", e);
-  }finally{
-    try{ window.setProfileEditMode?.(false); }catch(e){}
-
-    // refresh immédiat (direct)
-    try{ window.refreshTopbarUser?.(); }catch(e){}
-    try{ window.updateHomePremiumUI?.(); }catch(e){}
-    try{ window.renderProfileUI?.(); }catch(e){}
-
-    // refresh après repaint
-    requestAnimationFrame(()=>{
-      try{ window.refreshTopbarUser?.(); }catch(e){}
-      try{ window.updateHomePremiumUI?.(); }catch(e){}
-      try{ window.renderProfileUI?.(); }catch(e){}
-    });
-  }
-});
-  }
-
-  // bind proprement
-  bind();
-  setTimeout(bind, 0);
-  setTimeout(bind, 250);
-
-})();
 </script>
 </body>
 </html>
