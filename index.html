@@ -8317,20 +8317,19 @@ window.syncBottomNavVisibility = syncBottomNavVisibility;
 
 // =========================
 // ✅ PROFILE SAVE OVERRIDE (bulletproof)
-// Force un seul chemin de sauvegarde pour le prénom
 // =========================
 (function(){
+
   function bind(){
     const btnSave = document.getElementById("profileEditSave");
     const btnOpen = document.getElementById("profileEditOpen");
     const btnCancel = document.getElementById("profileEditCancel");
     if(!btnSave) return;
 
-    // ✅ neutralise tous les anciens handlers: clone + replace node
+    // neutralise anciens handlers
     const newSave = btnSave.cloneNode(true);
     btnSave.parentNode.replaceChild(newSave, btnSave);
 
-    // (optionnel) idem open/cancel si tu veux zéro surprise
     if(btnOpen){
       const n = btnOpen.cloneNode(true);
       btnOpen.parentNode.replaceChild(n, btnOpen);
@@ -8340,66 +8339,76 @@ window.syncBottomNavVisibility = syncBottomNavVisibility;
       btnCancel.parentNode.replaceChild(n, btnCancel);
     }
 
-    // Re-capture les refs après clone
     const save = document.getElementById("profileEditSave");
     const open = document.getElementById("profileEditOpen");
     const cancel = document.getElementById("profileEditCancel");
 
     if(open){
       open.addEventListener("click", ()=>{
-        try{ window.setProfileEditMode?.(true); }catch(e){}
+        window.setProfileEditMode?.(true);
       });
     }
 
     if(cancel){
       cancel.addEventListener("click", ()=>{
-        try{ window.setProfileEditMode?.(false); }catch(e){}
-        try{ window.refreshProfileScreen?.(); }catch(e){}
-        try{ window.refreshTopbarUser?.(); }catch(e){}
-        try{ window.updateHomePremiumUI?.(); }catch(e){}
+        window.setProfileEditMode?.(false);
+        window.refreshProfileScreen?.();
+        window.refreshTopbarUser?.();
+        window.updateHomePremiumUI?.();
       });
     }
 
-// ✅ ONE TRUE SAVE
-save.addEventListener("click", async ()=>{
-  try{
-    const inp = document.getElementById("editFirstName");
-    const vFirst = String(inp?.value || "").trim();
-    if(!vFirst) return;
+    save.addEventListener("click", async ()=>{
+      try{
+        const inp = document.getElementById("editFirstName");
+        const vFirst = String(inp?.value || "").trim();
+        if(!vFirst) return;
 
-    if(typeof window.saveEliteProfile === "function"){
-      await window.saveEliteProfile({ firstName: vFirst, displayName: vFirst });
-    }else{
-      // fallback: écrit au moins localStorage
-      const u = window.currentUser || null;
-      const uid = u?.uid || null;
-      const patch = { firstName: vFirst, displayName: vFirst, updatedAt: new Date().toISOString() };
-      window.eliteProfile = { ...(window.eliteProfile||{}), ...patch };
-      if(uid){
-        try{
-          localStorage.setItem("et_profile_v1_" + uid, JSON.stringify(window.eliteProfile));
-        }catch(e){}
+        if(typeof window.saveEliteProfile === "function"){
+          await window.saveEliteProfile({
+            firstName: vFirst,
+            displayName: vFirst
+          });
+        }else{
+          const u = window.currentUser || null;
+          const uid = u?.uid || null;
+          const patch = {
+            firstName: vFirst,
+            displayName: vFirst,
+            updatedAt: new Date().toISOString()
+          };
+
+          window.eliteProfile = { ...(window.eliteProfile||{}), ...patch };
+
+          if(uid){
+            localStorage.setItem(
+              "et_profile_v1_" + uid,
+              JSON.stringify(window.eliteProfile)
+            );
+          }
+        }
+
+      }catch(e){
+        console.warn("[profile] save override failed", e);
+      }finally{
+        window.setProfileEditMode?.(false);
+        window.refreshTopbarUser?.();
+        window.updateHomePremiumUI?.();
+        window.refreshProfileScreen?.();
+
+        requestAnimationFrame(()=>{
+          window.refreshProfileScreen?.();
+        });
       }
-    }
-  }catch(e){
-    console.warn("[profile] save override failed", e);
-  } finally {
-    try{ window.setProfileEditMode?.(false); }catch(e){}
-
-    // 🔁 Force un double refresh (immédiat + après repaint)
-    try{ window.refreshTopbarUser?.(); }catch(e){}
-    try{ window.updateHomePremiumUI?.(); }catch(e){}
-
-    // refresh immédiat
-    try{ window.refreshProfileScreen?.(); }catch(e){}
-
-    // refresh après repaint (corrige ton cas actuel)
-    requestAnimationFrame(()=>{
-      try{ window.refreshProfileScreen?.(); }catch(e){}
     });
   }
-});
 
+  // bind safe
+  bind();
+  setTimeout(bind, 0);
+  setTimeout(bind, 250);
+
+})();
 </script>
 </body>
 </html>
