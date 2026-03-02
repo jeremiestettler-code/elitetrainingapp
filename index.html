@@ -8314,6 +8314,92 @@ window.syncBottomNavVisibility = syncBottomNavVisibility;
     return r;
   };
 })();
+
+// =========================
+// ✅ PROFILE SAVE OVERRIDE (bulletproof)
+// Force un seul chemin de sauvegarde pour le prénom
+// =========================
+(function(){
+  function bind(){
+    const btnSave = document.getElementById("profileEditSave");
+    const btnOpen = document.getElementById("profileEditOpen");
+    const btnCancel = document.getElementById("profileEditCancel");
+    if(!btnSave) return;
+
+    // ✅ neutralise tous les anciens handlers: clone + replace node
+    const newSave = btnSave.cloneNode(true);
+    btnSave.parentNode.replaceChild(newSave, btnSave);
+
+    // (optionnel) idem open/cancel si tu veux zéro surprise
+    if(btnOpen){
+      const n = btnOpen.cloneNode(true);
+      btnOpen.parentNode.replaceChild(n, btnOpen);
+    }
+    if(btnCancel){
+      const n = btnCancel.cloneNode(true);
+      btnCancel.parentNode.replaceChild(n, btnCancel);
+    }
+
+    // Re-capture les refs après clone
+    const save = document.getElementById("profileEditSave");
+    const open = document.getElementById("profileEditOpen");
+    const cancel = document.getElementById("profileEditCancel");
+
+    if(open){
+      open.addEventListener("click", ()=>{
+        try{ window.setProfileEditMode?.(true); }catch(e){}
+      });
+    }
+
+    if(cancel){
+      cancel.addEventListener("click", ()=>{
+        try{ window.setProfileEditMode?.(false); }catch(e){}
+        try{ window.refreshProfileScreen?.(); }catch(e){}
+        try{ window.refreshTopbarUser?.(); }catch(e){}
+        try{ window.updateHomePremiumUI?.(); }catch(e){}
+      });
+    }
+
+    // ✅ ONE TRUE SAVE
+    save.addEventListener("click", async ()=>{
+      try{
+        const inp = document.getElementById("editFirstName");
+        const vFirst = String(inp?.value || "").trim();
+        if(!vFirst) return;
+
+        if(typeof window.saveEliteProfile === "function"){
+          await window.saveEliteProfile({ firstName: vFirst, displayName: vFirst });
+        }else{
+          // fallback: écrit au moins localStorage
+          const u = window.currentUser || null;
+          const uid = u?.uid || null;
+          const patch = { firstName: vFirst, displayName: vFirst, updatedAt: new Date().toISOString() };
+          window.eliteProfile = { ...(window.eliteProfile||{}), ...patch };
+          if(uid){
+            try{
+              localStorage.setItem("et_profile_v1_" + uid, JSON.stringify(window.eliteProfile));
+            }catch(e){}
+          }
+        }
+      }catch(e){
+        console.warn("[profile] save override failed", e);
+      }finally{
+        try{ window.setProfileEditMode?.(false); }catch(e){}
+        try{ window.refreshProfileScreen?.(); }catch(e){}
+        try{ window.refreshTopbarUser?.(); }catch(e){}
+        try{ window.updateHomePremiumUI?.(); }catch(e){}
+      }
+    });
+
+    console.log("✅ Profile save override bound");
+  }
+
+  // bind now + after a tick (au cas où le DOM arrive tard)
+  bind();
+  setTimeout(bind, 0);
+  setTimeout(bind, 250);
+})();
+
 </script>
 </body>
 </html>
