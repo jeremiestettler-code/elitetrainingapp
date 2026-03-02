@@ -7847,105 +7847,85 @@ document.addEventListener("DOMContentLoaded", ()=>{
   initBottomNav();
   syncBottomNavVisibility(); // ✅ cache sur login au load, montre ailleurs
 
-  // =========================
-  // Profile — inline edit bindings (SAFE)
-  // =========================
-  (function initProfileEditModeOnce(){
-    if(window.__profileEditBound) return;
-    window.__profileEditBound = true;
+// =========================
+// ✅ Profile — inline edit bindings (ONE TRUE SAVE)
+// =========================
+(function bindProfileEditModeOnce(){
+  if(window.__profileEditBound) return;
+  window.__profileEditBound = true;
 
-    window.setProfileEditMode = function(on){
-      document.documentElement.setAttribute("data-profile-edit", on ? "1" : "0");
+  window.setProfileEditMode = function(on){
+    // on garde ton système robuste (data attr + hidden bar)
+    const root = document.documentElement;
+    if(on) root.setAttribute("data-profile-edit", "1");
+    else root.removeAttribute("data-profile-edit");
 
-      // show/hide edit bar (au cas où il a la classe hidden par défaut)
-      const bar = document.getElementById("profileEditBar");
-      if(bar) bar.classList.toggle("hidden", !on);
-    };
+    const bar = document.getElementById("profileEditBar");
+    if(bar) bar.classList.toggle("hidden", !on);
 
-    const btnOpen   = document.getElementById("profileEditOpen");
-    const btnCancel = document.getElementById("profileEditCancel");
-    const btnSave   = document.getElementById("profileEditSave");
+    const btn = document.getElementById("profileEditOpen");
+    if(btn) btn.style.display = on ? "none" : "";
 
-    if(btnOpen){
-      btnOpen.addEventListener("click", ()=>{
-        window.setProfileEditMode(true);
-      });
-    }
-
-    if(btnCancel){
-      btnCancel.addEventListener("click", ()=>{
-        window.setProfileEditMode(false);
-        window.refreshProfileScreen?.();
-      });
-    }
-
-if(btnSave){
-  btnSave.addEventListener("click", async ()=>{
-    try{
-      const u = window.currentUser || (typeof currentUser !== "undefined" ? currentUser : null);
-      const uid = u?.uid || null;
-
+    // prefill
+    if(on){
       const inp = document.getElementById("editFirstName");
-      const v = String(inp?.value || "").trim();
-      if(!v){
-        window.setProfileEditMode(false);
-        window.refreshProfileScreen?.();
-        return;
+      if(inp){
+        const p = window.eliteProfile || window.firestoreProfile || {};
+        inp.value = String(p.firstName || p.prenom || p.displayName || "").trim();
+        setTimeout(()=>{ try{ inp.focus(); inp.select?.(); }catch(e){} }, 0);
       }
+    }
+  };
 
-      const patch = { firstName: v, displayName: v, updatedAt: new Date().toISOString() };
+  const btnOpen   = document.getElementById("profileEditOpen");
+  const btnCancel = document.getElementById("profileEditCancel");
+  const btnSave   = document.getElementById("profileEditSave");
 
-      // 1) patch mémoire (UI immédiate)
-      window.eliteProfile = { ...(window.eliteProfile||{}), ...patch };
-      window.firestoreProfile = { ...(window.firestoreProfile||{}), ...patch };
+  if(btnOpen){
+    btnOpen.addEventListener("click", ()=> window.setProfileEditMode(true));
+  }
 
-      // ✅ Persist localStorage (profil onboarding) — indispensable pour survivre au redémarrage
-      try{
-        const uid = (window.currentUser?.uid) || (typeof currentUser !== "undefined" ? currentUser?.uid : null);
-        if(uid && typeof loadEtProfile === "function" && typeof saveEtProfile === "function"){
-          const prev = loadEtProfile(uid) || {};
-          const merged = {
-            ...prev,
-            ...window.eliteProfile,          // inclut ton prénom édité
-            updatedAt: new Date().toISOString()
-          };
-          saveEtProfile(uid, merged);
-          window.eliteProfile = merged;      // ✅ s’aligne avec ce qui sera rechargé au prochain boot
-        }
-      }catch(e){
-        console.warn("[profile] localStorage persist failed (ok)", e);
-      }
-
-      // 1bis) patch localStorage (profil onboarding) si dispo
-      try{
-        if(uid && typeof saveEtProfile === "function"){
-          const prev = (typeof loadEtProfile === "function") ? (loadEtProfile(uid) || {}) : {};
-          saveEtProfile(uid, { ...prev, ...patch });
-        }
-      }catch(e){ /* ok */ }
-
-      // 2) patch Firestore (SAFE, merge)
-      try{
-        if(uid && typeof db !== "undefined" && typeof doc === "function" && typeof setDoc === "function"){
-          const ref = doc(db, "users", uid, "profile", "main");
-          await setDoc(ref, patch, { merge:true });
-        }
-      }catch(e){ /* offline / non dispo -> ok */ }
-
-      // 3) exit edit + refresh UI
+  if(btnCancel){
+    btnCancel.addEventListener("click", ()=>{
       window.setProfileEditMode(false);
       window.refreshProfileScreen?.();
       try{ updateHomePremiumUI?.(); }catch(e){}
-    }catch(e){
-      window.setProfileEditMode(false);
-      window.refreshProfileScreen?.();
-    }
-  });
-}
+    });
+  }
 
-    // état initial
-    window.setProfileEditMode(false);
-  })();
+  if(btnSave){
+    btnSave.addEventListener("click", async ()=>{
+      try{
+        const inp = document.getElementById("editFirstName");
+        const vFirst = String(inp?.value || "").trim();
+        if(!vFirst) return;
+
+        // ✅ One true save (écrit localStorage et Firestore)
+        if(typeof saveEliteProfile === "function"){
+          await saveEliteProfile({ firstName: vFirst, displayName: vFirst });
+        }else{
+          // fallback minimal
+          const patch = { firstName: vFirst, displayName: vFirst, updatedAt: new Date().toISOString() };
+          window.eliteProfile = { ...(window.eliteProfile||{}), ...patch };
+          window.firestoreProfile = { ...(window.firestoreProfile||{}), ...patch };
+          try{
+            const uid = window.currentUser?.uid || null;
+            if(uid && typeof saveEtProfile === "function") saveEtProfile(uid, window.eliteProfile);
+          }catch(e){}
+        }
+      }catch(e){
+        console.warn("[profile] save failed", e);
+      }finally{
+        window.setProfileEditMode(false);
+        window.refreshProfileScreen?.();
+        try{ updateHomePremiumUI?.(); }catch(e){}
+      }
+    });
+  }
+
+  // état initial
+  window.setProfileEditMode(false);
+})();
 });
 
 // =======================
