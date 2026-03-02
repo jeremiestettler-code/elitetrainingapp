@@ -2771,6 +2771,21 @@ const firebaseConfig = {
     }
 
     let topbarUserText = "Non connecté";
+
+window.refreshTopbarUser = function refreshTopbarUser(){
+  try{
+    // recalcul du texte header
+    const name = (typeof getAthleteName === "function") ? getAthleteName() : "Utilisateur";
+    topbarUserText = name || "Utilisateur";
+
+    // applique si on n'est pas en workout
+    const active = document.querySelector(".screen.active");
+    const isWorkout = active?.id === "screenWorkout";
+    const ul = document.getElementById("userLine");
+    if(ul && !isWorkout) ul.textContent = topbarUserText;
+  }catch(e){}
+};
+
 const screens = window.screens = { login:$("screenLogin"), home:$("screenHome"), history:$("screenHistory"), workout:$("screenWorkout"), profile:$("screenProfile") };
 
     let currentUser = null;
@@ -2846,6 +2861,11 @@ async function saveEliteProfile(patch){
     }
   }catch(e){ /* ok */ }
 
+      // ✅ sync UI immédiat (header + home + profil)
+try{ window.refreshTopbarUser?.(); }catch(e){}
+try{ window.refreshProfileScreen?.(); }catch(e){}
+try{ window.updateHomePremiumUI?.(); }catch(e){}
+
   return merged;
 }
 
@@ -2878,10 +2898,13 @@ function startProfileWizardIfNeeded(uid){
 
   // si déjà présent => rien à faire
   const existing = loadEtProfile(uid);
-  if(existing){
-    window.eliteProfile = existing; // prêt pour la suite IA
-    return;
-  }
+      if(existing){
+        window.eliteProfile = existing; // prêt pour la suite IA
+        try{ window.refreshTopbarUser?.(); }catch(e){}
+        try{ window.refreshProfileScreen?.(); }catch(e){}
+        try{ window.updateHomePremiumUI?.(); }catch(e){}
+        return;
+      }
 
   openProfileWizard(uid);
 }
@@ -7595,29 +7618,21 @@ window.showToast = function(message, duration=2500){
 ====================================================== */
 
 function getAthleteName(){
-  // ✅ 1) Source de vérité : eliteProfile / firestoreProfile
-  try{
-    const p = window.eliteProfile || window.firestoreProfile || null;
-    if(p){
-      const raw = String(
-        p.firstName || p.prenom || p.displayName || p.name || p.firstname || ""
-      ).trim();
-      if(raw) return raw.split(" ")[0];
-    }
-  }catch(e){}
+  const u = window.currentUser || (typeof currentUser !== "undefined" ? currentUser : null);
+  const p = window.eliteProfile || window.firestoreProfile || null;
 
-  // 2) Fallback : Firebase Auth
-  try{
-    const u = window.currentUser || null;
-    if(u){
-      const dn = String(u.displayName || "").trim();
-      if(dn) return dn.split(" ")[0];
-      const em = String(u.email || "").trim();
-      if(em && em.includes("@")) return em.split("@")[0];
-    }
-  }catch(e){}
+  // ✅ priorité à eliteProfile (source de vérité côté client)
+  let raw =
+    String(p?.firstName || "").trim() ||
+    String(p?.displayName || "").trim() ||
+    String(u?.displayName || "").trim();
 
-  return "—";
+  const email = String(u?.email || p?.email || "").trim();
+
+  if(!raw && email.includes("@")) raw = email.split("@")[0];
+  if(!raw) raw = "Utilisateur";
+
+  return raw.split(/\s+/)[0]; // juste le prénom
 }
 
 function formatTimeFromSeconds(totalSec){
