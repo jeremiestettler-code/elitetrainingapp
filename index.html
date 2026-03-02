@@ -8298,8 +8298,8 @@ function openProfileEntrySafe(){
           }else{
             // fallback ultra safe (au cas où)
             const patch = { firstName: vFirst, displayName: vFirst, updatedAt: new Date().toISOString() };
-            window.eliteProfile = { ...(window.eliteProfile||{}), ...patch };
-            window.firestoreProfile = { ...(window.firestoreProfile||{}), ...patch };
+            window.eliteProfile = { ...(window.eliteProfile || {}), ...patch };
+            window.firestoreProfile = { ...(window.firestoreProfile || {}), ...patch };
           }
         }catch(e){
           console.warn("[profile] save failed", e);
