@@ -488,3 +488,7 @@ html[data-theme="light"] .etLogoWordmark{
 .profileInfoRow span:last-child{
   font-weight:600;
 }
+/* All main app screens should respect bottom nav */
+.screen{
+  padding-bottom: calc(var(--safe-bot) + var(--nav-h, 76px));
+}
