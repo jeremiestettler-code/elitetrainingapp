@@ -7994,6 +7994,36 @@ document.addEventListener("DOMContentLoaded", ()=>{
     if(sexSel){
       sexSel.value = normalizeSex(p.sex || p.gender);
     }
+
+    // Prefill Objectif
+const goalSel = document.getElementById("editGoal");
+if(goalSel){
+  const p = window.eliteProfile || window.firestoreProfile || {};
+  const g = String(p.goal || p.objectif || "").trim().toLowerCase();
+  const norm =
+    ["force","strength"].includes(g) ? "force" :
+    ["hypertrophy","hypertrophie","muscle"].includes(g) ? "hypertrophy" :
+    ["fatloss","perte de gras","cut","loss"].includes(g) ? "fatloss" :
+    ["endurance","cardio"].includes(g) ? "endurance" :
+    ["recovery","recuperation","récupération"].includes(g) ? "recovery" :
+    "";
+  goalSel.value = norm;
+}
+
+// Prefill Niveau
+const lvlSel = document.getElementById("editLevel");
+if(lvlSel){
+  const p = window.eliteProfile || window.firestoreProfile || {};
+  const l = String(p.level || p.niveau || "").trim().toLowerCase();
+  const norm =
+    ["beginner","débutant","debutant"].includes(l) ? "beginner" :
+    ["intermediate","intermédiaire","intermediaire"].includes(l) ? "intermediate" :
+    ["advanced","avancé","avance"].includes(l) ? "advanced" :
+    "";
+  lvlSel.value = norm;
+}
+
+
   };
 
   const btnOpen   = document.getElementById("profileEditOpen");
@@ -8034,6 +8064,12 @@ document.addEventListener("DOMContentLoaded", ()=>{
         const sexSel = document.getElementById("editSex");
         const vSex = normalizeSex(sexSel?.value);
 
+        const goalSel = document.getElementById("editGoal");
+        const vGoal = String(goalSel?.value || "").trim() || null;
+
+        const lvlSel = document.getElementById("editLevel");
+        const vLevel = String(lvlSel?.value || "").trim() || null;
+
         // ✅ Unique persistance : saveEliteProfile()
         if(typeof window.saveEliteProfile === "function"){
           await window.saveEliteProfile({
@@ -8042,7 +8078,11 @@ document.addEventListener("DOMContentLoaded", ()=>{
             prenom: vFirst,
             dob: vDob || null,
             sex: vSex || null,
-            gender: vSex || null
+            gender: vSex || null,
+            goal: vGoal,
+            objectif: vGoal,
+            level: vLevel,
+            niveau: vLevel
           });
         }else{
           // fallback ultra safe
