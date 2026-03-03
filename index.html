@@ -8337,10 +8337,6 @@ window.renderProfileUI = function renderProfileUI(){
           const card = document.createElement("div");
           card.className = "pwEquipCard active";
           card.innerHTML = `
-            const eq = EQUIPMENT_MAP[k];
-if(!eq) return;
-
-card.innerHTML = `
   <img src="images/equipment/${eq.file}" alt="${eq.label}">
   <span>${eq.label}</span>
 `;
