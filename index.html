@@ -35,7 +35,7 @@ window.EQUIPMENT_MAP = {
   bike:       { label:"Bike", file:"bike.jpg" },
   ball:       { label:"Med Ball", file:"ball.jpg" }
 };
-  
+
   window.AI_FUNCTION_URL = "https://europe-west1-elitetraining-77406.cloudfunctions.net/generateWorkout";
 </script>
 <script>
@@ -2421,6 +2421,33 @@ html[data-profile-edit="1"] .profileEditOnly{ display:block; }
       </div>
 
     </section>
+
+<!-- WORKOUTS / PROGRAMMES (NEW SCREEN) -->
+<section class="screen" id="screenWorkouts">
+
+  <div class="workoutsTop">
+    <div class="workoutsBrandMark" aria-hidden="true"></div>
+    <div class="workoutsTitle">AI<br/>Workout</div>
+  </div>
+
+  <!-- PROGRAMMES -->
+  <div class="workoutsSectionHdr">
+    <div class="workoutsSectionTitle">Programmes</div>
+    <div class="workoutsSectionSub">Base + IA</div>
+  </div>
+
+  <div class="workoutsGrid" id="workoutsPrograms"></div>
+
+  <!-- TRENDING / READY -->
+  <div class="workoutsSectionHdr" style="margin-top:18px;">
+    <div class="workoutsSectionTitle">Trending<br/>Workout</div>
+    <div class="workoutsSectionSub">Séances prêtes à lancer</div>
+  </div>
+
+  <div class="workoutsGrid" id="workoutsTrending"></div>
+
+</section>
+
     <!-- PROFILE (NEW SCREEN) -->
     <section class="screen" id="screenProfile">
       <!-- Header premium -->
@@ -2868,7 +2895,14 @@ window.refreshTopbarUser = function refreshTopbarUser(){
   }catch(e){}
 };
 
-const screens = window.screens = { login:$("screenLogin"), home:$("screenHome"), history:$("screenHistory"), workout:$("screenWorkout"), profile:$("screenProfile") };
+const screens = window.screens = {
+  login:   $("screenLogin"),
+  home:    $("screenHome"),
+  sessions:$("screenWorkouts"),
+  history: $("screenHistory"),
+  workout: $("screenWorkout"),
+  profile: $("screenProfile")
+};
 
     let currentUser = null;
     let currentUserId = null;    function ukey(suffix){
@@ -8422,6 +8456,98 @@ function openProfileEntrySafe(){
   if(pm) pm.classList.remove("hidden");
 }
 
+/* =========================
+   WORKOUTS CATALOG (Programs + Trending)
+   Screen: #screenWorkouts (route: "sessions")
+========================= */
+(function(){
+
+  function esc(s){
+    return (s||"").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]));
+  }
+
+  // --- Data sources (safe defaults) ---
+  // Tu pourras ensuite remplacer ça par Firestore/programmes IA.
+  window.WORKOUT_CATALOG = window.WORKOUT_CATALOG || {
+    programs: [
+      { id:"BASE_4W", title:"4 weeks<br/>programme", subtitle:"Base", image:"images/workout_programme.jpg" },
+      { id:"AI_4W",   title:"AI<br/>Workout",        subtitle:"Généré", image:"images/workout_ai.jpg" }
+    ],
+    trending: [
+      { id:"TREND_HOCKEY_4W", title:"4 weeks<br/>hockey workout", subtitle:"Trending", image:"images/workout_hockey.jpg" },
+      { id:"TREND_RUN_2W",    title:"2 weeks<br/>running workout", subtitle:"Trending", image:"images/workout_running.jpg" }
+    ]
+  };
+
+  // Hook futur : injection depuis Firestore / IA
+  window.setWorkoutCatalog = function setWorkoutCatalog(patch){
+    window.WORKOUT_CATALOG = { ...(window.WORKOUT_CATALOG||{}), ...(patch||{}) };
+    try{ window.renderWorkoutsScreen?.(); }catch(e){}
+  };
+
+  function makeCard(item, kind){
+    const btnLabel = (kind === "program") ? "Ouvrir" : "Play";
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "wCard";
+    card.innerHTML = `
+      <div class="wCardSkew">
+        <div class="wCardMedia" style="background-image:url('${esc(item.image || "")}')"></div>
+        <div class="wCardOverlay"></div>
+
+        <div class="wCardText">
+          <div class="wCardTitle">${item.title || "—"}</div>
+        </div>
+
+        <div class="wCardCta">
+          <span class="wBadge">${esc(item.subtitle || "")}</span>
+          <span class="wBtn">${btnLabel}</span>
+        </div>
+      </div>
+    `;
+
+    card.addEventListener("click", ()=>{
+      // ✅ On ne touche pas au player (#screenWorkout) ici.
+      if(kind === "trending"){
+        // Plus tard: si item.sessionId existe => startSession(item.sessionId)
+        if(typeof window.startSession === "function" && item.sessionId){
+          window.startSession(item.sessionId);
+          return;
+        }
+        if(typeof window.showToast === "function") window.showToast("Bientôt : séance prête à lancer ✅");
+        return;
+      }
+
+      if(kind === "program"){
+        // Plus tard: openProgram(programId)
+        if(typeof window.showToast === "function") window.showToast("Bientôt : page Programme ✅");
+      }
+    });
+
+    return card;
+  }
+
+  window.renderWorkoutsScreen = function renderWorkoutsScreen(){
+    const hostP = document.getElementById("workoutsPrograms");
+    const hostT = document.getElementById("workoutsTrending");
+    if(!hostP || !hostT) return;
+
+    const data = window.WORKOUT_CATALOG || {};
+    const programs = Array.isArray(data.programs) ? data.programs : [];
+    const trending = Array.isArray(data.trending) ? data.trending : [];
+
+    hostP.innerHTML = "";
+    hostT.innerHTML = "";
+
+    programs.forEach(p=>hostP.appendChild(makeCard(p, "program")));
+    trending.forEach(t=>hostT.appendChild(makeCard(t, "trending")));
+
+    if(!programs.length) hostP.innerHTML = `<div class="muted small">Aucun programme pour le moment.</div>`;
+    if(!trending.length) hostT.innerHTML = `<div class="muted small">Aucune séance trending pour le moment.</div>`;
+  };
+
+})();
+
 function initBottomNav(){
   const bSessions = document.getElementById("navSessions");
   const bHome = document.getElementById("navHome");
@@ -8437,12 +8563,9 @@ function initBottomNav(){
 
   if(bSessions){
     bSessions.addEventListener("click", ()=>{
-      if(typeof showScreen === "function") showScreen("home");
+      if(typeof showScreen === "function") showScreen("sessions");
       setBottomNavActive("sessions");
-      setTimeout(()=>{
-        const legacy = document.getElementById("homeLegacy") || document.getElementById("sessionList");
-        if(legacy) legacy.scrollIntoView({ behavior:"smooth", block:"start" });
-      }, 60);
+      setTimeout(()=>{ try{ window.renderWorkoutsScreen?.(); }catch(e){} }, 0);
     });
   }
 
@@ -8466,7 +8589,9 @@ function syncBottomNavVisibility(){
 
   document.body.classList.toggle("screenLoginActive", isLogin);
 
-  if(!id.includes("session") && !id.includes("workout")){
+  // ✅ Retire inWorkout partout SAUF sur l'écran player "screenWorkout"
+  const isWorkoutPlayer = (id === "screenworkout");
+  if(!isWorkoutPlayer){
     document.body.classList.remove("inWorkout");
   }
 
@@ -8489,6 +8614,12 @@ window.syncBottomNavVisibility = syncBottomNavVisibility;
       setBottomNavActive("home");
       setTimeout(()=>{ try{ updateHomePremiumUI?.(); }catch(e){} }, 50);
     }
+
+    if(n === "sessions"){
+      setBottomNavActive("sessions");
+      setTimeout(()=>{ try{ window.renderWorkoutsScreen?.(); }catch(e){} }, 0);
+    }
+
     if(n === "profile"){
       setBottomNavActive("profile");
       setTimeout(()=>{ try{ window.renderProfileUI?.(); }catch(e){} }, 0);
