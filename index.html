@@ -2427,12 +2427,12 @@ html[data-profile-edit="1"] .profileEditOnly{ display:block; }
 
   <div class="workoutsTop">
     <div class="workoutsBrandMark" aria-hidden="true"></div>
-    <div class="workoutsTitle">AI<br/>Workout</div>
+    <div class="workoutsTitle"><br/>Workout</div>
   </div>
 
   <!-- PROGRAMMES -->
   <div class="workoutsSectionHdr">
-    <div class="workoutsSectionTitle">Programmes</div>
+    <div class="workoutsSectionTitle">AI Workout</div>
     <div class="workoutsSectionSub">Base + IA</div>
   </div>
 
@@ -2447,6 +2447,7 @@ html[data-profile-edit="1"] .profileEditOnly{ display:block; }
   <div class="workoutsGrid" id="workoutsTrending"></div>
 
 </section>
+
 
     <!-- PROFILE (NEW SCREEN) -->
     <section class="screen" id="screenProfile">
@@ -4791,6 +4792,82 @@ allKeys.forEach((k)=>{
       complete.sort(sortComplete);
       running.sort((a,b)=>String(a).localeCompare(String(b)));
       hockey.sort((a,b)=>String(a).localeCompare(String(b)));
+
+      /* =========================
+   W0-SAFE — Workout hub (3 cartes: Full body / Running / Hockey)
+   À COLLER JUSTE APRÈS :
+   hockey.sort((a,b)=>String(a).localeCompare(String(b)));
+========================= */
+
+function openHomeSection(sectionId){
+  const container = host.querySelector(`.homeSection[data-section="${sectionId}"]`);
+  if(!container) return false;
+
+  if(!container.classList.contains("open")){
+    container.classList.add("open");
+    container.style.maxHeight = container.scrollHeight + "px";
+
+    // best effort: update aria-expanded du compteur si trouvé
+    const header = container.previousElementSibling;
+    const btn = header?.querySelector('button[aria-expanded]');
+    if(btn) btn.setAttribute("aria-expanded", "true");
+  }
+  return true;
+}
+
+function scrollToHomeSection(sectionId){
+  const container = host.querySelector(`.homeSection[data-section="${sectionId}"]`);
+  if(!container) return;
+
+  openHomeSection(sectionId);
+
+  const header = container.previousElementSibling;
+  (header || container).scrollIntoView({ behavior:"smooth", block:"start" });
+
+  // recalc hauteur après scroll/expand
+  setTimeout(()=>{ try{ updateOpenSectionsHeight(); }catch(e){} }, 350);
+}
+
+// --- UI hub ---
+const hub = document.createElement("div");
+hub.className = "workoutHub";
+
+const hubCards = [
+  { id:"complete", title:"Full body", icon:"FB", count: complete.length, sub:"Séances complètes" },
+  { id:"running",  title:"Running",  icon:"R",  count: running.length,  sub:"Échauffements course" },
+  { id:"hockey",   title:"Hockey",   icon:"H",  count: hockey.length,   sub:"Force + physique" },
+];
+
+hubCards.forEach(c=>{
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "hubCard" + (c.count ? "" : " disabled");
+  btn.innerHTML = `
+    <div class="hubTop">
+      <div class="hubIcon">${c.icon}</div>
+      <div class="hubBadge">${c.count}</div>
+    </div>
+    <div class="hubTitle">${escapeHtml(c.title)}</div>
+    <div class="hubSub">${escapeHtml(c.sub)}</div>
+  `;
+
+  if(c.count){
+    btn.addEventListener("click", ()=>{
+      scrollToHomeSection(c.id);
+    });
+  }else{
+    btn.disabled = true;
+  }
+
+  hub.appendChild(btn);
+});
+
+// On l’affiche seulement si au moins 1 des catégories a du contenu
+if(hubCards.some(x=>x.count > 0)){
+  host.appendChild(hub);
+}
+
+/* ===== FIN W0-SAFE ===== */
 
       function addSection(title, keys, opts){
         const options = opts || {};
