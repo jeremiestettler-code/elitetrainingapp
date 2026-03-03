@@ -8573,43 +8573,59 @@ function openProfileEntrySafe(){
   // ✅ Catalog (3 programmes pour commencer)
   // - card click => ouvre la page programme
   // - dans la page programme => Play lance startSession(sessionId)
-  window.WORKOUT_CATALOG = {
-    programs: [
-      {
-        id:"FULL_BODY",
-        title:"Full body",
-        subtitle:"Force",
-        image:"images/workout_fullbody.jpg",
-        sessions: [
-          { id:"A1", blurb:"Séance complète force/volume : gros mouvements + finisher." }
-        ]
-      }
-    ],
+window.WORKOUT_CATALOG = {
+  programs: [
+    {
+      id:"FULL_BODY",
+      title:"Full body",
+      subtitle:"Base",
+      image:"images/workout_fullbody.jpg",
+      sessions: [
+        { id:"A1", blurb:"Séance complète force : pecs/triceps + tronc." }
+      ]
+    }
+  ],
 
-    trending: [
-      {
-        id:"HOCKEY",
-        title:"Hockey workout",
-        subtitle:"Athlétique",
-        image:"images/workout_hockey.jpg",
-        sessions: [
-          { id:"H1", blurb:"Puissance + appuis : bas du corps & explosivité." },
-          { id:"H2", blurb:"Haut du corps : poussée/tirage + gainage anti-rotation." },
-          { id:"H3", blurb:"Conditioning : intervalles, core, intensité “match-like”." },
-          { id:"H4", blurb:"Préhab & mobilité : hanches/chevilles, stabilité genou/hanche." }
-        ]
-      },
-      {
-        id:"RUNNING",
-        title:"Running workout",
-        subtitle:"Warm-up course",
-        image:"images/workout_running.jpg",
-        sessions: [
-          { id:"RUN_WU", blurb:"Échauffement running : activation + mobilité avant sortie." }
-        ]
-      }
-    ]
-  };
+  trending: [
+    {
+      id:"HOCKEY",
+      title:"Hockey workout",
+      subtitle:"Trending",
+      image:"images/workout_hockey.jpg",
+      sessions: [
+        { id:"H1", blurb:"Unilatéral + stabilité + bras." },
+        { id:"H2", blurb:"Force bas du corps + tronc." },
+        { id:"H3", blurb:"Haut du corps + puissance." },
+        { id:"H4", blurb:"Conditioning + gainage." }
+      ]
+    },
+    {
+      id:"RUNNING",
+      title:"Running workout",
+      subtitle:"Trending",
+      image:"images/workout_running.jpg",
+      sessions: [
+        { id:"RUN_WU", blurb:"Échauffement course : activation + mobilité." }
+      ]
+    },
+    {
+      id:"COMPLETE",
+      title:"Séances complètes",
+      subtitle:"Trending",
+      image:"images/workout_programme.jpg",
+      sessions: [
+        { id:"A1", blurb:"Pecs / Triceps (Force)" },
+        { id:"A2", blurb:"Pecs / Triceps (Volume)" },
+        { id:"B1", blurb:"Dos / Biceps (Épaisseur)" },
+        { id:"B2", blurb:"Dos / Biceps (Contrôle)" },
+        { id:"C1", blurb:"Épaules (Force)" },
+        { id:"C2", blurb:"Épaules (Volume + stabilité)" },
+        { id:"D1", blurb:"Bras (Lourd)" },
+        { id:"D2", blurb:"Bras + Métabolique" }
+      ]
+    }
+  ]
+};
 
   // Hook futur : injection depuis Firestore / IA
   window.setWorkoutCatalog = function setWorkoutCatalog(patch){
