@@ -8631,46 +8631,52 @@ function openProfileEntrySafe(){
   // AI Catalog (dynamic)
   // =========================
   window.AI_CATALOG = window.AI_CATALOG || {
-    sessions: [], // [{ key:"CUSTOM_x", title, image? }]
-    programs: []  // [{ programId, title, subtitle, image? }]
+    sessions: [], // [{ key:"CUSTOM_x", title }]
+    programs: []  // [{ programId, title }]
   };
 
-  // Charge depuis Firestore et injecte dans AI_CATALOG
+  // ✅ IMPORTANT: on utilise les variables LOCALES du module: currentUser + db
+  // (dans ton code elles existent déjà: let currentUser=null; const db=...)
   window.reloadAICatalogForWorkouts = async function reloadAICatalogForWorkouts(){
     try{
-      if(!window.currentUser?.uid || !window.db){
+      if(!currentUser?.uid || typeof db === "undefined"){
         window.AI_CATALOG = { sessions: [], programs: [] };
         return;
       }
 
-      const uid = window.currentUser.uid;
+      const uid = currentUser.uid;
 
       // 1) Séances AI (customSessions)
-      const snapCustom = await getDocs(collection(window.db, "users", uid, "customSessions"));
+      const snapCustom = await getDocs(collection(db, "users", uid, "customSessions"));
       const aiSessions = [];
       snapCustom.forEach(d=>{
         const data = d.data() || {};
         aiSessions.push({
           key: "CUSTOM_" + d.id,
-          title: String(data.name || "Séance AI").trim(),
-          subtitle: "Séance AI",
-          image: "images/workout_ai.jpg"
+          title: String(data.name || "Séance AI").trim()
         });
       });
 
-      // 2) Programmes AI (programs)
-      const progSnap = await getDocs(
-        query(collection(window.db, "users", uid, "programs"), orderBy("createdAt","desc"))
-      );
+      // 2) Programmes AI (programs) — sans orderBy (évite erreurs si champ absent / index)
+      const progSnap = await getDocs(collection(db, "users", uid, "programs"));
       const aiPrograms = [];
       progSnap.forEach(d=>{
         const data = d.data() || {};
+        // titre le plus robuste possible
+        const title = String(data.goalText || data.title || data.name || "Programme AI").trim();
         aiPrograms.push({
           programId: d.id,
-          title: String(data.goalText || data.title || "Programme AI").trim(),
-          subtitle: "Programme AI",
-          image: "images/workout_programme.jpg"
+          title
         });
+      });
+
+      // Tri “best effort” par createdAt si dispo (sinon stable)
+      aiPrograms.sort((a,b)=>{
+        const A = progSnap.docs.find(x=>x.id===a.programId)?.data()?.createdAt;
+        const B = progSnap.docs.find(x=>x.id===b.programId)?.data()?.createdAt;
+        const ta = (A?.seconds || 0);
+        const tb = (B?.seconds || 0);
+        return tb - ta;
       });
 
       window.AI_CATALOG = { sessions: aiSessions, programs: aiPrograms };
@@ -8681,7 +8687,7 @@ function openProfileEntrySafe(){
   };
 
   // =========================
-  // Program detail screen (reuse your existing workoutProgram screen)
+  // Program detail screen (reuse workoutProgram screen)
   // =========================
   function setProgramScreen(title, subtitle, sessions){
     window.CURRENT_WORKOUT_PROGRAM = {
@@ -8694,11 +8700,9 @@ function openProfileEntrySafe(){
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  // Open static pack/program already defined in WORKOUT_CATALOG (Trending)
+  // Open static pack/program (Trending)
   window.openWorkoutProgram = function openWorkoutProgram(programId){
-    const all = [
-      ...(window.WORKOUT_CATALOG?.trending || []),
-    ];
+    const all = [ ...(window.WORKOUT_CATALOG?.trending || []) ];
     const p = all.find(x=>String(x.id)===String(programId));
     if(!p){ notify("Programme introuvable."); return; }
     setProgramScreen(p.title, p.subtitle, p.sessions || []);
@@ -8713,19 +8717,20 @@ function openProfileEntrySafe(){
     setProgramScreen("Séances AI", "Tes séances créées", list);
   };
 
-  // Open one AI program (fetch week 1 sessions, and map to PROG_ keys)
+  // Open one AI program (fetch week 1 sessions, map to PROG_ keys, then reloadProgramsIntoSESSIONS)
   window.openAIProgram = async function openAIProgram(programId){
     try{
-      if(!window.currentUser?.uid || !window.db) return notify("Non connecté.");
-      if(typeof window.reloadProgramsIntoSESSIONS !== "function"){
+      if(!currentUser?.uid || typeof db === "undefined") return notify("Non connecté.");
+
+      if(typeof reloadProgramsIntoSESSIONS !== "function"){
         return notify("reloadProgramsIntoSESSIONS() introuvable.");
       }
 
-      const uid = window.currentUser.uid;
+      const uid = currentUser.uid;
 
-      // Charge week 1 (simple + robuste pour commencer)
+      // charge week 1 (list)
       const sessSnap = await getDocs(
-        collection(window.db, "users", uid, "programs", programId, "weeks", "1", "sessions")
+        collection(db, "users", uid, "programs", programId, "weeks", "1", "sessions")
       );
 
       const sessions = [];
@@ -8736,8 +8741,8 @@ function openProfileEntrySafe(){
         sessions.push({ id: key, blurb: title });
       });
 
-      // Recharge les PROG_ dans window.SESSIONS
-      await window.reloadProgramsIntoSESSIONS(programId);
+      // recharge PROG_ dans window.SESSIONS
+      await reloadProgramsIntoSESSIONS(programId);
 
       setProgramScreen("Programme AI", "Semaine 1", sessions);
     }catch(e){
@@ -8747,7 +8752,7 @@ function openProfileEntrySafe(){
   };
 
   // =========================
-  // Card rendering
+  // Card rendering (shared)
   // =========================
   function makeCard(item, onClick){
     const card = document.createElement("button");
@@ -8770,20 +8775,22 @@ function openProfileEntrySafe(){
     return card;
   }
 
+  // =========================
   // Render main workouts screen (AI + Trending)
+  // =========================
   window.renderWorkoutsScreen = async function renderWorkoutsScreen(){
     const hostAIS = document.getElementById("workoutsAISessions");
     const hostAIP = document.getElementById("workoutsAIPrograms");
     const hostT = document.getElementById("workoutsTrending");
     if(!hostAIS || !hostAIP || !hostT) return;
 
-    // 1) trending (static)
+    // trending
     hostT.innerHTML = "";
     (window.WORKOUT_CATALOG?.trending || []).forEach(t=>{
       hostT.appendChild(makeCard(t, ()=>window.openWorkoutProgram?.(t.id)));
     });
 
-    // 2) AI dynamic
+    // AI
     hostAIS.innerHTML = "";
     hostAIP.innerHTML = "";
 
@@ -8792,21 +8799,21 @@ function openProfileEntrySafe(){
     const aiSessions = window.AI_CATALOG?.sessions || [];
     const aiPrograms = window.AI_CATALOG?.programs || [];
 
-    // Séances AI: une seule carte “Séances AI” si au moins 1 séance
+    // Séances AI: une carte unique si au moins 1 séance
     if(aiSessions.length){
       hostAIS.appendChild(makeCard(
-        { title:"Séances AI", image:"images/workout_ai.jpg" },
+        { title:`Séances AI (${aiSessions.length})`, image:"images/workout_ai.jpg" },
         ()=>window.openAISessionsPack?.()
       ));
     }else{
       hostAIS.innerHTML = `<div class="muted small">Aucune séance IA enregistrée.</div>`;
     }
 
-    // Programmes AI: une carte par programme créé
+    // Programmes AI: une carte par programme
     if(aiPrograms.length){
       aiPrograms.forEach(p=>{
         hostAIP.appendChild(makeCard(
-          { title: p.title || "Programme AI", image: p.image || "images/workout_programme.jpg" },
+          { title: p.title || "Programme AI", image:"images/workout_programme.jpg" },
           ()=>window.openAIProgram?.(p.programId)
         ));
       });
