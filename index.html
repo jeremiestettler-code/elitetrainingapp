@@ -2436,7 +2436,20 @@ html[data-profile-edit="1"] .profileEditOnly{ display:block; }
     <div class="workoutsSectionSub">Base + IA</div>
   </div>
 
-  <div class="workoutsGrid" id="workoutsPrograms"></div>
+<!-- AI: séances seules -->
+<div class="workoutsSubHdr">
+  <div class="workoutsSubTitle">Séances AI</div>
+  <div class="workoutsSubSub">Tes séances créées</div>
+</div>
+<div class="workoutsGrid" id="workoutsAISessions"></div>
+
+<!-- AI: programmes (blocs auto) -->
+<div class="workoutsSubHdr" style="margin-top:14px;">
+  <div class="workoutsSubTitle">Programmes AI</div>
+  <div class="workoutsSubSub">Créés depuis l’app</div>
+</div>
+<div class="workoutsGrid" id="workoutsAIPrograms"></div>
+
 
   <!-- TRENDING / READY -->
   <div class="workoutsSectionHdr" style="margin-top:18px;">
@@ -8554,9 +8567,9 @@ function openProfileEntrySafe(){
 }
 
 /* =========================
-   WORKOUTS CATALOG (Programs + Trending)
-   Screen: #screenWorkouts (route: "sessions")
-   + Program detail screen: #screenWorkoutProgram (route: "workoutProgram")
+   WORKOUTS: Trending (static) + AI (dynamic from Firestore)
+   - Séances AI: users/{uid}/customSessions  => CUSTOM_<id>
+   - Programmes AI: users/{uid}/programs     => open => week 1 sessions
 ========================= */
 (function(){
 
@@ -8564,174 +8577,179 @@ function openProfileEntrySafe(){
     return (s||"").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]));
   }
 
-  // Toast robuste
   function notify(msg){
     if(typeof window.showToast === "function") window.showToast(msg);
     else alert(msg);
   }
 
-  // ✅ Catalog (3 programmes pour commencer)
-  // - card click => ouvre la page programme
-  // - dans la page programme => Play lance startSession(sessionId)
-window.WORKOUT_CATALOG = {
-  programs: [
-    {
-      id:"FULL_BODY",
-      title:"Full body",
-      subtitle:"Base",
-      image:"images/workout_fullbody.jpg",
-      sessions: [
-        { id:"A1", blurb:"Séance complète force : pecs/triceps + tronc." }
-      ]
-    }
-  ],
-
-  trending: [
-    {
-      id:"HOCKEY",
-      title:"Hockey workout",
-      subtitle:"Trending",
-      image:"images/workout_hockey.jpg",
-      sessions: [
-        { id:"H1", blurb:"Unilatéral + stabilité + bras." },
-        { id:"H2", blurb:"Force bas du corps + tronc." },
-        { id:"H3", blurb:"Haut du corps + puissance." },
-        { id:"H4", blurb:"Conditioning + gainage." }
-      ]
-    },
-    {
-      id:"RUNNING",
-      title:"Running workout",
-      subtitle:"Trending",
-      image:"images/workout_running.jpg",
-      sessions: [
-        { id:"RUN_WU", blurb:"Échauffement course : activation + mobilité." }
-      ]
-    },
-    {
-      id:"COMPLETE",
-      title:"Séances complètes",
-      subtitle:"Trending",
-      image:"images/workout_programme.jpg",
-      sessions: [
-        { id:"A1", blurb:"Pecs / Triceps (Force)" },
-        { id:"A2", blurb:"Pecs / Triceps (Volume)" },
-        { id:"B1", blurb:"Dos / Biceps (Épaisseur)" },
-        { id:"B2", blurb:"Dos / Biceps (Contrôle)" },
-        { id:"C1", blurb:"Épaules (Force)" },
-        { id:"C2", blurb:"Épaules (Volume + stabilité)" },
-        { id:"D1", blurb:"Bras (Lourd)" },
-        { id:"D2", blurb:"Bras + Métabolique" }
-      ]
-    }
-  ]
-};
-
-  // Hook futur : injection depuis Firestore / IA
-  window.setWorkoutCatalog = function setWorkoutCatalog(patch){
-    window.WORKOUT_CATALOG = { ...(window.WORKOUT_CATALOG||{}), ...(patch||{}) };
-    try{ window.renderWorkoutsScreen?.(); }catch(e){}
+  // =========================
+  // Static catalog (Trending)
+  // =========================
+  window.WORKOUT_CATALOG = window.WORKOUT_CATALOG || {
+    trending: [
+      {
+        id:"HOCKEY",
+        title:"Hockey workout",
+        subtitle:"Trending",
+        image:"images/workout_hockey.jpg",
+        sessions: [
+          { id:"H1", blurb:"Unilatéral + stabilité + bras." },
+          { id:"H2", blurb:"Force bas du corps + tronc." },
+          { id:"H3", blurb:"Haut du corps + puissance." },
+          { id:"H4", blurb:"Conditioning + gainage." }
+        ]
+      },
+      {
+        id:"RUNNING",
+        title:"Running workout",
+        subtitle:"Trending",
+        image:"images/workout_running.jpg",
+        sessions: [
+          { id:"RUN_WU", blurb:"Échauffement course : activation + mobilité." }
+        ]
+      },
+      {
+        id:"COMPLETE",
+        title:"Séances complètes",
+        subtitle:"Trending",
+        image:"images/workout_programme.jpg",
+        sessions: [
+          { id:"A1", blurb:"Pecs / Triceps (Force)" },
+          { id:"A2", blurb:"Pecs / Triceps (Volume)" },
+          { id:"B1", blurb:"Dos / Biceps (Épaisseur)" },
+          { id:"B2", blurb:"Dos / Biceps (Contrôle)" },
+          { id:"C1", blurb:"Épaules (Force)" },
+          { id:"C2", blurb:"Épaules (Volume + stabilité)" },
+          { id:"D1", blurb:"Bras (Lourd)" },
+          { id:"D2", blurb:"Bras + Métabolique" }
+        ]
+      }
+    ]
   };
 
-  function findProgramById(programId){
-    const data = window.WORKOUT_CATALOG || {};
-    const all = [
-      ...(Array.isArray(data.programs) ? data.programs : []),
-      ...(Array.isArray(data.trending) ? data.trending : [])
-    ];
-    return all.find(x => String(x.id) === String(programId)) || null;
-  }
+  // =========================
+  // AI Catalog (dynamic)
+  // =========================
+  window.AI_CATALOG = window.AI_CATALOG || {
+    sessions: [], // [{ key:"CUSTOM_x", title, image? }]
+    programs: []  // [{ programId, title, subtitle, image? }]
+  };
 
-  // ===== Screen detail =====
-  window.openWorkoutProgram = function openWorkoutProgram(programId){
-    const p = findProgramById(programId);
-    if(!p){
-      notify("Programme introuvable.");
-      return;
+  // Charge depuis Firestore et injecte dans AI_CATALOG
+  window.reloadAICatalogForWorkouts = async function reloadAICatalogForWorkouts(){
+    try{
+      if(!window.currentUser?.uid || !window.db){
+        window.AI_CATALOG = { sessions: [], programs: [] };
+        return;
+      }
+
+      const uid = window.currentUser.uid;
+
+      // 1) Séances AI (customSessions)
+      const snapCustom = await getDocs(collection(window.db, "users", uid, "customSessions"));
+      const aiSessions = [];
+      snapCustom.forEach(d=>{
+        const data = d.data() || {};
+        aiSessions.push({
+          key: "CUSTOM_" + d.id,
+          title: String(data.name || "Séance AI").trim(),
+          subtitle: "Séance AI",
+          image: "images/workout_ai.jpg"
+        });
+      });
+
+      // 2) Programmes AI (programs)
+      const progSnap = await getDocs(
+        query(collection(window.db, "users", uid, "programs"), orderBy("createdAt","desc"))
+      );
+      const aiPrograms = [];
+      progSnap.forEach(d=>{
+        const data = d.data() || {};
+        aiPrograms.push({
+          programId: d.id,
+          title: String(data.goalText || data.title || "Programme AI").trim(),
+          subtitle: "Programme AI",
+          image: "images/workout_programme.jpg"
+        });
+      });
+
+      window.AI_CATALOG = { sessions: aiSessions, programs: aiPrograms };
+    }catch(e){
+      console.warn("reloadAICatalogForWorkouts error:", e);
+      window.AI_CATALOG = { sessions: [], programs: [] };
     }
-    window.CURRENT_WORKOUT_PROGRAM = p;
+  };
 
+  // =========================
+  // Program detail screen (reuse your existing workoutProgram screen)
+  // =========================
+  function setProgramScreen(title, subtitle, sessions){
+    window.CURRENT_WORKOUT_PROGRAM = {
+      title: title || "Workout",
+      subtitle: subtitle || "—",
+      sessions: sessions || []
+    };
     try{ window.renderWorkoutProgramScreen?.(); }catch(e){}
     if(typeof window.showScreen === "function") window.showScreen("workoutProgram");
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  // Open static pack/program already defined in WORKOUT_CATALOG (Trending)
+  window.openWorkoutProgram = function openWorkoutProgram(programId){
+    const all = [
+      ...(window.WORKOUT_CATALOG?.trending || []),
+    ];
+    const p = all.find(x=>String(x.id)===String(programId));
+    if(!p){ notify("Programme introuvable."); return; }
+    setProgramScreen(p.title, p.subtitle, p.sessions || []);
   };
 
-  window.renderWorkoutProgramScreen = function renderWorkoutProgramScreen(){
-    const p = window.CURRENT_WORKOUT_PROGRAM || null;
-    const titleEl = document.getElementById("wpTitle");
-    const subEl = document.getElementById("wpSub");
-    const listEl = document.getElementById("wpSessionList");
-    if(!titleEl || !subEl || !listEl) return;
-
-    titleEl.textContent = p?.title || "Workout";
-    subEl.textContent = p?.subtitle || "—";
-
-    const sessions = Array.isArray(p?.sessions) ? p.sessions : [];
-    const S = window.SESSIONS || {};
-
-    if(!sessions.length){
-      listEl.innerHTML = `<div class="muted small">Aucune séance dans ce programme.</div>`;
-      return;
-    }
-
-    listEl.innerHTML = sessions.map(s=>{
-      const sid = String(s?.id || "").trim();
-      const meta = S[sid] || null;
-      const name = meta?.name || sid || "Séance";
-      const blurb = String(s?.blurb || "").trim();
-      return `
-        <div class="wpItem" data-sid="${esc(sid)}">
-          <div class="wpItemLeft">
-            <div class="wpItemTitle">${esc(name)}</div>
-            <div class="wpItemSub">${esc(blurb || "Séance prête à lancer.")}</div>
-          </div>
-          <button class="wpPlay" type="button" data-play="${esc(sid)}">Play</button>
-        </div>
-      `;
-    }).join("");
+  // Open AI sessions list (Séances AI)
+  window.openAISessionsPack = function openAISessionsPack(){
+    const list = (window.AI_CATALOG?.sessions || []).map(x=>({
+      id: x.key,
+      blurb: "Séance créée par toi"
+    }));
+    setProgramScreen("Séances AI", "Tes séances créées", list);
   };
 
-  // Back button
-  (function bindBackOnce(){
-    if(window.__wpBackBound) return;
-    window.__wpBackBound = true;
-
-    document.getElementById("btnBackFromProgram")?.addEventListener("click", ()=>{
-      if(typeof window.showScreen === "function") window.showScreen("sessions");
-      setTimeout(()=>{ try{ window.renderWorkoutsScreen?.(); }catch(e){} }, 0);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    });
-
-    // Play delegation
-    document.getElementById("wpSessionList")?.addEventListener("click", (e)=>{
-      const btn = e.target.closest("[data-play]");
-      if(!btn) return;
-      const sid = btn.getAttribute("data-play");
-      if(!sid) return;
-
-      if(typeof window.startSession === "function"){
-
-        // 1️⃣ Lance la séance
-        window.startSession(sid);
-
-        // 2️⃣ Force l'écran workout (sécurité)
-        if(typeof window.showScreen === "function"){
-          window.showScreen("workout");
-        }
-
-        // 3️⃣ Active le mode workout (comme quand tu lances depuis home)
-        document.body.classList.add("inWorkout");
-
-      }else{
-        alert("startSession() introuvable.");
+  // Open one AI program (fetch week 1 sessions, and map to PROG_ keys)
+  window.openAIProgram = async function openAIProgram(programId){
+    try{
+      if(!window.currentUser?.uid || !window.db) return notify("Non connecté.");
+      if(typeof window.reloadProgramsIntoSESSIONS !== "function"){
+        return notify("reloadProgramsIntoSESSIONS() introuvable.");
       }
-    });
-  })();
 
-  // ===== Cards list screen =====
-  function makeCard(item){
-    const btnLabel = "Play";
+      const uid = window.currentUser.uid;
 
+      // Charge week 1 (simple + robuste pour commencer)
+      const sessSnap = await getDocs(
+        collection(window.db, "users", uid, "programs", programId, "weeks", "1", "sessions")
+      );
+
+      const sessions = [];
+      sessSnap.forEach(d=>{
+        const key = `PROG_${programId}__${d.id}`;
+        const data = d.data() || {};
+        const title = String(data.title || data.session?.name || d.id);
+        sessions.push({ id: key, blurb: title });
+      });
+
+      // Recharge les PROG_ dans window.SESSIONS
+      await window.reloadProgramsIntoSESSIONS(programId);
+
+      setProgramScreen("Programme AI", "Semaine 1", sessions);
+    }catch(e){
+      console.warn("openAIProgram error:", e);
+      notify("Impossible d’ouvrir ce programme.");
+    }
+  };
+
+  // =========================
+  // Card rendering
+  // =========================
+  function makeCard(item, onClick){
     const card = document.createElement("button");
     card.type = "button";
     card.className = "wCard";
@@ -8739,43 +8757,62 @@ window.WORKOUT_CATALOG = {
       <div class="wCardSkew">
         <div class="wCardMedia" style="background-image:url('${esc(item.image || "")}')"></div>
         <div class="wCardOverlay"></div>
-
         <div class="wCardText">
           <div class="wCardTitle">${item.title || "—"}</div>
         </div>
-
         <div class="wCardCta">
-          <span class="wBadge">${esc(item.subtitle || "")}</span>
-          <span class="wBtn">${btnLabel}</span>
+          <span class="wBadge">${esc(item.title || "")}</span>
+          <span class="wBtn">Play</span>
         </div>
       </div>
     `;
-
-    card.addEventListener("click", ()=>{
-      // ✅ Maintenant: clic => ouvre la page programme
-      window.openWorkoutProgram?.(item.id);
-    });
-
+    card.addEventListener("click", onClick);
     return card;
   }
 
-  window.renderWorkoutsScreen = function renderWorkoutsScreen(){
-    const hostP = document.getElementById("workoutsPrograms");
+  // Render main workouts screen (AI + Trending)
+  window.renderWorkoutsScreen = async function renderWorkoutsScreen(){
+    const hostAIS = document.getElementById("workoutsAISessions");
+    const hostAIP = document.getElementById("workoutsAIPrograms");
     const hostT = document.getElementById("workoutsTrending");
-    if(!hostP || !hostT) return;
+    if(!hostAIS || !hostAIP || !hostT) return;
 
-    const data = window.WORKOUT_CATALOG || {};
-    const programs = Array.isArray(data.programs) ? data.programs : [];
-    const trending = Array.isArray(data.trending) ? data.trending : [];
-
-    hostP.innerHTML = "";
+    // 1) trending (static)
     hostT.innerHTML = "";
+    (window.WORKOUT_CATALOG?.trending || []).forEach(t=>{
+      hostT.appendChild(makeCard(t, ()=>window.openWorkoutProgram?.(t.id)));
+    });
 
-    programs.forEach(p=>hostP.appendChild(makeCard(p)));
-    trending.forEach(t=>hostT.appendChild(makeCard(t)));
+    // 2) AI dynamic
+    hostAIS.innerHTML = "";
+    hostAIP.innerHTML = "";
 
-    if(!programs.length) hostP.innerHTML = `<div class="muted small">Aucun programme pour le moment.</div>`;
-    if(!trending.length) hostT.innerHTML = `<div class="muted small">Aucune séance trending pour le moment.</div>`;
+    await window.reloadAICatalogForWorkouts();
+
+    const aiSessions = window.AI_CATALOG?.sessions || [];
+    const aiPrograms = window.AI_CATALOG?.programs || [];
+
+    // Séances AI: une seule carte “Séances AI” si au moins 1 séance
+    if(aiSessions.length){
+      hostAIS.appendChild(makeCard(
+        { title:"Séances AI", image:"images/workout_ai.jpg" },
+        ()=>window.openAISessionsPack?.()
+      ));
+    }else{
+      hostAIS.innerHTML = `<div class="muted small">Aucune séance IA enregistrée.</div>`;
+    }
+
+    // Programmes AI: une carte par programme créé
+    if(aiPrograms.length){
+      aiPrograms.forEach(p=>{
+        hostAIP.appendChild(makeCard(
+          { title: p.title || "Programme AI", image: p.image || "images/workout_programme.jpg" },
+          ()=>window.openAIProgram?.(p.programId)
+        ));
+      });
+    }else{
+      hostAIP.innerHTML = `<div class="muted small">Aucun programme IA créé.</div>`;
+    }
   };
 
 })();
