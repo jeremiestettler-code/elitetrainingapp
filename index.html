@@ -8545,16 +8545,34 @@ function openProfileEntrySafe(){
 
   // --- Data sources (safe defaults) ---
   // Tu pourras ensuite remplacer ça par Firestore/programmes IA.
-  window.WORKOUT_CATALOG = window.WORKOUT_CATALOG || {
-    programs: [
-      { id:"BASE_4W", title:"4 weeks<br/>programme", subtitle:"Base", image:"images/workout_programme.jpg" },
-      { id:"AI_4W",   title:"AI<br/>Workout",        subtitle:"Généré", image:"images/workout_ai.jpg" }
-    ],
-    trending: [
-      { id:"TREND_HOCKEY_4W", title:"4 weeks<br/>hockey workout", subtitle:"Trending", image:"images/workout_hockey.jpg" },
-      { id:"TREND_RUN_2W",    title:"2 weeks<br/>running workout", subtitle:"Trending", image:"images/workout_running.jpg" }
-    ]
-  };
+window.WORKOUT_CATALOG = {
+  programs: [
+    {
+      id:"FULL_BODY",
+      title:"Full body",
+      subtitle:"Force",
+      image:"images/workout_fullbody.jpg",
+      sessionId:"A1" // ✅ Lance Séance A1
+    }
+  ],
+
+  trending: [
+    {
+      id:"HOCKEY",
+      title:"Hockey workout",
+      subtitle:"Athlétique",
+      image:"images/workout_hockey.jpg",
+      sessionId:"H1" // ✅ Lance Hockey H1
+    },
+    {
+      id:"RUNNING",
+      title:"Running workout",
+      subtitle:"Warm-up course",
+      image:"images/workout_running.jpg",
+      sessionId:"RUN_WU" // ✅ Lance échauffement course
+    }
+  ]
+};
 
   // Hook futur : injection depuis Firestore / IA
   window.setWorkoutCatalog = function setWorkoutCatalog(patch){
