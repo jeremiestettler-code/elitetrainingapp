@@ -8691,9 +8691,20 @@ function openProfileEntrySafe(){
       if(!sid) return;
 
       if(typeof window.startSession === "function"){
+
+        // 1️⃣ Lance la séance
         window.startSession(sid);
+
+        // 2️⃣ Force l'écran workout (sécurité)
+        if(typeof window.showScreen === "function"){
+          window.showScreen("workout");
+        }
+
+        // 3️⃣ Active le mode workout (comme quand tu lances depuis home)
+        document.body.classList.add("inWorkout");
+
       }else{
-        notify("startSession() introuvable.");
+        alert("startSession() introuvable.");
       }
     });
   })();
