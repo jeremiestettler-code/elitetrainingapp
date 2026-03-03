@@ -2632,6 +2632,22 @@ html[data-profile-edit="1"] .profileEditOnly{ display:block; }
 
   </section>
 
+<!-- WORKOUT PROGRAM DETAIL (NEW SCREEN) -->
+<section class="screen" id="screenWorkoutProgram">
+
+  <div class="wpTop">
+    <button class="wpBack" id="btnBackFromProgram" type="button" aria-label="Retour">←</button>
+    <div class="wpHead">
+      <div class="wpTitle" id="wpTitle">Workout</div>
+      <div class="wpSub" id="wpSub">—</div>
+    </div>
+  </div>
+
+  <div class="wpList" id="wpSessionList"></div>
+
+</section>
+  
+
   <!-- HISTORY -->
   <section class="screen" id="screenHistory">
       <div class="card">
@@ -2900,6 +2916,7 @@ const screens = window.screens = {
   login:   $("screenLogin"),
   home:    $("screenHome"),
   sessions:$("screenWorkouts"),
+  workoutProgram: $("screenWorkoutProgram"),
   history: $("screenHistory"),
   workout: $("screenWorkout"),
   profile: $("screenProfile")
@@ -8536,6 +8553,7 @@ function openProfileEntrySafe(){
 /* =========================
    WORKOUTS CATALOG (Programs + Trending)
    Screen: #screenWorkouts (route: "sessions")
+   + Program detail screen: #screenWorkoutProgram (route: "workoutProgram")
 ========================= */
 (function(){
 
@@ -8543,36 +8561,52 @@ function openProfileEntrySafe(){
     return (s||"").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]));
   }
 
-  // --- Data sources (safe defaults) ---
-  // Tu pourras ensuite remplacer ça par Firestore/programmes IA.
-window.WORKOUT_CATALOG = {
-  programs: [
-    {
-      id:"FULL_BODY",
-      title:"Full body",
-      subtitle:"Force",
-      image:"images/workout_fullbody.jpg",
-      sessionId:"A1" // ✅ Lance Séance A1
-    }
-  ],
+  // Toast robuste
+  function notify(msg){
+    if(typeof window.showToast === "function") window.showToast(msg);
+    else alert(msg);
+  }
 
-  trending: [
-    {
-      id:"HOCKEY",
-      title:"Hockey workout",
-      subtitle:"Athlétique",
-      image:"images/workout_hockey.jpg",
-      sessionId:"H1" // ✅ Lance Hockey H1
-    },
-    {
-      id:"RUNNING",
-      title:"Running workout",
-      subtitle:"Warm-up course",
-      image:"images/workout_running.jpg",
-      sessionId:"RUN_WU" // ✅ Lance échauffement course
-    }
-  ]
-};
+  // ✅ Catalog (3 programmes pour commencer)
+  // - card click => ouvre la page programme
+  // - dans la page programme => Play lance startSession(sessionId)
+  window.WORKOUT_CATALOG = {
+    programs: [
+      {
+        id:"FULL_BODY",
+        title:"Full body",
+        subtitle:"Force",
+        image:"images/workout_fullbody.jpg",
+        sessions: [
+          { id:"A1", blurb:"Séance complète force/volume : gros mouvements + finisher." }
+        ]
+      }
+    ],
+
+    trending: [
+      {
+        id:"HOCKEY",
+        title:"Hockey workout",
+        subtitle:"Athlétique",
+        image:"images/workout_hockey.jpg",
+        sessions: [
+          { id:"H1", blurb:"Puissance + appuis : bas du corps & explosivité." },
+          { id:"H2", blurb:"Haut du corps : poussée/tirage + gainage anti-rotation." },
+          { id:"H3", blurb:"Conditioning : intervalles, core, intensité “match-like”." },
+          { id:"H4", blurb:"Préhab & mobilité : hanches/chevilles, stabilité genou/hanche." }
+        ]
+      },
+      {
+        id:"RUNNING",
+        title:"Running workout",
+        subtitle:"Warm-up course",
+        image:"images/workout_running.jpg",
+        sessions: [
+          { id:"RUN_WU", blurb:"Échauffement running : activation + mobilité avant sortie." }
+        ]
+      }
+    ]
+  };
 
   // Hook futur : injection depuis Firestore / IA
   window.setWorkoutCatalog = function setWorkoutCatalog(patch){
@@ -8580,54 +8614,120 @@ window.WORKOUT_CATALOG = {
     try{ window.renderWorkoutsScreen?.(); }catch(e){}
   };
 
-function makeCard(item, kind){
-  // ✅ Uniformisation label
-  const btnLabel = "Play";
-
-  // ✅ Notif robuste (toast si dispo, sinon alert)
-  function notify(msg){
-    if(typeof window.showToast === "function") window.showToast(msg);
-    else alert(msg);
+  function findProgramById(programId){
+    const data = window.WORKOUT_CATALOG || {};
+    const all = [
+      ...(Array.isArray(data.programs) ? data.programs : []),
+      ...(Array.isArray(data.trending) ? data.trending : [])
+    ];
+    return all.find(x => String(x.id) === String(programId)) || null;
   }
 
-  const card = document.createElement("button");
-  card.type = "button";
-  card.className = "wCard";
-  card.innerHTML = `
-    <div class="wCardSkew">
-      <div class="wCardMedia" style="background-image:url('${esc(item.image || "")}')"></div>
-      <div class="wCardOverlay"></div>
+  // ===== Screen detail =====
+  window.openWorkoutProgram = function openWorkoutProgram(programId){
+    const p = findProgramById(programId);
+    if(!p){
+      notify("Programme introuvable.");
+      return;
+    }
+    window.CURRENT_WORKOUT_PROGRAM = p;
 
-      <div class="wCardText">
-        <div class="wCardTitle">${item.title || "—"}</div>
-      </div>
+    try{ window.renderWorkoutProgramScreen?.(); }catch(e){}
+    if(typeof window.showScreen === "function") window.showScreen("workoutProgram");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
-      <div class="wCardCta">
-        <span class="wBadge">${esc(item.subtitle || "")}</span>
-        <span class="wBtn">${btnLabel}</span>
-      </div>
-    </div>
-  `;
+  window.renderWorkoutProgramScreen = function renderWorkoutProgramScreen(){
+    const p = window.CURRENT_WORKOUT_PROGRAM || null;
+    const titleEl = document.getElementById("wpTitle");
+    const subEl = document.getElementById("wpSub");
+    const listEl = document.getElementById("wpSessionList");
+    if(!titleEl || !subEl || !listEl) return;
 
-  card.addEventListener("click", ()=>{
-    // 1) Si une sessionId est fournie -> on lance direct la séance guidée
-    if(typeof window.startSession === "function" && item.sessionId){
-      window.startSession(item.sessionId);
+    titleEl.textContent = p?.title || "Workout";
+    subEl.textContent = p?.subtitle || "—";
+
+    const sessions = Array.isArray(p?.sessions) ? p.sessions : [];
+    const S = window.SESSIONS || {};
+
+    if(!sessions.length){
+      listEl.innerHTML = `<div class="muted small">Aucune séance dans ce programme.</div>`;
       return;
     }
 
-    // 2) Si tu veux plus tard brancher les programmes -> placeholder clair
-    if(kind === "program"){
-      notify("Programme : lecture/planification arrive juste après ✅");
-      return;
-    }
+    listEl.innerHTML = sessions.map(s=>{
+      const sid = String(s?.id || "").trim();
+      const meta = S[sid] || null;
+      const name = meta?.name || sid || "Séance";
+      const blurb = String(s?.blurb || "").trim();
+      return `
+        <div class="wpItem" data-sid="${esc(sid)}">
+          <div class="wpItemLeft">
+            <div class="wpItemTitle">${esc(name)}</div>
+            <div class="wpItemSub">${esc(blurb || "Séance prête à lancer.")}</div>
+          </div>
+          <button class="wpPlay" type="button" data-play="${esc(sid)}">Play</button>
+        </div>
+      `;
+    }).join("");
+  };
 
-    // 3) Trending sans sessionId -> placeholder clair
-    notify("Séance prête à lancer : on la branche sur une vraie séance juste après ✅");
-  });
+  // Back button
+  (function bindBackOnce(){
+    if(window.__wpBackBound) return;
+    window.__wpBackBound = true;
 
-  return card;
-}
+    document.getElementById("btnBackFromProgram")?.addEventListener("click", ()=>{
+      if(typeof window.showScreen === "function") window.showScreen("sessions");
+      setTimeout(()=>{ try{ window.renderWorkoutsScreen?.(); }catch(e){} }, 0);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    // Play delegation
+    document.getElementById("wpSessionList")?.addEventListener("click", (e)=>{
+      const btn = e.target.closest("[data-play]");
+      if(!btn) return;
+      const sid = btn.getAttribute("data-play");
+      if(!sid) return;
+
+      if(typeof window.startSession === "function"){
+        window.startSession(sid);
+      }else{
+        notify("startSession() introuvable.");
+      }
+    });
+  })();
+
+  // ===== Cards list screen =====
+  function makeCard(item){
+    const btnLabel = "Play";
+
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "wCard";
+    card.innerHTML = `
+      <div class="wCardSkew">
+        <div class="wCardMedia" style="background-image:url('${esc(item.image || "")}')"></div>
+        <div class="wCardOverlay"></div>
+
+        <div class="wCardText">
+          <div class="wCardTitle">${item.title || "—"}</div>
+        </div>
+
+        <div class="wCardCta">
+          <span class="wBadge">${esc(item.subtitle || "")}</span>
+          <span class="wBtn">${btnLabel}</span>
+        </div>
+      </div>
+    `;
+
+    card.addEventListener("click", ()=>{
+      // ✅ Maintenant: clic => ouvre la page programme
+      window.openWorkoutProgram?.(item.id);
+    });
+
+    return card;
+  }
 
   window.renderWorkoutsScreen = function renderWorkoutsScreen(){
     const hostP = document.getElementById("workoutsPrograms");
@@ -8641,8 +8741,8 @@ function makeCard(item, kind){
     hostP.innerHTML = "";
     hostT.innerHTML = "";
 
-    programs.forEach(p=>hostP.appendChild(makeCard(p, "program")));
-    trending.forEach(t=>hostT.appendChild(makeCard(t, "trending")));
+    programs.forEach(p=>hostP.appendChild(makeCard(p)));
+    trending.forEach(t=>hostT.appendChild(makeCard(t)));
 
     if(!programs.length) hostP.innerHTML = `<div class="muted small">Aucun programme pour le moment.</div>`;
     if(!trending.length) hostT.innerHTML = `<div class="muted small">Aucune séance trending pour le moment.</div>`;
