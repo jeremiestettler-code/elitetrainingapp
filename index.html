@@ -8205,8 +8205,34 @@ window.renderProfileUI = function renderProfileUI(){
     // Fitness card
     const fitGoal = document.getElementById("fitGoal");
     const fitLevel = document.getElementById("fitLevel");
-    if(fitGoal) fitGoal.textContent = p?.goal || p?.objectif || "—";
-    if(fitLevel) fitLevel.textContent = p?.level || p?.niveau || "—";
+
+    // ===== Labels FR (affichage) =====
+    const goalRaw = String(p?.goal || p?.objectif || "").trim().toLowerCase();
+    const levelRaw = String(p?.level || p?.niveau || "").trim().toLowerCase();
+    const sexRaw = String(p?.sex || p?.gender || "").trim().toLowerCase();
+
+    const goalFR =
+      (["force","strength"].includes(goalRaw)) ? "Force" :
+      (["hypertrophy","hypertrophie","muscle"].includes(goalRaw)) ? "Hypertrophie" :
+      (["fatloss","perte de gras","cut","loss"].includes(goalRaw)) ? "Perte de gras" :
+      (["endurance","cardio"].includes(goalRaw)) ? "Endurance" :
+      (["recovery","recuperation","récupération"].includes(goalRaw)) ? "Récupération" :
+      "—";
+
+    const levelFR =
+      (["beginner","débutant","debutant"].includes(levelRaw)) ? "Débutant" :
+      (["intermediate","intermédiaire","intermediaire"].includes(levelRaw)) ? "Intermédiaire" :
+      (["advanced","avancé","avance"].includes(levelRaw)) ? "Avancé" :
+      "—";
+
+    const sexFR =
+      (["male","m","homme"].includes(sexRaw)) ? "Homme" :
+      (["female","f","femme"].includes(sexRaw)) ? "Femme" :
+      (["other","autre","x"].includes(sexRaw)) ? "Autre" :
+      "—";
+
+    if(fitGoal) fitGoal.textContent = goalFR;
+    if(fitLevel) fitLevel.textContent = levelFR;
 
     // Matériel preview
     const eqWrap = document.getElementById("equipmentChipsPreview");
@@ -8269,7 +8295,7 @@ window.renderProfileUI = function renderProfileUI(){
 
     if(infoDob) infoDob.textContent = dobLabel;
     if(infoAge) infoAge.textContent = age;
-    if(infoSexe) infoSexe.textContent = p?.sex || p?.gender || "—";
+    if(infoSexe) infoSexe.textContent = sexFR;
 
   }catch(e){
     console.warn("[profile] renderProfileUI failed", e);
@@ -8279,7 +8305,6 @@ window.renderProfileUI = function renderProfileUI(){
 window.refreshProfileScreen = function(){
   try{ window.renderProfileUI?.(); }catch(e){}
 };
-
 
 /* ======================================================
    Navigation helpers
