@@ -2500,15 +2500,39 @@ html[data-profile-edit="1"] .profileEditOnly{ display:block; }
             <div class="card" id="profileFitnessCard">
         <div class="h2">Fitness</div>
 
-        <div class="profileInfoRow">
-          <span>Objectif</span>
-          <span id="fitGoal">—</span>
-        </div>
+      <div class="profileInfoRow">
+  <span>Objectif</span>
+  <div class="profileInfoRight">
+    <!-- view -->
+    <span class="profileViewOnly" id="fitGoal">—</span>
 
-        <div class="profileInfoRow">
-          <span>Niveau</span>
-          <span id="fitLevel">—</span>
-        </div>
+    <!-- edit -->
+    <select id="editGoal" class="profileEditOnly input profileInlineInput">
+      <option value="">—</option>
+      <option value="force">Force</option>
+      <option value="hypertrophy">Hypertrophie</option>
+      <option value="fatloss">Perte de gras</option>
+      <option value="endurance">Endurance</option>
+      <option value="recovery">Récupération</option>
+    </select>
+  </div>
+</div>
+
+<div class="profileInfoRow">
+  <span>Niveau</span>
+  <div class="profileInfoRight">
+    <!-- view -->
+    <span class="profileViewOnly" id="fitLevel">—</span>
+
+    <!-- edit -->
+    <select id="editLevel" class="profileEditOnly input profileInlineInput">
+      <option value="">—</option>
+      <option value="beginner">Débutant</option>
+      <option value="intermediate">Intermédiaire</option>
+      <option value="advanced">Avancé</option>
+    </select>
+  </div>
+</div>
       </div>
 
       <div style="height:12px"></div>
