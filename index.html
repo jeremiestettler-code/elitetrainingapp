@@ -8562,47 +8562,54 @@ function openProfileEntrySafe(){
     try{ window.renderWorkoutsScreen?.(); }catch(e){}
   };
 
-  function makeCard(item, kind){
-    const btnLabel = (kind === "program") ? "Ouvrir" : "Play";
-    const card = document.createElement("button");
-    card.type = "button";
-    card.className = "wCard";
-    card.innerHTML = `
-      <div class="wCardSkew">
-        <div class="wCardMedia" style="background-image:url('${esc(item.image || "")}')"></div>
-        <div class="wCardOverlay"></div>
+function makeCard(item, kind){
+  // ✅ Uniformisation label
+  const btnLabel = "Play";
 
-        <div class="wCardText">
-          <div class="wCardTitle">${item.title || "—"}</div>
-        </div>
-
-        <div class="wCardCta">
-          <span class="wBadge">${esc(item.subtitle || "")}</span>
-          <span class="wBtn">${btnLabel}</span>
-        </div>
-      </div>
-    `;
-
-    card.addEventListener("click", ()=>{
-      // ✅ On ne touche pas au player (#screenWorkout) ici.
-      if(kind === "trending"){
-        // Plus tard: si item.sessionId existe => startSession(item.sessionId)
-        if(typeof window.startSession === "function" && item.sessionId){
-          window.startSession(item.sessionId);
-          return;
-        }
-        if(typeof window.showToast === "function") window.showToast("Bientôt : séance prête à lancer ✅");
-        return;
-      }
-
-      if(kind === "program"){
-        // Plus tard: openProgram(programId)
-        if(typeof window.showToast === "function") window.showToast("Bientôt : page Programme ✅");
-      }
-    });
-
-    return card;
+  // ✅ Notif robuste (toast si dispo, sinon alert)
+  function notify(msg){
+    if(typeof window.showToast === "function") window.showToast(msg);
+    else alert(msg);
   }
+
+  const card = document.createElement("button");
+  card.type = "button";
+  card.className = "wCard";
+  card.innerHTML = `
+    <div class="wCardSkew">
+      <div class="wCardMedia" style="background-image:url('${esc(item.image || "")}')"></div>
+      <div class="wCardOverlay"></div>
+
+      <div class="wCardText">
+        <div class="wCardTitle">${item.title || "—"}</div>
+      </div>
+
+      <div class="wCardCta">
+        <span class="wBadge">${esc(item.subtitle || "")}</span>
+        <span class="wBtn">${btnLabel}</span>
+      </div>
+    </div>
+  `;
+
+  card.addEventListener("click", ()=>{
+    // 1) Si une sessionId est fournie -> on lance direct la séance guidée
+    if(typeof window.startSession === "function" && item.sessionId){
+      window.startSession(item.sessionId);
+      return;
+    }
+
+    // 2) Si tu veux plus tard brancher les programmes -> placeholder clair
+    if(kind === "program"){
+      notify("Programme : lecture/planification arrive juste après ✅");
+      return;
+    }
+
+    // 3) Trending sans sessionId -> placeholder clair
+    notify("Séance prête à lancer : on la branche sur une vraie séance juste après ✅");
+  });
+
+  return card;
+}
 
   window.renderWorkoutsScreen = function renderWorkoutsScreen(){
     const hostP = document.getElementById("workoutsPrograms");
