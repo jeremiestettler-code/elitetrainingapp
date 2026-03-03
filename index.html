@@ -12,6 +12,30 @@
   <link rel="apple-touch-icon" href="./images/icon-192.png" />
   <title>EliteTraining</title>
 <script>
+
+  /* =========================================
+   ✅ Global Equipment Map (single source)
+========================================= */
+window.EQUIPMENT_MAP = {
+  halteres:   { label:"Haltères", file:"dumbbells.jpg" },
+  barre:      { label:"Barre + disques", file:"barbell.jpg" },
+  banc:       { label:"Banc", file:"bench.jpg" },
+  poulie:     { label:"Poulie", file:"cables.jpg" },
+  elastiques: { label:"Élastiques", file:"bands.jpg" },
+  kettlebell: { label:"Kettlebell", file:"kettlebell.jpg" },
+  rameur:     { label:"Rameur", file:"rameur.jpg" },
+  trx:        { label:"TRX", file:"trx.jpg" },
+  box:        { label:"Box", file:"box.jpg" },
+  corde:      { label:"Corde", file:"rope.jpg" },
+  abwheel:    { label:"Ab Wheel", file:"abwheel.jpg" },
+  slider:     { label:"Sliders", file:"slider.jpg" },
+  steps:      { label:"Steps", file:"steps.jpg" },
+  parallel:   { label:"Parallettes", file:"parallel.jpg" },
+  dipbar:     { label:"Dip bars", file:"dipbar.jpg" },
+  bike:       { label:"Bike", file:"bike.jpg" },
+  ball:       { label:"Med Ball", file:"ball.jpg" }
+};
+  
   window.AI_FUNCTION_URL = "https://europe-west1-elitetraining-77406.cloudfunctions.net/generateWorkout";
 </script>
 <script>
@@ -8054,9 +8078,8 @@ if(eqGrid){
   eqGrid.innerHTML = "";
   eqGrid.classList.add("pwEquipmentGrid");
 
- Object.keys(EQUIPMENT_MAP).forEach((key)=>{
-  const eq = EQUIPMENT_MAP[key];
-    const card = document.createElement("button");
+ Object.keys(window.EQUIPMENT_MAP).forEach((key)=>{
+  const eq = window.EQUIPMENT_MAP[key];    const card = document.createElement("button");
     card.type = "button";
     card.className = "pwEquipCard" + (selectedSet.has(key) ? " active" : "");
     card.setAttribute("data-eq", key);
@@ -8218,9 +8241,32 @@ function setBottomNavActive(which){
   bProfile.classList.toggle("active", which === "profile");
 }
 
+/* =========================================
+   ✅ Global Equipment Map (single source)
+========================================= */
+window.EQUIPMENT_MAP = {
+  halteres:   { label:"Haltères", file:"dumbbells.jpg" },
+  barre:      { label:"Barre + disques", file:"barbell.jpg" },
+  banc:       { label:"Banc", file:"bench.jpg" },
+  poulie:     { label:"Poulie", file:"cables.jpg" },
+  elastiques: { label:"Élastiques", file:"bands.jpg" },
+  kettlebell: { label:"Kettlebell", file:"kettlebell.jpg" },
+  rameur:     { label:"Rameur", file:"rameur.jpg" },
+  trx:        { label:"TRX", file:"trx.jpg" },
+  box:        { label:"Box", file:"box.jpg" },
+  corde:      { label:"Corde", file:"rope.jpg" },
+  abwheel:    { label:"Ab Wheel", file:"abwheel.jpg" },
+  slider:     { label:"Sliders", file:"slider.jpg" },
+  steps:      { label:"Steps", file:"steps.jpg" },
+  parallel:   { label:"Parallettes", file:"parallel.jpg" },
+  dipbar:     { label:"Dip bars", file:"dipbar.jpg" },
+  bike:       { label:"Bike", file:"bike.jpg" },
+  ball:       { label:"Med Ball", file:"ball.jpg" }
+};
+
 
 /* ======================================================
-   ✅ Profile renderer (single place) — FIXED try/catch
+   ✅ Profile renderer (clean & stable)
 ====================================================== */
 
 window.renderProfileUI = function renderProfileUI(){
@@ -8252,7 +8298,6 @@ window.renderProfileUI = function renderProfileUI(){
     emailEl.textContent = email || "—";
     avatarEl.textContent = initials || "U";
 
-    // Infos card
     const infoFirst = document.getElementById("infoFirstName");
     const infoEmail = document.getElementById("infoEmail");
     const infoAge   = document.getElementById("infoAge");
@@ -8262,62 +8307,39 @@ window.renderProfileUI = function renderProfileUI(){
     if(infoFirst) infoFirst.textContent = first;
     if(infoEmail) infoEmail.textContent = email || "—";
 
-    // Fitness card
     const fitGoal = document.getElementById("fitGoal");
     const fitLevel = document.getElementById("fitLevel");
 
-    // ===== Labels FR (affichage) =====
     const goalRaw = String(p?.goal || p?.objectif || "").trim().toLowerCase();
     const levelRaw = String(p?.level || p?.niveau || "").trim().toLowerCase();
     const sexRaw = String(p?.sex || p?.gender || "").trim().toLowerCase();
 
     const goalFR =
-      (["force","strength"].includes(goalRaw)) ? "Force" :
-      (["hypertrophy","hypertrophie","muscle"].includes(goalRaw)) ? "Hypertrophie" :
-      (["fatloss","perte de gras","cut","loss"].includes(goalRaw)) ? "Perte de gras" :
-      (["endurance","cardio"].includes(goalRaw)) ? "Endurance" :
-      (["recovery","recuperation","récupération"].includes(goalRaw)) ? "Récupération" :
+      ["force","strength"].includes(goalRaw) ? "Force" :
+      ["hypertrophy","hypertrophie","muscle"].includes(goalRaw) ? "Hypertrophie" :
+      ["fatloss","perte de gras","cut","loss"].includes(goalRaw) ? "Perte de gras" :
+      ["endurance","cardio"].includes(goalRaw) ? "Endurance" :
+      ["recovery","recuperation","récupération"].includes(goalRaw) ? "Récupération" :
       "—";
 
     const levelFR =
-      (["beginner","débutant","debutant"].includes(levelRaw)) ? "Débutant" :
-      (["intermediate","intermédiaire","intermediaire"].includes(levelRaw)) ? "Intermédiaire" :
-      (["advanced","avancé","avance"].includes(levelRaw)) ? "Avancé" :
+      ["beginner","débutant","debutant"].includes(levelRaw) ? "Débutant" :
+      ["intermediate","intermédiaire","intermediaire"].includes(levelRaw) ? "Intermédiaire" :
+      ["advanced","avancé","avance"].includes(levelRaw) ? "Avancé" :
       "—";
 
     const sexFR =
-      (["male","m","homme"].includes(sexRaw)) ? "Homme" :
-      (["female","f","femme"].includes(sexRaw)) ? "Femme" :
-      (["other","autre","x"].includes(sexRaw)) ? "Autre" :
+      ["male","m","homme"].includes(sexRaw) ? "Homme" :
+      ["female","f","femme"].includes(sexRaw) ? "Femme" :
+      ["other","autre","x"].includes(sexRaw) ? "Autre" :
       "—";
 
     if(fitGoal) fitGoal.textContent = goalFR;
     if(fitLevel) fitLevel.textContent = levelFR;
 
-    // Matériel preview
     const eqWrap = document.getElementById("equipmentChipsPreview");
     if(eqWrap){
-      const EQUIPMENT_MAP = {
-        halteres:   { label:"Haltères", file:"dumbbells.jpg" },
-        barre:      { label:"Barre + disques", file:"barbell.jpg" },
-        banc:       { label:"Banc", file:"bench.jpg" },
-        poulie:     { label:"Poulie", file:"cables.jpg" },
-        elastiques: { label:"Élastiques", file:"bands.jpg" },
-        kettlebell: { label:"Kettlebell", file:"kettlebell.jpg" },
-        rameur:     { label:"Rameur", file:"rameur.jpg" },
-        trx:        { label:"TRX", file:"trx.jpg" },
-        box:        { label:"Box", file:"box.jpg" },
-        corde:      { label:"Corde", file:"rope.jpg" },
-        abwheel:    { label:"Ab Wheel", file:"abwheel.jpg" },
-        slider:     { label:"Sliders", file:"slider.jpg" },
-        steps:      { label:"Steps", file:"steps.jpg" },
-        parallel:   { label:"Parallettes", file:"parallel.jpg" },
-        dipbar:     { label:"Dip bars", file:"dipbar.jpg" },
-        bike:       { label:"Bike", file:"bike.jpg" },
-        ball:       { label:"Med Ball", file:"ball.jpg" }
-      };
-
-      let eq = p?.equipment || p?.equipments || p?.materiel || p?.matos || [];
+      let eq = p?.equipment || p?.materiel || p?.matos || [];
       if(typeof eq === "string") eq = eq.split(",").map(s=>s.trim()).filter(Boolean);
       if(!Array.isArray(eq)) eq = [];
 
@@ -8331,32 +8353,24 @@ window.renderProfileUI = function renderProfileUI(){
         eqWrap.appendChild(empty);
       }else{
         eq.forEach((key)=>{
-  const k = String(key || "").trim();
-  if(!k) return;
+          const meta = window.EQUIPMENT_MAP?.[key];
+          if(!meta) return;
 
-  const meta = (EQUIPMENT_MAP && EQUIPMENT_MAP[k]) ? EQUIPMENT_MAP[k] : null;
-
-  const card = document.createElement("div");
-  card.className = "pwEquipCard active";
-
-  // fallback si clé inconnue
-  const file = meta?.file ? meta.file : (k + ".jpg");
-  const label = meta?.label ? meta.label : k;
-
-  card.innerHTML = `
-    <img src="images/equipment/${file}" alt="${label}">
-    <span>${label}</span>
-  `;
-
-  eqWrap.appendChild(card);
-});
+          const card = document.createElement("div");
+          card.className = "pwEquipCard active";
+          card.innerHTML = `
+            <img src="images/equipment/${meta.file}" alt="${meta.label}">
+            <span>${meta.label}</span>
+          `;
+          eqWrap.appendChild(card);
+        });
       }
     }
 
-    // DOB + âge
     let age = "—";
     let dobLabel = "—";
     const dob = String(p?.dob || "").trim();
+
     if(dob){
       const birth = new Date(dob + "T00:00:00");
       if(Number.isFinite(birth.getTime())){
