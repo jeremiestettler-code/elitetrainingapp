@@ -594,6 +594,8 @@ html[data-theme="light"] .etLogoWordmark{
 }
 
 .wCardTitle{
+  color: #ffffff;
+  text-shadow: 0 4px 18px rgba(0,0,0,.65);
   font-size: 22px;
   line-height: 1.05;
   font-weight: 900;
@@ -716,4 +718,100 @@ html[data-theme="light"] .etLogoWordmark{
   margin-top: 3px;
   font-size: 11px;
   color: var(--muted);
+}
+
+
+/* =========================
+   Workout Program Detail
+========================= */
+#screenWorkoutProgram{
+  padding-bottom: 10px;
+}
+
+.wpTop{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top: 2px;
+  margin-bottom: 12px;
+}
+
+.wpBack{
+  width:42px;
+  height:42px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.04);
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 900;
+  cursor:pointer;
+}
+
+[data-theme="light"] .wpBack{
+  border-color: rgba(0,0,0,.08);
+  background: rgba(0,0,0,.03);
+}
+
+.wpHead{
+  display:flex;
+  flex-direction:column;
+  line-height:1.1;
+}
+
+.wpTitle{
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--accent);
+}
+
+.wpSub{
+  font-size: 12px;
+  font-weight: 800;
+  opacity: .75;
+}
+
+.wpList{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.wpItem{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+
+  padding: 14px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(139,195,74,.08), rgba(0,0,0,0)), var(--card);
+  border: 1px solid rgba(139,195,74,.25);
+}
+
+.wpItemTitle{
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.wpItemSub{
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: .75;
+  font-weight: 700;
+}
+
+.wpPlay{
+  border: none;
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-weight: 900;
+  cursor:pointer;
+  background: rgba(139,195,74,.22);
+  color: var(--text);
+  border: 1px solid rgba(139,195,74,.35);
+}
+
+.wpPlay:active{
+  transform: scale(.98);
 }
