@@ -6210,33 +6210,36 @@ function buildSequence(session){
     }
 
     function startSession(sessionId){
-      __endSpoken = false;
-      curSessionId = sessionId;
-      // ✅ SAFE: enrichit toujours la séance (utile pour les programmes Firestore)
-      if(curSession && typeof enrichSession === "function"){
-        curSession = enrichSession(curSession, null);
-        // garde la version enrichie en mémoire pour la suite
-        (window.SESSIONS || {})[sessionId] = curSession;
+        __endSpoken = false;
+        curSessionId = sessionId;
+        // ✅ SAFE: enrichit toujours la séance (utile pour les programmes Firestore)
+        if(curSession && typeof enrichSession === "function"){
+          curSession = enrichSession(curSession, null);
+          // garde la version enrichie en mémoire pour la suite
+          (window.SESSIONS || {})[sessionId] = curSession;
+        }
+        sessionLoadsUsed = {}; // reset
+
+        curSession = (window.SESSIONS || {})[sessionId];
+        // DEBUG/STATE (SAFE) — expose la séance courante
+        window.CURRENT_SESSION_ID = sessionId;
+        window.CURRENT_SESSION = curSession;
+        window.CURRENT_SEQUENCE = null;
+        workoutStartMs = Date.now();
+        workoutLogged = false;
+
+        if(!curSession) return;
+
+        seq = buildSequence(curSession);
+        window.CURRENT_SEQUENCE = seq;
+        idx = 0;
+
+        showScreen("workout");
+        renderWorkoutStep();
       }
-      sessionLoadsUsed = {}; // reset
 
-      curSession = (window.SESSIONS || {})[sessionId];
-      // DEBUG/STATE (SAFE) — expose la séance courante
-      window.CURRENT_SESSION_ID = sessionId;
-      window.CURRENT_SESSION = curSession;
-      window.CURRENT_SEQUENCE = null;
-      workoutStartMs = Date.now();
-      workoutLogged = false;
-
-      if(!curSession) return;
-
-      seq = buildSequence(curSession);
-      window.CURRENT_SEQUENCE = seq;
-      idx = 0;
-
-      showScreen("workout");
-      renderWorkoutStep();
-    }
+      // ✅ EXPOSE GLOBAL (permet d’appeler depuis la page Programmes / Workouts)
+      window.startSession = startSession;
 
     function stepPrev(){
       // Count typed load even if not explicitly saved
