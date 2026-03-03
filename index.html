@@ -8331,19 +8331,25 @@ window.renderProfileUI = function renderProfileUI(){
         eqWrap.appendChild(empty);
       }else{
         eq.forEach((key)=>{
-          const k = String(key || "").trim();
-          if(!k) return;
+  const k = String(key || "").trim();
+  if(!k) return;
 
-          const card = document.createElement("div");
-          card.className = "pwEquipCard active";
-          card.innerHTML = `
-  <img src="images/equipment/${eq.file}" alt="${eq.label}">
-  <span>${eq.label}</span>
-`;
-            <span>${labelMap[k] || k}</span>
-          `;
-          eqWrap.appendChild(card);
-        });
+  const meta = (EQUIPMENT_MAP && EQUIPMENT_MAP[k]) ? EQUIPMENT_MAP[k] : null;
+
+  const card = document.createElement("div");
+  card.className = "pwEquipCard active";
+
+  // fallback si clé inconnue
+  const file = meta?.file ? meta.file : (k + ".jpg");
+  const label = meta?.label ? meta.label : k;
+
+  card.innerHTML = `
+    <img src="images/equipment/${file}" alt="${label}">
+    <span>${label}</span>
+  `;
+
+  eqWrap.appendChild(card);
+});
       }
     }
 
