@@ -2535,25 +2535,30 @@ html[data-profile-edit="1"] .profileEditOnly{ display:block; }
 </div>
       </div>
 
-      <div style="height:12px"></div>
+<div style="height:12px"></div>
 
-      <div class="card" id="profileEquipmentCard">
-        <div class="row" style="align-items:center;">
-          <div class="grow">
-            <div class="h2">Matériel</div>
-            <div class="muted small">Modifier via “Modifier le profil”.</div>
-          </div>
-        </div>
+<div class="card" id="profileEquipmentCard">
+  <div class="row" style="align-items:center;">
+    <div class="grow">
+      <div class="h2">Matériel</div>
+      <div class="muted small">Modifier via “Modifier le profil”.</div>
+    </div>
+  </div>
 
-        <div id="equipmentChipsPreview" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;"></div>
-      </div>
+  <!-- View -->
+  <div id="equipmentChipsPreview" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;"></div>
 
-      <div style="height:12px"></div>
+  <!-- ✅ Edit (inline, visible uniquement en mode édition) -->
+  <div id="equipmentEditGrid" class="profileEditOnly pwEquipmentGrid" style="margin-top:10px;"></div>
+  <div class="profileEditOnly muted small" style="margin-top:8px;">
+    Touchez pour sélectionner / désélectionner votre matériel.
+  </div>
+</div>
 
-      <div class="card" style="margin-top:10px;">
-  <button class="btn primary" id="profileEditOpen" style="width:100%;">
-    Modifier le profil
-  </button>
+<div style="height:12px"></div>
+
+<div class="card" style="margin-top:10px;">
+  <button class="btn primary" id="profileEditOpen" style="width:100%;">Modifier le profil</button>
 </div>
 
             <div class="card" id="profilePrefsCard">
@@ -8023,6 +8028,52 @@ if(lvlSel){
   lvlSel.value = norm;
 }
 
+// Prefill Matériel (grille edit)
+const eqGrid = document.getElementById("equipmentEditGrid");
+if(eqGrid){
+  const labelMap = {
+    halteres: "Haltères",
+    barre: "Barre + disques",
+    banc: "Banc",
+    poulie: "Poulie",
+    elastiques: "Élastiques",
+    kettlebell: "Kettlebell",
+    rameur: "Rameur",
+    trx: "TRX"
+  };
+
+  const p = window.eliteProfile || window.firestoreProfile || {};
+  let selected = p?.equipment || p?.materiel || p?.matos || [];
+  if(typeof selected === "string") selected = selected.split(",").map(s=>s.trim()).filter(Boolean);
+  if(!Array.isArray(selected)) selected = [];
+  const selectedSet = new Set(selected.map(x=>String(x||"").trim()).filter(Boolean));
+
+  // stocke la sélection en mémoire pendant l'edit
+  window.__editEquipmentSet = selectedSet;
+
+  eqGrid.innerHTML = "";
+  eqGrid.classList.add("pwEquipmentGrid");
+
+  Object.keys(labelMap).forEach((key)=>{
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "pwEquipCard" + (selectedSet.has(key) ? " active" : "");
+    card.setAttribute("data-eq", key);
+    card.innerHTML = `
+      <img src="images/equipment/${key}.jpg" alt="${labelMap[key]}">
+      <span>${labelMap[key]}</span>
+    `;
+
+    card.addEventListener("click", ()=>{
+      // toggle
+      if(selectedSet.has(key)) selectedSet.delete(key);
+      else selectedSet.add(key);
+      card.classList.toggle("active", selectedSet.has(key));
+    });
+
+    eqGrid.appendChild(card);
+  });
+}
 
   };
 
@@ -8070,6 +8121,10 @@ if(lvlSel){
         const lvlSel = document.getElementById("editLevel");
         const vLevel = String(lvlSel?.value || "").trim() || null;
 
+        // Matériel sélectionné pendant l'edit
+        const eqSet = window.__editEquipmentSet instanceof Set ? window.__editEquipmentSet : new Set();
+        const vEq = Array.from(eqSet);
+
         // ✅ Unique persistance : saveEliteProfile()
         if(typeof window.saveEliteProfile === "function"){
           await window.saveEliteProfile({
@@ -8082,7 +8137,10 @@ if(lvlSel){
             goal: vGoal,
             objectif: vGoal,
             level: vLevel,
-            niveau: vLevel
+            niveau: vLevel,
+            equipment: vEq,
+            materiel: vEq,
+            matos: vEq
           });
         }else{
           // fallback ultra safe
@@ -8100,6 +8158,7 @@ if(lvlSel){
       }catch(e){
         console.warn("[profile] save failed", e);
       }finally{
+        try{ delete window.__editEquipmentSet; }catch(e){}
         window.setProfileEditMode(false);
         refreshAll();
         refreshAllAfterPaint();
