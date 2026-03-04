@@ -8573,9 +8573,9 @@ function openProfileEntrySafe(){
 /* =========================
    WORKOUTS (single source)
    - Trending (static)
-   - AI Sessions: CUSTOM_* (from window.SESSIONS)
-   - AI Programs: list from Firestore users/{uid}/programs
-   + Program detail screen: #screenWorkoutProgram
+   - AI Sessions: CUSTOM_* (from window.SESSIONS via reloadCustomSessionsIntoSESSIONS)
+   - AI Programs: list from Firestore users/{uid}/programs (si connecté)
+   + Detail screen: #screenWorkoutProgram
 ========================= */
 (function(){
 
@@ -8630,20 +8630,94 @@ function openProfileEntrySafe(){
     ]
   };
 
-  function setProgramScreen(title, subtitle, sessions){
-    window.CURRENT_WORKOUT_PROGRAM = { title, subtitle, sessions };
-    try{ window.renderWorkoutProgramScreen?.(); }catch(e){}
+  // =========================
+  // Detail screen helpers
+  // =========================
+  function _setProgramScreen(payload){
+    const p = payload || {};
+    window.CURRENT_WORKOUT_PROGRAM = {
+      title: String(p.title || "Workout"),
+      subtitle: String(p.subtitle || "—"),
+      sessions: Array.isArray(p.sessions) ? p.sessions : []
+    };
+
     if(typeof window.showScreen === "function") window.showScreen("workoutProgram");
     window.scrollTo({ top: 0, behavior: "smooth" });
+
+    // ✅ timing-proof render
+    requestAnimationFrame(()=>{ try{ window.renderWorkoutProgramScreen?.(); }catch(e){} });
   }
 
-  window.openWorkoutProgram = function(programId){
+  window.openWorkoutProgram = function openWorkoutProgram(programId){
     const p = (window.WORKOUT_CATALOG?.trending || []).find(x=>String(x.id)===String(programId));
     if(!p) return notify("Programme introuvable.");
-    setProgramScreen(p.title, p.subtitle, p.sessions || []);
+    _setProgramScreen(p);
   };
 
-  window.openAISessionsPack = async function(){
+  window.renderWorkoutProgramScreen = function renderWorkoutProgramScreen(){
+    const p = window.CURRENT_WORKOUT_PROGRAM || null;
+    const titleEl = document.getElementById("wpTitle");
+    const subEl = document.getElementById("wpSub");
+    const listEl = document.getElementById("wpSessionList");
+    if(!titleEl || !subEl || !listEl) return;
+
+    titleEl.textContent = p?.title || "Workout";
+    subEl.textContent = p?.subtitle || "—";
+
+    const sessions = Array.isArray(p?.sessions) ? p.sessions : [];
+    const S = window.SESSIONS || {};
+
+    if(!sessions.length){
+      listEl.innerHTML = `<div class="muted small">Aucune séance dans ce programme.</div>`;
+      return;
+    }
+
+    listEl.innerHTML = sessions.map(s=>{
+      const sid = String(s?.id || "").trim();
+      const meta = S[sid] || null;
+      const name = meta?.name || sid || "Séance";
+      const blurb = String(s?.blurb || "").trim();
+      return `
+        <div class="wpItem" data-sid="${esc(sid)}">
+          <div class="wpItemLeft">
+            <div class="wpItemTitle">${esc(name)}</div>
+            <div class="wpItemSub">${esc(blurb || "Séance prête à lancer.")}</div>
+          </div>
+          <button class="wpPlay" type="button" data-play="${esc(sid)}">Play</button>
+        </div>
+      `;
+    }).join("");
+  };
+
+  // Bind back + play once
+  (function bindProgramScreenOnce(){
+    if(window.__wpBoundOnce) return;
+    window.__wpBoundOnce = true;
+
+    document.getElementById("btnBackFromProgram")?.addEventListener("click", ()=>{
+      if(typeof window.showScreen === "function") window.showScreen("sessions");
+      requestAnimationFrame(()=>{ try{ window.renderWorkoutsScreen?.(); }catch(e){} });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    document.getElementById("wpSessionList")?.addEventListener("click", (e)=>{
+      const btn = e.target.closest("[data-play]");
+      if(!btn) return;
+      const sid = btn.getAttribute("data-play");
+      if(!sid) return;
+
+      if(typeof window.startSession === "function"){
+        window.startSession(sid);
+      }else{
+        notify("startSession() introuvable.");
+      }
+    });
+  })();
+
+  // =========================
+  // AI packs
+  // =========================
+  window.openAISessionsPack = async function openAISessionsPack(){
     try{
       if(typeof window.reloadCustomSessionsIntoSESSIONS === "function"){
         await window.reloadCustomSessionsIntoSESSIONS();
@@ -8651,25 +8725,24 @@ function openProfileEntrySafe(){
       const S = window.SESSIONS || {};
       const keys = Object.keys(S).filter(k=>String(k).startsWith("CUSTOM_"));
       if(!keys.length) return notify("Aucune séance IA enregistrée.");
+
       const list = keys.map(k=>({ id:k, blurb: (S[k]?.name || "Séance créée par toi") }));
-      setProgramScreen("Séances AI", "Tes séances créées", list);
+      _setProgramScreen({ title:"Séances AI", subtitle:"Tes séances créées", sessions:list });
     }catch(e){
       console.warn("openAISessionsPack error:", e);
       notify("Impossible d’ouvrir tes séances AI.");
     }
   };
 
-  window.openAIProgram = async function(programId){
+  window.openAIProgram = async function openAIProgram(programId){
     try{
       // Recharge PROG_ dans window.SESSIONS (ta fonction existante)
       if(typeof window.reloadProgramsIntoSESSIONS === "function"){
         await window.reloadProgramsIntoSESSIONS(programId);
+      }else if(typeof reloadProgramsIntoSESSIONS === "function"){
+        await reloadProgramsIntoSESSIONS(programId);
       }else{
-        if(typeof reloadProgramsIntoSESSIONS === "function"){
-          await reloadProgramsIntoSESSIONS(programId);
-        }else{
-          return notify("reloadProgramsIntoSESSIONS introuvable.");
-        }
+        return notify("reloadProgramsIntoSESSIONS introuvable.");
       }
 
       const S = window.SESSIONS || {};
@@ -8678,13 +8751,16 @@ function openProfileEntrySafe(){
       if(!keys.length) return notify("Programme vide (aucune séance chargée).");
 
       const list = keys.map(k=>({ id:k, blurb: (S[k]?.name || "Séance programme") }));
-      setProgramScreen("Programme AI", "Semaine 1", list);
+      _setProgramScreen({ title:"Programme AI", subtitle:"Semaine 1", sessions:list });
     }catch(e){
       console.warn("openAIProgram error:", e);
       notify("Impossible d’ouvrir ce programme.");
     }
   };
 
+  // =========================
+  // Card rendering
+  // =========================
   function makeCard(item, onClick){
     const card = document.createElement("button");
     card.type = "button";
@@ -8706,7 +8782,10 @@ function openProfileEntrySafe(){
     return card;
   }
 
-  window.renderWorkoutsScreen = async function(){
+  // =========================
+  // Render main workouts screen
+  // =========================
+  window.renderWorkoutsScreen = async function renderWorkoutsScreen(){
     const hostT   = document.getElementById("workoutsTrending");
     const hostAIS = document.getElementById("workoutsAISessions");
     const hostAIP = document.getElementById("workoutsAIPrograms");
@@ -8718,7 +8797,7 @@ function openProfileEntrySafe(){
       hostT.appendChild(makeCard(t, ()=>window.openWorkoutProgram(t.id)));
     });
 
-    // AI Sessions
+    // AI sessions
     hostAIS.innerHTML = "";
     try{
       if(typeof window.reloadCustomSessionsIntoSESSIONS === "function"){
@@ -8739,17 +8818,19 @@ function openProfileEntrySafe(){
       hostAIS.innerHTML = `<div class="muted small">Aucune séance IA enregistrée.</div>`;
     }
 
-    // AI Programs
+    // AI programs (Firestore list) — utilise db/currentUser du module s’ils existent, sinon fallback
     hostAIP.innerHTML = "";
     try{
-      // IMPORTANT: chez toi db/currentUser sont des variables locales du module.
-      // On utilise celles-ci directement (pas window.db).
-      if(!currentUser?.uid || typeof db === "undefined"){
+      // db/currentUser sont souvent des variables locales dans ton module
+      const _db = (typeof db !== "undefined") ? db : window.db;
+      const _user = (typeof currentUser !== "undefined") ? currentUser : window.currentUser;
+
+      if(!_db || !_user?.uid){
         hostAIP.innerHTML = `<div class="muted small">Connecte-toi pour voir tes programmes.</div>`;
         return;
       }
 
-      const snap = await getDocs(collection(db, "users", currentUser.uid, "programs"));
+      const snap = await getDocs(collection(_db, "users", _user.uid, "programs"));
       const programs = [];
       snap.forEach(d=>{
         const data = d.data() || {};
@@ -8775,7 +8856,6 @@ function openProfileEntrySafe(){
       hostAIP.innerHTML = `<div class="muted small">Aucun programme IA créé.</div>`;
     }
   };
-
 })();
 
 function initBottomNav(){
