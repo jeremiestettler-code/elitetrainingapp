@@ -6814,6 +6814,9 @@ async function reloadCustomSessionsIntoSESSIONS(){
   window.SESSIONS = { ...(window.SESSIONS || {}), ...custom };
 }
 
+// ✅ expose global (debug + page Workouts AI)
+window.reloadCustomSessionsIntoSESSIONS = reloadCustomSessionsIntoSESSIONS;
+
 function purgeProgramsFromSessions(){
   const prev = window.SESSIONS || {};
   const cleaned = {};
@@ -6855,6 +6858,8 @@ async function reloadProgramsIntoSESSIONS(forceProgramId){
     }
     progData = progSnap.data() || {};
   }
+  // ✅ expose global (page Workouts AI)
+window.reloadProgramsIntoSESSIONS = reloadProgramsIntoSESSIONS;
 
   const programName = String(progData.goalText || "Programme 4 semaines");
 
