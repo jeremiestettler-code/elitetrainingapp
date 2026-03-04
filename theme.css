@@ -720,7 +720,6 @@ html[data-theme="light"] .etLogoWordmark{
   color: var(--muted);
 }
 
-
 /* =========================
    Workout Program Detail
 ========================= */
@@ -782,7 +781,6 @@ html[data-theme="light"] .etLogoWordmark{
   align-items:center;
   justify-content:space-between;
   gap:12px;
-
   padding: 14px;
   border-radius: 18px;
   background: linear-gradient(180deg, rgba(139,195,74,.08), rgba(0,0,0,0)), var(--card);
@@ -814,4 +812,45 @@ html[data-theme="light"] .etLogoWordmark{
 
 .wpPlay:active{
   transform: scale(.98);
+}
+
+/* ===== Workouts sub headers ===== */
+.workoutsSubHdr{
+  margin: 10px 2px 8px;
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:12px;
+}
+.workoutsSubTitle{
+  font-size: 14px;
+  font-weight: 950;
+  letter-spacing: .2px;
+  color: var(--text);
+}
+.workoutsSubSub{
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+  opacity: .85;
+}
+/* ===== Workouts sub headers ===== */
+.workoutsSubHdr{
+  margin: 10px 2px 8px;
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:12px;
+}
+.workoutsSubTitle{
+  font-size: 14px;
+  font-weight: 950;
+  letter-spacing: .2px;
+  color: var(--text);
+}
+.workoutsSubSub{
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+  opacity: .85;
 }
