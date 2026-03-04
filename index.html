@@ -2431,10 +2431,10 @@ html[data-profile-edit="1"] .profileEditOnly{ display:block; }
   </div>
 
   <!-- PROGRAMMES -->
-  <div class="workoutsSectionHdr">
-    <div class="workoutsSectionTitle">AI Workout</div>
-    <div class="workoutsSectionSub">Base + IA</div>
-  </div>
+<div class="workoutsSectionHdr">
+  <div class="workoutsSectionTitle">AI Workout</div>
+  <div class="workoutsSectionSub">Créé depuis l’app</div>
+</div>
 
 <!-- AI: séances seules -->
 <div class="workoutsSubHdr">
@@ -8572,16 +8572,15 @@ function openProfileEntrySafe(){
 }
 
 /* =========================
-   WORKOUTS: Trending (static) + AI (dynamic from Firestore)
-   - Séances AI: users/{uid}/customSessions  => CUSTOM_<id>
-   - Programmes AI: users/{uid}/programs     => open => week 1 sessions
+   WORKOUTS: Trending (static) + AI (dynamic)
+   - Trending: WORKOUT_CATALOG.trending
+   - Séances AI: détectées via window.SESSIONS (CUSTOM_*)
+   - Programmes AI: listés via Firestore users/{uid}/programs
 ========================= */
 (function(){
-
   function esc(s){
     return (s||"").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]));
   }
-
   function notify(msg){
     if(typeof window.showToast === "function") window.showToast(msg);
     else alert(msg);
@@ -8633,66 +8632,7 @@ function openProfileEntrySafe(){
   };
 
   // =========================
-  // AI Catalog (dynamic)
-  // =========================
-  window.AI_CATALOG = window.AI_CATALOG || {
-    sessions: [], // [{ key:"CUSTOM_x", title }]
-    programs: []  // [{ programId, title }]
-  };
-
-  // ✅ IMPORTANT: on utilise les variables LOCALES du module: currentUser + db
-  // (dans ton code elles existent déjà: let currentUser=null; const db=...)
-  window.reloadAICatalogForWorkouts = async function reloadAICatalogForWorkouts(){
-    try{
-      if(!currentUser?.uid || typeof db === "undefined"){
-        window.AI_CATALOG = { sessions: [], programs: [] };
-        return;
-      }
-
-      const uid = currentUser.uid;
-
-      // 1) Séances AI (customSessions)
-      const snapCustom = await getDocs(collection(db, "users", uid, "customSessions"));
-      const aiSessions = [];
-      snapCustom.forEach(d=>{
-        const data = d.data() || {};
-        aiSessions.push({
-          key: "CUSTOM_" + d.id,
-          title: String(data.name || "Séance AI").trim()
-        });
-      });
-
-      // 2) Programmes AI (programs) — sans orderBy (évite erreurs si champ absent / index)
-      const progSnap = await getDocs(collection(db, "users", uid, "programs"));
-      const aiPrograms = [];
-      progSnap.forEach(d=>{
-        const data = d.data() || {};
-        // titre le plus robuste possible
-        const title = String(data.goalText || data.title || data.name || "Programme AI").trim();
-        aiPrograms.push({
-          programId: d.id,
-          title
-        });
-      });
-
-      // Tri “best effort” par createdAt si dispo (sinon stable)
-      aiPrograms.sort((a,b)=>{
-        const A = progSnap.docs.find(x=>x.id===a.programId)?.data()?.createdAt;
-        const B = progSnap.docs.find(x=>x.id===b.programId)?.data()?.createdAt;
-        const ta = (A?.seconds || 0);
-        const tb = (B?.seconds || 0);
-        return tb - ta;
-      });
-
-      window.AI_CATALOG = { sessions: aiSessions, programs: aiPrograms };
-    }catch(e){
-      console.warn("reloadAICatalogForWorkouts error:", e);
-      window.AI_CATALOG = { sessions: [], programs: [] };
-    }
-  };
-
-  // =========================
-  // Program detail screen (reuse workoutProgram screen)
+  // Program detail screen helper
   // =========================
   function setProgramScreen(title, subtitle, sessions){
     window.CURRENT_WORKOUT_PROGRAM = {
@@ -8705,7 +8645,7 @@ function openProfileEntrySafe(){
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  // Open static pack/program (Trending)
+  // Open static pack/program already defined in WORKOUT_CATALOG
   window.openWorkoutProgram = function openWorkoutProgram(programId){
     const all = [ ...(window.WORKOUT_CATALOG?.trending || []) ];
     const p = all.find(x=>String(x.id)===String(programId));
@@ -8713,41 +8653,60 @@ function openProfileEntrySafe(){
     setProgramScreen(p.title, p.subtitle, p.sessions || []);
   };
 
-  // Open AI sessions list (Séances AI)
-  window.openAISessionsPack = function openAISessionsPack(){
-    const list = (window.AI_CATALOG?.sessions || []).map(x=>({
-      id: x.key,
-      blurb: "Séance créée par toi"
-    }));
-    setProgramScreen("Séances AI", "Tes séances créées", list);
-  };
-
-  // Open one AI program (fetch week 1 sessions, map to PROG_ keys, then reloadProgramsIntoSESSIONS)
-  window.openAIProgram = async function openAIProgram(programId){
+  // =========================
+  // AI: Séances (CUSTOM_) => pack list
+  // =========================
+  window.openAISessionsPack = async function openAISessionsPack(){
     try{
-      if(!currentUser?.uid || typeof db === "undefined") return notify("Non connecté.");
-
-      if(typeof reloadProgramsIntoSESSIONS !== "function"){
-        return notify("reloadProgramsIntoSESSIONS() introuvable.");
+      // On s’assure que SESSIONS contient bien les CUSTOM_
+      if(typeof window.reloadCustomSessionsIntoSESSIONS === "function"){
+        await window.reloadCustomSessionsIntoSESSIONS();
       }
 
-      const uid = currentUser.uid;
+      const S = window.SESSIONS || {};
+      const keys = Object.keys(S).filter(k=>String(k).startsWith("CUSTOM_"));
 
-      // charge week 1 (list)
-      const sessSnap = await getDocs(
-        collection(db, "users", uid, "programs", programId, "weeks", "1", "sessions")
-      );
+      const list = keys.map(k=>({
+        id: k,
+        blurb: "Séance créée par toi"
+      }));
 
-      const sessions = [];
-      sessSnap.forEach(d=>{
-        const key = `PROG_${programId}__${d.id}`;
-        const data = d.data() || {};
-        const title = String(data.title || data.session?.name || d.id);
-        sessions.push({ id: key, blurb: title });
-      });
+      if(!list.length){
+        return notify("Aucune séance IA enregistrée.");
+      }
 
-      // recharge PROG_ dans window.SESSIONS
-      await reloadProgramsIntoSESSIONS(programId);
+      setProgramScreen("Séances AI", "Tes séances créées", list);
+    }catch(e){
+      console.warn("openAISessionsPack error:", e);
+      notify("Impossible d’ouvrir tes séances AI.");
+    }
+  };
+
+  // =========================
+  // AI: Programmes => ouvrir un programme (Semaine 1)
+  // =========================
+  window.openAIProgram = async function openAIProgram(programId){
+    try{
+      if(!window.currentUser?.uid || !window.db) return notify("Non connecté.");
+
+      // Recharge les PROG_ pour CE programme (ta fonction sait faire)
+      if(typeof window.reloadProgramsIntoSESSIONS === "function"){
+        await window.reloadProgramsIntoSESSIONS(programId);
+      }
+
+      // Maintenant on lit dans window.SESSIONS les sessions de ce programme
+      const S = window.SESSIONS || {};
+      const prefix = `PROG_${programId}__`;
+      const keys = Object.keys(S).filter(k=>String(k).startsWith(prefix));
+
+      const sessions = keys.map(k=>({
+        id: k,
+        blurb: (S[k]?.name || "Séance programme")
+      }));
+
+      if(!sessions.length){
+        return notify("Programme vide (semaine 1 introuvable).");
+      }
 
       setProgramScreen("Programme AI", "Semaine 1", sessions);
     }catch(e){
@@ -8757,7 +8716,7 @@ function openProfileEntrySafe(){
   };
 
   // =========================
-  // Card rendering (shared)
+  // Card rendering
   // =========================
   function makeCard(item, onClick){
     const card = document.createElement("button");
@@ -8768,7 +8727,7 @@ function openProfileEntrySafe(){
         <div class="wCardMedia" style="background-image:url('${esc(item.image || "")}')"></div>
         <div class="wCardOverlay"></div>
         <div class="wCardText">
-          <div class="wCardTitle">${item.title || "—"}</div>
+          <div class="wCardTitle">${esc(item.title || "—")}</div>
         </div>
         <div class="wCardCta">
           <span class="wBadge">${esc(item.title || "")}</span>
@@ -8781,48 +8740,78 @@ function openProfileEntrySafe(){
   }
 
   // =========================
-  // Render main workouts screen (AI + Trending)
+  // Render screen
   // =========================
   window.renderWorkoutsScreen = async function renderWorkoutsScreen(){
+    const hostT   = document.getElementById("workoutsTrending");
     const hostAIS = document.getElementById("workoutsAISessions");
     const hostAIP = document.getElementById("workoutsAIPrograms");
-    const hostT = document.getElementById("workoutsTrending");
-    if(!hostAIS || !hostAIP || !hostT) return;
+    if(!hostT || !hostAIS || !hostAIP) return;
 
-    // trending
+    // 1) Trending (static)
     hostT.innerHTML = "";
     (window.WORKOUT_CATALOG?.trending || []).forEach(t=>{
       hostT.appendChild(makeCard(t, ()=>window.openWorkoutProgram?.(t.id)));
     });
 
-    // AI
+    // 2) AI sessions (CUSTOM_) : une carte unique si au moins 1 séance
     hostAIS.innerHTML = "";
-    hostAIP.innerHTML = "";
+    try{
+      if(typeof window.reloadCustomSessionsIntoSESSIONS === "function"){
+        await window.reloadCustomSessionsIntoSESSIONS();
+      }
+      const S = window.SESSIONS || {};
+      const hasCustom = Object.keys(S).some(k=>String(k).startsWith("CUSTOM_"));
 
-    await window.reloadAICatalogForWorkouts();
-
-    const aiSessions = window.AI_CATALOG?.sessions || [];
-    const aiPrograms = window.AI_CATALOG?.programs || [];
-
-    // Séances AI: une carte unique si au moins 1 séance
-    if(aiSessions.length){
-      hostAIS.appendChild(makeCard(
-        { title:`Séances AI (${aiSessions.length})`, image:"images/workout_ai.jpg" },
-        ()=>window.openAISessionsPack?.()
-      ));
-    }else{
+      if(hasCustom){
+        hostAIS.appendChild(makeCard(
+          { title:"Séances AI", image:"images/workout_ai.jpg" },
+          ()=>window.openAISessionsPack?.()
+        ));
+      }else{
+        hostAIS.innerHTML = `<div class="muted small">Aucune séance IA enregistrée.</div>`;
+      }
+    }catch(e){
+      console.warn("render AI sessions error:", e);
       hostAIS.innerHTML = `<div class="muted small">Aucune séance IA enregistrée.</div>`;
     }
 
-    // Programmes AI: une carte par programme
-    if(aiPrograms.length){
-      aiPrograms.forEach(p=>{
-        hostAIP.appendChild(makeCard(
-          { title: p.title || "Programme AI", image:"images/workout_programme.jpg" },
-          ()=>window.openAIProgram?.(p.programId)
-        ));
+    // 3) AI programs (Firestore list)
+    hostAIP.innerHTML = "";
+    try{
+      if(!window.currentUser?.uid || !window.db){
+        hostAIP.innerHTML = `<div class="muted small">Connecte-toi pour voir tes programmes.</div>`;
+        return;
+      }
+
+      const uid = window.currentUser.uid;
+
+      const progSnap = await getDocs(
+        query(collection(db, "users", uid, "programs"), orderBy("createdAt","desc"))
+      );
+
+      const programs = [];
+      progSnap.forEach(d=>{
+        const data = d.data() || {};
+        programs.push({
+          programId: d.id,
+          title: String(data.goalText || "Programme AI").trim(),
+          image: "images/workout_programme.jpg"
+        });
       });
-    }else{
+
+      if(programs.length){
+        programs.forEach(p=>{
+          hostAIP.appendChild(makeCard(
+            { title: p.title, image: p.image },
+            ()=>window.openAIProgram?.(p.programId)
+          ));
+        });
+      }else{
+        hostAIP.innerHTML = `<div class="muted small">Aucun programme IA créé.</div>`;
+      }
+    }catch(e){
+      console.warn("render AI programs error:", e);
       hostAIP.innerHTML = `<div class="muted small">Aucun programme IA créé.</div>`;
     }
   };
