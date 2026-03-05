@@ -3001,15 +3001,15 @@ window.refreshTopbarUser = function refreshTopbarUser(){
 };
 
 const screens = window.screens = {
-  login:   $("screenLogin"),
-  home:    $("screenHome"),
-  sessions:$("screenWorkouts"),
+  login:          $("screenLogin"),
+  home:           $("screenHome"),
+  sessions:       $("screenWorkouts"),
+  ai:             $("screenAI"),
   workoutProgram: $("screenWorkoutProgram"),
-  history: $("screenHistory"),
-  workout: $("screenWorkout"),
-  profile: $("screenProfile")
+  history:        $("screenHistory"),
+  workout:        $("screenWorkout"),
+  profile:        $("screenProfile")
 };
-
     let currentUser = null;
     let currentUserId = null;    function ukey(suffix){
       const uid = currentUser?.uid || "anon";
