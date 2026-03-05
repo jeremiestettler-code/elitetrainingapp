@@ -2422,6 +2422,82 @@ html[data-profile-edit="1"] .profileEditOnly{ display:block; }
 
     </section>
 
+<!-- AI (NEW SCREEN) -->
+<section class="screen" id="screenAI">
+
+  <div class="workoutsTop">
+    <div class="workoutsBrandMark" aria-hidden="true"></div>
+    <div class="workoutsTitle"><br/>IA</div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <div class="grow">
+        <div class="h2">Créer avec l’IA</div>
+        <div class="muted small">Séance unique ou programme complet.</div>
+      </div>
+    </div>
+
+    <div style="height:12px"></div>
+
+    <!-- Switch -->
+    <div class="row" style="gap:10px; align-items:center;">
+      <div class="muted small" style="min-width:86px;">Séance</div>
+
+      <label class="switch" style="margin:0;">
+        <input id="aiModeToggle" type="checkbox">
+        <span class="slider"></span>
+      </label>
+
+      <div class="muted small">Programme</div>
+    </div>
+
+    <div style="height:14px"></div>
+
+    <!-- Objectif -->
+    <div class="muted small" style="margin-bottom:6px;">Objectif</div>
+    <input class="input" id="aiGoalText" type="text" placeholder="Ex: Full body force, hockey conditioning, running..." />
+
+    <div style="height:12px"></div>
+
+    <!-- Séance (unique) -->
+    <div id="aiSingleWrap">
+      <div class="muted small" style="margin-bottom:6px;">Durée (minutes)</div>
+      <input class="input" id="aiSingleMinutes" type="number" min="10" max="120" step="5" value="45" />
+    </div>
+
+    <!-- Programme -->
+    <div id="aiProgramWrap" style="display:none;">
+      <div class="row" style="gap:10px;">
+        <div class="grow">
+          <div class="muted small" style="margin-bottom:6px;">Semaines</div>
+          <input class="input" id="aiWeeks" type="number" min="1" max="16" step="1" value="4" />
+        </div>
+        <div class="grow">
+          <div class="muted small" style="margin-bottom:6px;">Séances / semaine</div>
+          <input class="input" id="aiPerWeek" type="number" min="1" max="7" step="1" value="3" />
+        </div>
+      </div>
+
+      <div style="height:12px"></div>
+
+      <div class="muted small" style="margin-bottom:6px;">Durée cible / séance (minutes)</div>
+      <input class="input" id="aiProgramMinutes" type="number" min="10" max="120" step="5" value="45" />
+    </div>
+
+    <div style="height:14px"></div>
+
+    <button class="btn primary wide" id="btnAIStart">Générer</button>
+
+    <div style="height:8px"></div>
+    <div class="muted small" id="aiHint">
+      L’IA choisit le nombre d’exercices selon l’objectif + la durée.
+    </div>
+  </div>
+
+</section>
+
+
 <!-- WORKOUTS / PROGRAMMES (NEW SCREEN) -->
 <section class="screen" id="screenWorkouts">
 
@@ -7809,35 +7885,51 @@ window.showToast = function(message, duration=2500){
 <nav id="bottomNav" class="bottomNav" aria-label="Navigation">
   <div class="bottomNavInner">
 
-<!-- Séances -->
-<button class="navBtn" id="navSessions" type="button" aria-label="Séances">
-  <svg class="navIco" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-     stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-  <path d="M7 10v4"/>
-  <path d="M9 9v6"/>
-  <path d="M15 9v6"/>
-  <path d="M17 10v4"/>
-  <path d="M9 12h6"/>
-  </svg>
-</button>
+    <!-- IA (nouveau) -->
+    <button class="navBtn" id="navAI" type="button" aria-label="IA">
+      <svg class="navIco" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 2v2"/>
+        <path d="M12 20v2"/>
+        <path d="M4.9 4.9l1.4 1.4"/>
+        <path d="M17.7 17.7l1.4 1.4"/>
+        <path d="M2 12h2"/>
+        <path d="M20 12h2"/>
+        <path d="M4.9 19.1l1.4-1.4"/>
+        <path d="M17.7 6.3l1.4-1.4"/>
+        <circle cx="12" cy="12" r="4.2"/>
+      </svg>
+    </button>
 
-<!-- Home -->
-<button class="navBtn" id="navHome" type="button" aria-label="Accueil">
-  <svg class="navIco" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-     stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-  <path d="M4 10.75l8-6 8 6"/>
-  <path d="M9 20V12.25h6V20"/>
-  </svg>
-</button>
+    <!-- Séances -->
+    <button class="navBtn" id="navSessions" type="button" aria-label="Séances">
+      <svg class="navIco" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M7 10v4"/>
+        <path d="M9 9v6"/>
+        <path d="M15 9v6"/>
+        <path d="M17 10v4"/>
+        <path d="M9 12h6"/>
+      </svg>
+    </button>
 
-<!-- Profil -->
-<button class="navBtn" id="navProfile" type="button" aria-label="Profil">
-  <svg class="navIco" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-     stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-  <circle cx="12" cy="9" r="3.5"/>
-  <path d="M5 20c1.8-3.2 4.6-4.8 7-4.8S17.2 16.8 19 20"/>
-  </svg>
-</button>
+    <!-- Home -->
+    <button class="navBtn" id="navHome" type="button" aria-label="Accueil">
+      <svg class="navIco" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 10.75l8-6 8 6"/>
+        <path d="M9 20V12.25h6V20"/>
+      </svg>
+    </button>
+
+    <!-- Profil -->
+    <button class="navBtn" id="navProfile" type="button" aria-label="Profil">
+      <svg class="navIco" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="9" r="3.5"/>
+        <path d="M5 20c1.8-3.2 4.6-4.8 7-4.8S17.2 16.8 19 20"/>
+      </svg>
+    </button>
 
   </div>
 </nav>
@@ -8381,11 +8473,13 @@ if(eqGrid){
 })();
 
 function setBottomNavActive(which){
+  const bAI = document.getElementById("navAI");
   const bSessions = document.getElementById("navSessions");
   const bHome = document.getElementById("navHome");
   const bProfile = document.getElementById("navProfile");
   if(!bSessions || !bHome || !bProfile) return;
 
+  if(bAI) bAI.classList.toggle("active", which === "ai");
   bSessions.classList.toggle("active", which === "sessions");
   bHome.classList.toggle("active", which === "home");
   bProfile.classList.toggle("active", which === "profile");
@@ -8689,6 +8783,113 @@ function openProfileEntrySafe(){
     }).join("");
   };
 
+// =========================
+// AI Screen (toggle + submit)
+// =========================
+window.renderAIScreen = function renderAIScreen(){
+  const t = document.getElementById("aiModeToggle");
+  const single = document.getElementById("aiSingleWrap");
+  const prog = document.getElementById("aiProgramWrap");
+  if(!t || !single || !prog) return;
+
+  const isProgram = !!t.checked;
+  single.style.display = isProgram ? "none" : "";
+  prog.style.display = isProgram ? "" : "none";
+};
+
+(function initAIScreenOnce(){
+  if(window.__aiScreenBound) return;
+  window.__aiScreenBound = true;
+
+  const t = document.getElementById("aiModeToggle");
+  const btn = document.getElementById("btnAIStart");
+
+  if(t){
+    t.addEventListener("change", ()=>{
+      window.renderAIScreen?.();
+    });
+  }
+
+  if(btn){
+    btn.addEventListener("click", async ()=>{
+      const goalText = String(document.getElementById("aiGoalText")?.value || "").trim();
+      const isProgram = !!document.getElementById("aiModeToggle")?.checked;
+
+      if(!goalText){
+        if(window.showToast) window.showToast("Indique un objectif.");
+        else alert("Indique un objectif.");
+        return;
+      }
+
+      // ✅ Source: nouveau profil (et_profile_v1_${uid}) via window.eliteProfile
+      const profile = window.eliteProfile || window.firestoreProfile || {};
+
+      // ✅ Contraintes/infos envoyées à l’IA (sans toucher au player)
+      const payloadBase = {
+        goalText,
+        profile: {
+          firstName: profile.firstName || profile.prenom || "",
+          dob: profile.dob || "",
+          sex: profile.sex || profile.gender || "",
+          level: profile.level || "",
+          goal: profile.goal || "",
+          equipment: profile.equipment || profile.materiel || profile.matos || []
+        }
+      };
+
+      try{
+        if(!isProgram){
+          const minutes = Number(document.getElementById("aiSingleMinutes")?.value || 45) || 45;
+
+          if(typeof window.generateSessionWithAI !== "function"){
+            window.showToast ? window.showToast("generateSessionWithAI() introuvable.") : alert("generateSessionWithAI() introuvable.");
+            return;
+          }
+
+          // ⚠️ L’IA décide du nb d’exercices (on ne passe rien ici)
+          await window.generateSessionWithAI({
+            ...payloadBase,
+            minutes
+          });
+
+          window.showToast ? window.showToast("Séance IA générée ✅") : alert("Séance IA générée ✅");
+          // Optionnel: retour sur Séances
+          if(typeof window.showScreen === "function") window.showScreen("sessions");
+          setBottomNavActive("sessions");
+          setTimeout(()=>{ try{ window.renderWorkoutsScreen?.(); }catch(e){} }, 0);
+          return;
+        }
+
+        // PROGRAMME
+        const weeks = Number(document.getElementById("aiWeeks")?.value || 4) || 4;
+        const perWeek = Number(document.getElementById("aiPerWeek")?.value || 3) || 3;
+        const minutes = Number(document.getElementById("aiProgramMinutes")?.value || 45) || 45;
+
+        if(typeof window.generateProgramWithAI !== "function"){
+          window.showToast ? window.showToast("generateProgramWithAI() introuvable.") : alert("generateProgramWithAI() introuvable.");
+          return;
+        }
+
+        await window.generateProgramWithAI({
+          ...payloadBase,
+          weeks,
+          sessionsPerWeek: perWeek,
+          minutesPerSession: minutes
+        });
+
+        window.showToast ? window.showToast("Programme IA généré ✅") : alert("Programme IA généré ✅");
+        if(typeof window.showScreen === "function") window.showScreen("sessions");
+        setBottomNavActive("sessions");
+        setTimeout(()=>{ try{ window.renderWorkoutsScreen?.(); }catch(e){} }, 0);
+
+      }catch(e){
+        console.warn("[AI] generate failed", e);
+        window.showToast ? window.showToast("Erreur IA. Réessaie.") : alert("Erreur IA. Réessaie.");
+      }
+    });
+  }
+})();
+
   // Bind back + play once
   (function bindProgramScreenOnce(){
     if(window.__wpBoundOnce) return;
@@ -8859,6 +9060,7 @@ function openProfileEntrySafe(){
 })();
 
 function initBottomNav(){
+  const bAI = document.getElementById("navAI");
   const bSessions = document.getElementById("navSessions");
   const bHome = document.getElementById("navHome");
   const bProfile = document.getElementById("navProfile");
@@ -8876,6 +9078,15 @@ function initBottomNav(){
       if(typeof showScreen === "function") showScreen("sessions");
       setBottomNavActive("sessions");
       setTimeout(()=>{ try{ window.renderWorkoutsScreen?.(); }catch(e){} }, 0);
+    });
+  }
+
+  if(bAI){
+    bAI.addEventListener("click", ()=>{
+      if(typeof showScreen === "function") showScreen("ai");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setBottomNavActive("ai");
+      setTimeout(()=>{ try{ window.renderAIScreen?.(); }catch(e){} }, 0);
     });
   }
 
