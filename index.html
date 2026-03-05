@@ -8935,11 +8935,11 @@ window.generateProgramWithAI = window.generateProgramWithAI || (async function g
           // génère (avec timeout)
           const aiSession = await withTimeout(
             window.generateSessionWithAI({ goalText, minutes, constraints }),
-            25000
+            30000
           );
 
           // save firestore (et reload CUSTOM_ est déjà fait dedans chez toi)
-          await withTimeout(saveAISessionToFirestore(aiSession), 25000);
+          await withTimeout(saveAISessionToFirestore(aiSession), 30000);
 
           toast("✅ Séance IA créée");
 
@@ -8957,7 +8957,7 @@ window.generateProgramWithAI = window.generateProgramWithAI || (async function g
 
         await withTimeout(
           window.generateProgramWithAI({ goalText, weeks, sessionsPerWeek: perWeek, minutesPerSession: minutes }),
-          25000
+          60000
         );
 
         toast("✅ Programme IA créé");
