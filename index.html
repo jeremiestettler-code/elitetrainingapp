@@ -8807,15 +8807,14 @@ window.generateProgramWithAI = window.generateProgramWithAI || (async function g
   if(!goalText) throw new Error("Objectif manquant.");
   if(!window.AI_PROGRAM_URL) throw new Error("AI_PROGRAM_URL manquant.");
 
-  // token firebase (même logique que generateSessionWithAI)
-  let token = null;
-  try{
-    const u = (typeof auth !== "undefined" && auth?.currentUser)
-      ? auth.currentUser
-      : (typeof getAuth === "function" ? getAuth().currentUser : null);
-    if(u) token = await u.getIdToken();
-  }catch(e){}
+  // ✅ Source de vérité auth dans TON app
+  const u =
+    ((typeof currentUser !== "undefined" && currentUser) ? currentUser : null) ||
+    (window.currentUser || null);
 
+  if(!u) throw new Error("Non connecté (user absent).");
+
+  const token = await u.getIdToken().catch(()=>null);
   if(!token) throw new Error("Non connecté (token absent).");
 
   const profile = (window.eliteProfile || window.firestoreProfile || {});
@@ -8845,6 +8844,22 @@ window.generateProgramWithAI = window.generateProgramWithAI || (async function g
       recentIds: (typeof getRecentExerciseIds === "function") ? getRecentExerciseIds(40) : []
     })
   });
+
+  const raw = await res.text();
+  let data = null;
+  try{ data = JSON.parse(raw); }catch(e){}
+
+  if(!res.ok || !data?.ok){
+    throw new Error(data?.error || ("HTTP " + res.status));
+  }
+
+  try{
+    if(typeof reloadProgramsIntoSESSIONS === "function") await reloadProgramsIntoSESSIONS();
+    else if(typeof window.reloadProgramsIntoSESSIONS === "function") await window.reloadProgramsIntoSESSIONS();
+  }catch(e){}
+
+  return data;
+});
 
   const raw = await res.text();
   let data = null;
