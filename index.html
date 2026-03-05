@@ -8853,22 +8853,6 @@ window.generateProgramWithAI = window.generateProgramWithAI || (async function g
     throw new Error(data?.error || ("HTTP " + res.status));
   }
 
-  try{
-    if(typeof reloadProgramsIntoSESSIONS === "function") await reloadProgramsIntoSESSIONS();
-    else if(typeof window.reloadProgramsIntoSESSIONS === "function") await window.reloadProgramsIntoSESSIONS();
-  }catch(e){}
-
-  return data;
-});
-
-  const raw = await res.text();
-  let data = null;
-  try{ data = JSON.parse(raw); }catch(e){}
-
-  if(!res.ok || !data?.ok){
-    throw new Error(data?.error || ("HTTP " + res.status));
-  }
-
   // recharge programmes si helper existe
   try{
     if(typeof reloadProgramsIntoSESSIONS === "function") await reloadProgramsIntoSESSIONS();
