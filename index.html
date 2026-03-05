@@ -8784,7 +8784,7 @@ function openProfileEntrySafe(){
   };
 
 // =========================
-// AI Screen (toggle + submit) — V2 (save + program wrapper)
+// AI Screen (toggle + submit) — V3 (rebind + timeout + uses existing funcs)
 // =========================
 window.renderAIScreen = function renderAIScreen(){
   const t = document.getElementById("aiModeToggle");
@@ -8797,22 +8797,27 @@ window.renderAIScreen = function renderAIScreen(){
   prog.style.display = isProgram ? "" : "none";
 };
 
-// ✅ Wrapper programme (exposé), car ton app n’avait pas window.generateProgramWithAI
-// Utilise la Cloud Function window.AI_PROGRAM_URL (déjà définie dans ton fichier).
-window.generateProgramWithAI = async function generateProgramWithAI(opts){
+// ✅ Wrapper programme exposé (si pas déjà présent)
+window.generateProgramWithAI = window.generateProgramWithAI || (async function generateProgramWithAI(opts){
   const goalText = String(opts?.goalText || "").trim();
   const weeks = Number(opts?.weeks || 4) || 4;
   const sessionsPerWeek = Number(opts?.sessionsPerWeek || 3) || 3;
   const minutesPerSession = Number(opts?.minutesPerSession || 45) || 45;
 
   if(!goalText) throw new Error("Objectif manquant.");
+  if(!window.AI_PROGRAM_URL) throw new Error("AI_PROGRAM_URL manquant.");
 
-  // Token auth si connecté
-  const token = (typeof currentUser !== "undefined" && currentUser)
-    ? await currentUser.getIdToken()
-    : null;
+  // token firebase (même logique que generateSessionWithAI)
+  let token = null;
+  try{
+    const u = (typeof auth !== "undefined" && auth?.currentUser)
+      ? auth.currentUser
+      : (typeof getAuth === "function" ? getAuth().currentUser : null);
+    if(u) token = await u.getIdToken();
+  }catch(e){}
 
-  // Constraints basées sur ton profil (matériel, niveau, etc.)
+  if(!token) throw new Error("Non connecté (token absent).");
+
   const profile = (window.eliteProfile || window.firestoreProfile || {});
   const constraints = {
     equipment: Array.isArray(profile.equipment) ? profile.equipment : [],
@@ -8822,20 +8827,13 @@ window.generateProgramWithAI = async function generateProgramWithAI(opts){
     dob: profile.dob || ""
   };
 
-  // Library compact (ton projet a déjà buildLibraryCompact())
-  const libraryCompact = (typeof buildLibraryCompact === "function")
-    ? buildLibraryCompact()
-    : [];
-
-  if(!window.AI_PROGRAM_URL){
-    throw new Error("AI_PROGRAM_URL manquant.");
-  }
+  const libraryCompact = (typeof buildLibraryCompact === "function") ? buildLibraryCompact() : [];
 
   const res = await fetch(window.AI_PROGRAM_URL, {
     method: "POST",
     headers: {
       "Content-Type":"application/json",
-      ...(token ? { "Authorization": "Bearer " + token } : {})
+      "Authorization":"Bearer " + token
     },
     body: JSON.stringify({
       goalText,
@@ -8844,31 +8842,38 @@ window.generateProgramWithAI = async function generateProgramWithAI(opts){
       minutesPerSession,
       constraints,
       libraryCompact,
-      recentIds: []
+      recentIds: (typeof getRecentExerciseIds === "function") ? getRecentExerciseIds(40) : []
     })
   });
 
-  const data = await res.json().catch(()=>null);
+  const raw = await res.text();
+  let data = null;
+  try{ data = JSON.parse(raw); }catch(e){}
+
   if(!res.ok || !data?.ok){
-    throw new Error(data?.error || "Erreur génération programme");
+    throw new Error(data?.error || ("HTTP " + res.status));
   }
 
-  // IMPORTANT : recharge les programmes dans window.SESSIONS
-  if(typeof reloadProgramsIntoSESSIONS === "function"){
-    await reloadProgramsIntoSESSIONS();
-  }else if(typeof window.reloadProgramsIntoSESSIONS === "function"){
-    await window.reloadProgramsIntoSESSIONS();
-  }
+  // recharge programmes si helper existe
+  try{
+    if(typeof reloadProgramsIntoSESSIONS === "function") await reloadProgramsIntoSESSIONS();
+    else if(typeof window.reloadProgramsIntoSESSIONS === "function") await window.reloadProgramsIntoSESSIONS();
+  }catch(e){}
 
   return data;
-};
+});
 
-(function initAIScreenOnce(){
-  if(window.__aiScreenBound) return;
-  window.__aiScreenBound = true;
+(function initAIScreenOnceV3(){
+  if(window.__aiScreenBoundV3) return;
+  window.__aiScreenBoundV3 = true;
 
   const t = document.getElementById("aiModeToggle");
   const btn = document.getElementById("btnAIStart");
+
+  function toast(msg){
+    if(typeof window.showToast === "function") window.showToast(msg);
+    else alert(msg);
+  }
 
   function setBusy(on){
     if(!btn) return;
@@ -8877,10 +8882,20 @@ window.generateProgramWithAI = async function generateProgramWithAI(opts){
     btn.textContent = on ? "Génération..." : "Générer";
   }
 
-  if(t){
-    t.addEventListener("change", ()=>{
-      window.renderAIScreen?.();
+  async function withTimeout(promise, ms=25000){
+    let to;
+    const timeout = new Promise((_, rej)=>{
+      to = setTimeout(()=>rej(new Error("Timeout IA ("+ms+"ms)")), ms);
     });
+    try{
+      return await Promise.race([promise, timeout]);
+    }finally{
+      clearTimeout(to);
+    }
+  }
+
+  if(t){
+    t.addEventListener("change", ()=>window.renderAIScreen?.());
   }
 
   if(btn){
@@ -8889,100 +8904,80 @@ window.generateProgramWithAI = async function generateProgramWithAI(opts){
       const isProgram = !!document.getElementById("aiModeToggle")?.checked;
 
       if(!goalText){
-        window.showToast ? window.showToast("Indique un objectif.") : alert("Indique un objectif.");
+        toast("Indique un objectif.");
         return;
       }
 
-      // ✅ Profil (nouveau)
       const profile = window.eliteProfile || window.firestoreProfile || {};
-      const payloadBase = {
-        goalText,
-        // On laisse l’IA décider du nombre d’exercices.
-        constraints: {
-          equipment: Array.isArray(profile.equipment) ? profile.equipment : [],
-          level: profile.level || "",
-          goal: profile.goal || "",
-          sex: profile.sex || "",
-          dob: profile.dob || ""
-        }
+      const constraints = {
+        equipment: Array.isArray(profile.equipment) ? profile.equipment : [],
+        level: profile.level || "",
+        goal: profile.goal || "",
+        sex: profile.sex || "",
+        dob: profile.dob || ""
       };
 
       try{
         setBusy(true);
 
-        // =====================
-        // 1) SÉANCE UNIQUE
-        // =====================
+        // ========= SÉANCE UNIQUE =========
         if(!isProgram){
           const minutes = Number(document.getElementById("aiSingleMinutes")?.value || 45) || 45;
 
           if(typeof window.generateSessionWithAI !== "function"){
-            window.showToast ? window.showToast("generateSessionWithAI() introuvable.") : alert("generateSessionWithAI() introuvable.");
+            toast("generateSessionWithAI() introuvable.");
             return;
           }
-
-          // 1) Génère (retourne un objet séance)
-          const aiSession = await window.generateSessionWithAI({
-            goalText: payloadBase.goalText,
-            minutes,
-            constraints: payloadBase.constraints
-          });
-
-          // 2) Sauvegarde Firestore (ta fonction existe en local dans le fichier)
           if(typeof saveAISessionToFirestore !== "function"){
-            window.showToast ? window.showToast("saveAISessionToFirestore() introuvable.") : alert("saveAISessionToFirestore() introuvable.");
+            toast("saveAISessionToFirestore() introuvable.");
             return;
           }
 
-          await saveAISessionToFirestore(aiSession);
+          // génère (avec timeout)
+          const aiSession = await withTimeout(
+            window.generateSessionWithAI({ goalText, minutes, constraints }),
+            25000
+          );
 
-          // 3) Recharge CUSTOM_ dans window.SESSIONS + refresh Workouts
-          if(typeof window.reloadCustomSessionsIntoSESSIONS === "function"){
-            await window.reloadCustomSessionsIntoSESSIONS();
-          }
+          // save firestore (et reload CUSTOM_ est déjà fait dedans chez toi)
+          await withTimeout(saveAISessionToFirestore(aiSession), 25000);
 
-          window.showToast ? window.showToast("✅ Séance IA créée") : alert("✅ Séance IA créée");
+          toast("✅ Séance IA créée");
 
-          // Retour Workouts
+          // refresh workouts
           if(typeof window.showScreen === "function") window.showScreen("sessions");
           if(typeof setBottomNavActive === "function") setBottomNavActive("sessions");
           setTimeout(()=>{ try{ window.renderWorkoutsScreen?.(); }catch(e){} }, 0);
           return;
         }
 
-        // =====================
-        // 2) PROGRAMME
-        // =====================
+        // ========= PROGRAMME =========
         const weeks = Number(document.getElementById("aiWeeks")?.value || 4) || 4;
         const perWeek = Number(document.getElementById("aiPerWeek")?.value || 3) || 3;
         const minutes = Number(document.getElementById("aiProgramMinutes")?.value || 45) || 45;
 
-        if(typeof window.generateProgramWithAI !== "function"){
-          window.showToast ? window.showToast("generateProgramWithAI() introuvable.") : alert("generateProgramWithAI() introuvable.");
-          return;
-        }
+        await withTimeout(
+          window.generateProgramWithAI({ goalText, weeks, sessionsPerWeek: perWeek, minutesPerSession: minutes }),
+          25000
+        );
 
-        await window.generateProgramWithAI({
-          goalText: payloadBase.goalText,
-          weeks,
-          sessionsPerWeek: perWeek,
-          minutesPerSession: minutes
-        });
-
-        window.showToast ? window.showToast("✅ Programme IA créé") : alert("✅ Programme IA créé");
+        toast("✅ Programme IA créé");
 
         if(typeof window.showScreen === "function") window.showScreen("sessions");
         if(typeof setBottomNavActive === "function") setBottomNavActive("sessions");
         setTimeout(()=>{ try{ window.renderWorkoutsScreen?.(); }catch(e){} }, 0);
 
       }catch(e){
-        console.warn("[AI] generate failed", e);
-        window.showToast ? window.showToast("Erreur IA : " + (e?.message || e)) : alert("Erreur IA : " + (e?.message || e));
+        console.warn("[AI] error", e);
+        toast("Erreur IA : " + (e?.message || e));
       }finally{
         setBusy(false);
       }
     });
   }
+
+  // first render
+  setTimeout(()=>{ try{ window.renderAIScreen?.(); }catch(e){} }, 0);
 })();
 
   // Bind back + play once
