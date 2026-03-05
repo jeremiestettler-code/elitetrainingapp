@@ -8926,10 +8926,7 @@ window.renderAIScreen = function renderAIScreen(){
           toast("generateSessionWithAI() introuvable.");
           return;
         }
-        if(typeof validateAISessionAgainstLibrary !== "function"){
-          toast("validateAISessionAgainstLibrary() introuvable.");
-          return;
-        }
+
         if(typeof saveAISessionToFirestore !== "function"){
           toast("saveAISessionToFirestore() introuvable.");
           return;
@@ -8942,13 +8939,6 @@ window.renderAIScreen = function renderAIScreen(){
           30000
         );
 
-        const lib = window.EXERCISE_LIBRARY;
-        const check = validateAISessionAgainstLibrary(session, lib);
-        if(!check.ok){
-          console.warn("[AI] validation errors:", check.errors);
-          toast("Séance IA invalide (exercices inconnus).");
-          return;
-        }
 
         await withTimeout(saveAISessionToFirestore(session), 30000);
 
