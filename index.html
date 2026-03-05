@@ -8784,7 +8784,7 @@ function openProfileEntrySafe(){
   };
 
 // =========================
-// AI Screen (toggle + submit) — V3 (rebind + timeout + uses existing funcs)
+// AI Screen (toggle + submit) — V4 (aligné Home IA V2)
 // =========================
 window.renderAIScreen = function renderAIScreen(){
   const t = document.getElementById("aiModeToggle");
@@ -8797,74 +8797,9 @@ window.renderAIScreen = function renderAIScreen(){
   prog.style.display = isProgram ? "" : "none";
 };
 
-// ✅ Wrapper programme exposé (si pas déjà présent)
-window.generateProgramWithAI = window.generateProgramWithAI || (async function generateProgramWithAI(opts){
-  const goalText = String(opts?.goalText || "").trim();
-  const weeks = Number(opts?.weeks || 4) || 4;
-  const sessionsPerWeek = Number(opts?.sessionsPerWeek || 3) || 3;
-  const minutesPerSession = Number(opts?.minutesPerSession || 45) || 45;
-
-  if(!goalText) throw new Error("Objectif manquant.");
-  if(!window.AI_PROGRAM_URL) throw new Error("AI_PROGRAM_URL manquant.");
-
-  // ✅ Source de vérité auth dans TON app
-  const u =
-    ((typeof currentUser !== "undefined" && currentUser) ? currentUser : null) ||
-    (window.currentUser || null);
-
-  if(!u) throw new Error("Non connecté (user absent).");
-
-  const token = await u.getIdToken().catch(()=>null);
-  if(!token) throw new Error("Non connecté (token absent).");
-
-  const profile = (window.eliteProfile || window.firestoreProfile || {});
-  const constraints = {
-    equipment: Array.isArray(profile.equipment) ? profile.equipment : [],
-    level: profile.level || "",
-    goal: profile.goal || "",
-    sex: profile.sex || "",
-    dob: profile.dob || ""
-  };
-
-  const libraryCompact = (typeof buildLibraryCompact === "function") ? buildLibraryCompact() : [];
-
-  const res = await fetch(window.AI_PROGRAM_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type":"application/json",
-      "Authorization":"Bearer " + token
-    },
-    body: JSON.stringify({
-      goalText,
-      weeks,
-      sessionsPerWeek,
-      minutesPerSession,
-      constraints,
-      libraryCompact,
-      recentIds: (typeof getRecentExerciseIds === "function") ? getRecentExerciseIds(40) : []
-    })
-  });
-
-  const raw = await res.text();
-  let data = null;
-  try{ data = JSON.parse(raw); }catch(e){}
-
-  if(!res.ok || !data?.ok){
-    throw new Error(data?.error || ("HTTP " + res.status));
-  }
-
-  // recharge programmes si helper existe
-  try{
-    if(typeof reloadProgramsIntoSESSIONS === "function") await reloadProgramsIntoSESSIONS();
-    else if(typeof window.reloadProgramsIntoSESSIONS === "function") await window.reloadProgramsIntoSESSIONS();
-  }catch(e){}
-
-  return data;
-});
-
-(function initAIScreenOnceV3(){
-  if(window.__aiScreenBoundV3) return;
-  window.__aiScreenBoundV3 = true;
+(function initAIScreenOnceV4(){
+  if(window.__aiScreenBoundV4) return;
+  window.__aiScreenBoundV4 = true;
 
   const t = document.getElementById("aiModeToggle");
   const btn = document.getElementById("btnAIStart");
@@ -8873,7 +8808,6 @@ window.generateProgramWithAI = window.generateProgramWithAI || (async function g
     if(typeof window.showToast === "function") window.showToast(msg);
     else alert(msg);
   }
-
   function setBusy(on){
     if(!btn) return;
     btn.disabled = !!on;
@@ -8881,99 +8815,184 @@ window.generateProgramWithAI = window.generateProgramWithAI || (async function g
     btn.textContent = on ? "Génération..." : "Générer";
   }
 
-  async function withTimeout(promise, ms=25000){
+  async function withTimeout(promise, ms){
     let to;
     const timeout = new Promise((_, rej)=>{
       to = setTimeout(()=>rej(new Error("Timeout IA ("+ms+"ms)")), ms);
     });
+    try{ return await Promise.race([promise, timeout]); }
+    finally{ clearTimeout(to); }
+  }
+
+  function buildConstraintsFromProfile(){
+    const profile = window.eliteProfile || window.firestoreProfile || {};
+    return {
+      equipment: Array.isArray(profile.equipment) ? profile.equipment : [],
+      level: profile.level || "",
+      goal: profile.goal || "",
+      sex: profile.sex || "",
+      dob: profile.dob || ""
+    };
+  }
+
+  // --------- Programme: même logique que HOME (btnAIProgram) ----------
+  async function createProgramViaBackend({ goalText, weeks, sessionsPerWeek, minutesPerSession, constraints }){
+    if(!window.AI_PROGRAM_URL) throw new Error("AI_PROGRAM_URL manquant.");
+    const u =
+      ((typeof currentUser !== "undefined" && currentUser) ? currentUser : null) ||
+      (window.currentUser || null);
+    if(!u) throw new Error("Non connecté.");
+
+    const token = await u.getIdToken();
+    const libraryCompact = (typeof buildLibraryCompact === "function") ? buildLibraryCompact() : [];
+
+    // AbortController pour éviter pending infini
+    const ac = new AbortController();
+    const kill = setTimeout(()=>ac.abort(), 55000);
+
+    let res, raw, data;
     try{
-      return await Promise.race([promise, timeout]);
+      res = await fetch(window.AI_PROGRAM_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type":"application/json",
+          "Authorization":"Bearer " + token
+        },
+        body: JSON.stringify({
+          goalText,
+          weeks: Number(weeks || 4) || 4,
+
+          // ✅ On les envoie (nouvelle fonctionnalité), mais si le backend ne les gère pas encore, il peut les ignorer
+          sessionsPerWeek: Number(sessionsPerWeek || 3) || 3,
+          minutesPerSession: Number(minutesPerSession || 45) || 45,
+
+          // Comme HOME
+          constraints: constraints || {},
+          libraryCompact,
+          recentIds: []
+        }),
+        signal: ac.signal
+      });
+    }catch(e){
+      if(e?.name === "AbortError") throw new Error("IA trop lente (55s). Réessaie.");
+      throw e;
     }finally{
-      clearTimeout(to);
+      clearTimeout(kill);
     }
+
+    raw = await res.text();
+    data = null;
+    try{ data = JSON.parse(raw); }catch(e){}
+
+    if(!res.ok || !data?.ok){
+      throw new Error(data?.error || raw || ("HTTP " + res.status));
+    }
+
+    // 🔥 IMPORTANT : même mécanique que HOME
+    if(typeof reloadProgramsIntoSESSIONS === "function"){
+      await reloadProgramsIntoSESSIONS();
+    }else if(typeof window.reloadProgramsIntoSESSIONS === "function"){
+      await window.reloadProgramsIntoSESSIONS();
+    }
+
+    return data;
   }
 
-  if(t){
-    t.addEventListener("change", ()=>window.renderAIScreen?.());
-  }
+  // Bind toggle
+  t?.addEventListener("change", ()=>window.renderAIScreen?.());
 
-  if(btn){
-    btn.addEventListener("click", async ()=>{
-      const goalText = String(document.getElementById("aiGoalText")?.value || "").trim();
-      const isProgram = !!document.getElementById("aiModeToggle")?.checked;
+  // Bind generate
+  btn?.addEventListener("click", async ()=>{
+    const goalText = String(document.getElementById("aiGoalText")?.value || "").trim();
+    const isProgram = !!document.getElementById("aiModeToggle")?.checked;
 
-      if(!goalText){
-        toast("Indique un objectif.");
-        return;
-      }
+    if(!goalText){
+      toast("Indique un objectif.");
+      return;
+    }
 
-      const profile = window.eliteProfile || window.firestoreProfile || {};
-      const constraints = {
-        equipment: Array.isArray(profile.equipment) ? profile.equipment : [],
-        level: profile.level || "",
-        goal: profile.goal || "",
-        sex: profile.sex || "",
-        dob: profile.dob || ""
-      };
+    const constraints = buildConstraintsFromProfile();
 
-      try{
-        setBusy(true);
+    try{
+      setBusy(true);
 
-        // ========= SÉANCE UNIQUE =========
-        if(!isProgram){
-          const minutes = Number(document.getElementById("aiSingleMinutes")?.value || 45) || 45;
+      // =====================
+      // SÉANCE UNIQUE (calée Home)
+      // =====================
+      if(!isProgram){
+        const minutes = Number(document.getElementById("aiSingleMinutes")?.value || 45) || 45;
 
-          if(typeof window.generateSessionWithAI !== "function"){
-            toast("generateSessionWithAI() introuvable.");
-            return;
-          }
-          if(typeof saveAISessionToFirestore !== "function"){
-            toast("saveAISessionToFirestore() introuvable.");
-            return;
-          }
-
-          // génère (avec timeout)
-          const aiSession = await withTimeout(
-            window.generateSessionWithAI({ goalText, minutes, constraints }),
-            30000
-          );
-
-          // save firestore (et reload CUSTOM_ est déjà fait dedans chez toi)
-          await withTimeout(saveAISessionToFirestore(aiSession), 30000);
-
-          toast("✅ Séance IA créée");
-
-          // refresh workouts
-          if(typeof window.showScreen === "function") window.showScreen("sessions");
-          if(typeof setBottomNavActive === "function") setBottomNavActive("sessions");
-          setTimeout(()=>{ try{ window.renderWorkoutsScreen?.(); }catch(e){} }, 0);
+        if(typeof window.generateSessionWithAI !== "function"){
+          toast("generateSessionWithAI() introuvable.");
+          return;
+        }
+        if(typeof validateAISessionAgainstLibrary !== "function"){
+          toast("validateAISessionAgainstLibrary() introuvable.");
+          return;
+        }
+        if(typeof saveAISessionToFirestore !== "function"){
+          toast("saveAISessionToFirestore() introuvable.");
           return;
         }
 
-        // ========= PROGRAMME =========
-        const weeks = Number(document.getElementById("aiWeeks")?.value || 4) || 4;
-        const perWeek = Number(document.getElementById("aiPerWeek")?.value || 3) || 3;
-        const minutes = Number(document.getElementById("aiProgramMinutes")?.value || 45) || 45;
+        console.log("[AI] generate session…", { goalText, minutes, constraints });
 
-        await withTimeout(
-          window.generateProgramWithAI({ goalText, weeks, sessionsPerWeek: perWeek, minutesPerSession: minutes }),
-          60000
+        const session = await withTimeout(
+          window.generateSessionWithAI({ goalText, minutes, constraints }),
+          30000
         );
 
-        toast("✅ Programme IA créé");
+        const lib = window.EXERCISE_LIBRARY;
+        const check = validateAISessionAgainstLibrary(session, lib);
+        if(!check.ok){
+          console.warn("[AI] validation errors:", check.errors);
+          toast("Séance IA invalide (exercices inconnus).");
+          return;
+        }
+
+        await withTimeout(saveAISessionToFirestore(session), 30000);
+
+        toast("✅ Séance IA créée");
 
         if(typeof window.showScreen === "function") window.showScreen("sessions");
         if(typeof setBottomNavActive === "function") setBottomNavActive("sessions");
         setTimeout(()=>{ try{ window.renderWorkoutsScreen?.(); }catch(e){} }, 0);
-
-      }catch(e){
-        console.warn("[AI] error", e);
-        toast("Erreur IA : " + (e?.message || e));
-      }finally{
-        setBusy(false);
+        return;
       }
-    });
-  }
+
+      // =====================
+      // PROGRAMME (calé Home + reloadProgramsIntoSESSIONS)
+      // =====================
+      const weeks = Number(document.getElementById("aiWeeks")?.value || 4) || 4;
+      const perWeek = Number(document.getElementById("aiPerWeek")?.value || 3) || 3;
+      const minutes = Number(document.getElementById("aiProgramMinutes")?.value || 45) || 45;
+
+      console.log("[AI] generate program…", { goalText, weeks, perWeek, minutes, constraints });
+
+      await withTimeout(
+        createProgramViaBackend({
+          goalText,
+          weeks,
+          sessionsPerWeek: perWeek,
+          minutesPerSession: minutes,
+          constraints
+        }),
+        60000
+      );
+
+      toast("✅ Programme IA créé");
+
+      if(typeof window.showScreen === "function") window.showScreen("sessions");
+      if(typeof setBottomNavActive === "function") setBottomNavActive("sessions");
+      setTimeout(()=>{ try{ window.renderWorkoutsScreen?.(); }catch(e){} }, 0);
+
+    }catch(e){
+      console.warn("[AI] error", e);
+      toast("Erreur IA : " + (e?.message || e));
+    }finally{
+      setBusy(false);
+    }
+  });
 
   // first render
   setTimeout(()=>{ try{ window.renderAIScreen?.(); }catch(e){} }, 0);
