@@ -9043,17 +9043,18 @@ window.renderAIScreen = function renderAIScreen(){
   }
 
   // --------- Programme: même logique que HOME (btnAIProgram) ----------
-  async function createProgramViaBackend({ goalText, weeks, sessionsPerWeek, minutesPerSession, constraints }){
+    async function createProgramViaBackend({ goalText, weeks, sessionsPerWeek, minutesPerSession, constraints }){
     if(!window.AI_PROGRAM_URL) throw new Error("AI_PROGRAM_URL manquant.");
+
     const u =
       ((typeof currentUser !== "undefined" && currentUser) ? currentUser : null) ||
       (window.currentUser || null);
+
     if(!u) throw new Error("Non connecté.");
 
     const token = await u.getIdToken();
     const libraryCompact = (typeof buildLibraryCompact === "function") ? buildLibraryCompact() : [];
 
-    // AbortController pour éviter pending infini
     const ac = new AbortController();
     const kill = setTimeout(()=>ac.abort(), 55000);
 
@@ -9068,12 +9069,8 @@ window.renderAIScreen = function renderAIScreen(){
         body: JSON.stringify({
           goalText,
           weeks: Number(weeks || 4) || 4,
-
-          // ✅ On les envoie (nouvelle fonctionnalité), mais si le backend ne les gère pas encore, il peut les ignorer
           sessionsPerWeek: Number(sessionsPerWeek || 3) || 3,
           minutesPerSession: Number(minutesPerSession || 45) || 45,
-
-          // Comme HOME
           constraints: constraints || {},
           libraryCompact,
           recentIds: []
@@ -9091,18 +9088,38 @@ window.renderAIScreen = function renderAIScreen(){
     data = null;
     try{ data = JSON.parse(raw); }catch(e){}
 
-    if(!res.ok || !data?.ok){
-      throw new Error(data?.error || raw || ("HTTP " + res.status));
+    const backendError = String(data?.error || raw || ("HTTP " + res.status)).trim();
+    const tolerateUnknownIds =
+      /unknown exercise ids/i.test(backendError);
+
+    // ✅ cas normal
+    if(res.ok && data?.ok){
+      if(typeof reloadProgramsIntoSESSIONS === "function"){
+        await reloadProgramsIntoSESSIONS();
+      }else if(typeof window.reloadProgramsIntoSESSIONS === "function"){
+        await window.reloadProgramsIntoSESSIONS();
+      }
+      return { ...(data || {}), softWarning: null };
     }
 
-    // 🔥 IMPORTANT : même mécanique que HOME
-    if(typeof reloadProgramsIntoSESSIONS === "function"){
-      await reloadProgramsIntoSESSIONS();
-    }else if(typeof window.reloadProgramsIntoSESSIONS === "function"){
-      await window.reloadProgramsIntoSESSIONS();
+    // ✅ cas toléré : le backend a pu écrire le programme même s’il remonte une erreur d’IDs inconnus
+    if(tolerateUnknownIds){
+      console.warn("[AI PROGRAM] backend warning tolerated:", backendError);
+
+      if(typeof reloadProgramsIntoSESSIONS === "function"){
+        await reloadProgramsIntoSESSIONS();
+      }else if(typeof window.reloadProgramsIntoSESSIONS === "function"){
+        await window.reloadProgramsIntoSESSIONS();
+      }
+
+      return {
+        ok: true,
+        softWarning: backendError,
+        recoveredFromBackendWarning: true
+      };
     }
 
-    return data;
+    throw new Error(backendError);
   }
 
   // Bind toggle
@@ -9166,7 +9183,7 @@ window.renderAIScreen = function renderAIScreen(){
 
       console.log("[AI] generate program…", { goalText, weeks, perWeek, minutes, constraints });
 
-      await withTimeout(
+      const programResult = await withTimeout(
         createProgramViaBackend({
           goalText,
           weeks,
@@ -9177,7 +9194,11 @@ window.renderAIScreen = function renderAIScreen(){
         60000
       );
 
-      toast("✅ Programme IA créé");
+      if(programResult?.softWarning){
+        toast("✅ Programme créé (avec ajustements IA)");
+      }else{
+        toast("✅ Programme IA créé");
+      }
 
       if(typeof window.showScreen === "function") window.showScreen("sessions");
       if(typeof setBottomNavActive === "function") setBottomNavActive("sessions");
@@ -9405,7 +9426,7 @@ window.renderAIScreen = function renderAIScreen(){
             data.name ||
             `Programme AI ${index + 1}`
           ).trim(),
-          subtitle: `${Number(data.weeks || 0) || "?"} sem • ${Number(data.sessionsPerWeek || data.daysPerWeek || 0) || "?"}/sem`,
+          subtitle: `${Number(data.weeks || 0) || "?"} sem • ${Number(data.sessionsPerWeek || data.daysPerWeek || data.plan?.daysPerWeek || 0) || "?"}/sem`,
           image: getProgramImageByIndex(index + 1),
           createdAtValue: getCreatedAtValue(data)
         }));
