@@ -7102,7 +7102,6 @@ async function reloadProgramsIntoSESSIONS(forceProgramId){
   }
 
   const programs = {};
-
   let loadedFromSubcollections = false;
 
   try{
@@ -9043,7 +9042,7 @@ window.renderAIScreen = function renderAIScreen(){
   }
 
   // --------- Programme: même logique que HOME (btnAIProgram) ----------
-    async function createProgramViaBackend({ goalText, weeks, sessionsPerWeek, minutesPerSession, constraints }){
+      async function createProgramViaBackend({ goalText, weeks, sessionsPerWeek, minutesPerSession, constraints }){
     if(!window.AI_PROGRAM_URL) throw new Error("AI_PROGRAM_URL manquant.");
 
     const u =
@@ -9089,29 +9088,14 @@ window.renderAIScreen = function renderAIScreen(){
     try{ data = JSON.parse(raw); }catch(e){}
 
     const backendError = String(data?.error || raw || ("HTTP " + res.status)).trim();
-    const tolerateUnknownIds =
-      /unknown exercise ids/i.test(backendError);
+    const tolerateUnknownIds = /unknown exercise ids/i.test(backendError);
 
-    // ✅ cas normal
     if(res.ok && data?.ok){
-      if(typeof reloadProgramsIntoSESSIONS === "function"){
-        await reloadProgramsIntoSESSIONS();
-      }else if(typeof window.reloadProgramsIntoSESSIONS === "function"){
-        await window.reloadProgramsIntoSESSIONS();
-      }
       return { ...(data || {}), softWarning: null };
     }
 
-    // ✅ cas toléré : le backend a pu écrire le programme même s’il remonte une erreur d’IDs inconnus
     if(tolerateUnknownIds){
       console.warn("[AI PROGRAM] backend warning tolerated:", backendError);
-
-      if(typeof reloadProgramsIntoSESSIONS === "function"){
-        await reloadProgramsIntoSESSIONS();
-      }else if(typeof window.reloadProgramsIntoSESSIONS === "function"){
-        await window.reloadProgramsIntoSESSIONS();
-      }
-
       return {
         ok: true,
         softWarning: backendError,
