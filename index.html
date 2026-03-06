@@ -3964,12 +3964,13 @@ function validateAISessionAgainstLibrary(session, lib){
   if(!session.name) errors.push("Session.name manquant.");
   if(!Number.isFinite(Number(session.estimatedMinutes))) errors.push("Session.estimatedMinutes invalide.");
 
+  const byId = lib?.byId || {};
   const checkArr = (arr, label)=>{
     if(!Array.isArray(arr)) { errors.push(`${label} doit être un tableau.`); return; }
     arr.forEach((e, i)=>{
       if(!e || typeof e !== "object") { errors.push(`${label}[${i}] invalide.`); return; }
       if(!e.id) errors.push(`${label}[${i}].id manquant.`);
-      if(e.id && !lib.byId[e.id]) errors.push(`${label}[${i}].id inconnu: ${e.id}`);
+      if(e.id && !byId[e.id]) errors.push(`${label}[${i}].id inconnu: ${e.id}`);
     });
   };
 
@@ -3979,6 +3980,9 @@ function validateAISessionAgainstLibrary(session, lib){
 
   return { ok: errors.length === 0, errors };
 }
+
+// ✅ IMPORTANT: expose global (sinon "introuvable")
+window.validateAISessionAgainstLibrary = validateAISessionAgainstLibrary;
 
 /* -------- MOCK GENERATOR (local) --------
    Heuristique simple basée sur tags/equipment/kneeImpact
@@ -6819,7 +6823,14 @@ await setDoc(ref, payloadClean, { merge: true });
 // IA V2 — Save direct to Firestore (sans ouvrir l'éditeur)
 // =========================
 async function saveAISessionToFirestore(aiSession){
-  if(!currentUser?.uid) throw new Error("Utilisateur non connecté.");
+  const u =
+    ((typeof currentUser !== "undefined" && currentUser) ? currentUser : null) ||
+    (window.currentUser || null);
+
+  const _db = (typeof db !== "undefined") ? db : window.db;
+
+  if(!u?.uid) throw new Error("Utilisateur non connecté.");
+  if(!_db) throw new Error("Firestore db introuvable.");
   if(!aiSession) throw new Error("Aucune séance IA à enregistrer.");
 
   const sessionId = csMakeId("cs"); // nouveau doc
@@ -6839,16 +6850,29 @@ async function saveAISessionToFirestore(aiSession){
     source: "ai"
   };
 
-  const ref = doc(db, "users", currentUser.uid, "customSessions", sessionId);
+  const ref = doc(_db, "users", u.uid, "customSessions", sessionId);
   await setDoc(ref, stripUndefinedDeep(payload), { merge: true });
 
   // Recharge les custom sessions dans window.SESSIONS puis refresh UI
-  await reloadCustomSessionsIntoSESSIONS();
-  if(typeof window.refreshSessionsList === "function") window.refreshSessionsList();
-  else if(typeof renderHome === "function") renderHome();
+  try{
+    if(typeof window.reloadCustomSessionsIntoSESSIONS === "function"){
+      await window.reloadCustomSessionsIntoSESSIONS();
+    }else if(typeof reloadCustomSessionsIntoSESSIONS === "function"){
+      await reloadCustomSessionsIntoSESSIONS();
+    }
+  }catch(e){
+    console.warn("[AI] reload custom sessions failed", e);
+  }
+
+  try{
+    if(typeof window.renderWorkoutsScreen === "function") window.renderWorkoutsScreen();
+  }catch(e){}
 
   return "CUSTOM_" + sessionId; // clé UI
 }
+
+// ✅ IMPORTANT: expose global (sinon "introuvable")
+window.saveAISessionToFirestore = saveAISessionToFirestore;
 
 
 /* =========================
@@ -8927,8 +8951,8 @@ window.renderAIScreen = function renderAIScreen(){
           return;
         }
 
-        if(typeof saveAISessionToFirestore !== "function"){
-          toast("saveAISessionToFirestore() introuvable.");
+        if(typeof window.saveAISessionToFirestore !== "function"){
+  toast("saveAISessionToFirestore() introuvable.");
           return;
         }
 
@@ -8940,7 +8964,7 @@ window.renderAIScreen = function renderAIScreen(){
         );
 
 
-        await withTimeout(saveAISessionToFirestore(session), 30000);
+        await withTimeout(window.saveAISessionToFirestore(aiSession), 25000);
 
         toast("✅ Séance IA créée");
 
