@@ -6982,6 +6982,13 @@ window.reloadCustomSessionsIntoSESSIONS = reloadCustomSessionsIntoSESSIONS;
 
 function purgeProgramsFromSessions(){
   const prev = window.SESSIONS || {};
+  const cleaned = {};
+  for(const [k,v] of Object.entries(prev)){
+    if(!String(k).startsWith("PROG_")) cleaned[k] = v;
+  }
+  window.SESSIONS = cleaned;
+}
+
 async function reloadProgramsIntoSESSIONS(forceProgramId){
   if(!currentUser?.uid) return;
 
@@ -7162,6 +7169,7 @@ async function reloadProgramsIntoSESSIONS(forceProgramId){
     console.log("[PROGRAM] No sessions found for program", programId);
   }
 }
+
 window.reloadProgramsIntoSESSIONS = reloadProgramsIntoSESSIONS;
 /* ===== FIN B2.0-3-SAFE ===== */
 
@@ -7561,7 +7569,7 @@ await reloadProgramsIntoSESSIONS();
  
 /* ===== FIN B2.0-2-SAFE ===== */
 
-  </script>
+</script>
 
 <div id="settingsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
   <div class="modal-content">
