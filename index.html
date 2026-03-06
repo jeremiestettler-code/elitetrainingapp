@@ -6980,15 +6980,6 @@ async function reloadCustomSessionsIntoSESSIONS(){
 // ✅ expose global (debug + page Workouts AI)
 window.reloadCustomSessionsIntoSESSIONS = reloadCustomSessionsIntoSESSIONS;
 
-function purgeProgramsFromSessions(){
-  const prev = window.SESSIONS || {};
-  const cleaned = {};
-  for(const [k,v] of Object.entries(prev)){
-    if(!String(k).startsWith("PROG_")) cleaned[k] = v;
-  }
-  window.SESSIONS = cleaned;
-}
-
 async function reloadProgramsIntoSESSIONS(forceProgramId){
   if(!currentUser?.uid) return;
 
@@ -7010,7 +7001,6 @@ async function reloadProgramsIntoSESSIONS(forceProgramId){
       );
       progSnap = await getDocs(progQ);
     }catch(e){
-      // fallback si index/orderBy non prêt
       const rawSnap = await getDocs(userProgramsRef);
       const docs = rawSnap.docs
         .filter(d => !!(d.data() || {}).active)
@@ -7048,8 +7038,16 @@ async function reloadProgramsIntoSESSIONS(forceProgramId){
     "Programme AI"
   ).trim();
 
-  const weeksCount = Number(progData.weeks || 0) || null;
-  const sessionsPerWeek = Number(progData.sessionsPerWeek || 0) || null;
+  const weeksCount =
+    Number(progData.weeks || 0) ||
+    Number(progData.plan?.weeks || 0) ||
+    null;
+
+  const sessionsPerWeek =
+    Number(progData.sessionsPerWeek || 0) ||
+    Number(progData.daysPerWeek || 0) ||
+    Number(progData.plan?.daysPerWeek || 0) ||
+    null;
 
   const libById = (window.EXERCISE_LIBRARY && window.EXERCISE_LIBRARY.byId)
     ? window.EXERCISE_LIBRARY.byId
@@ -7088,75 +7086,144 @@ async function reloadProgramsIntoSESSIONS(forceProgramId){
 
   function parseSessionOrder(sessionId, data){
     const explicit =
-      Number(data?.order ?? data?.position ?? data?.index ?? data?.sessionNumber ?? 0) || 0;
+      Number(data?.order ?? data?.position ?? data?.index ?? data?.sessionNumber ?? data?.dayIndex ?? 0) || 0;
     if(explicit > 0) return explicit;
 
     const m = String(sessionId || "").match(/(\d+)(?!.*\d)/);
     return m ? (parseInt(m[1], 10) || 999) : 999;
   }
 
-  const weeksSnap = await getDocs(
-    collection(db, "users", currentUser.uid, "programs", programId, "weeks")
-  );
-
-  const weekDocs = weeksSnap.docs.sort((a,b)=>{
-    return parseWeekNumber(a.id) - parseWeekNumber(b.id);
-  });
-
   const programs = {};
 
-  for(const weekDoc of weekDocs){
-    const weekId = String(weekDoc.id || "");
-    const weekData = weekDoc.data() || {};
-    const weekNumber =
-      Number(weekData.weekNumber || weekData.order || parseWeekNumber(weekId)) || 1;
+  // =========================
+  // FORMAT A — sous-collections weeks/{week}/sessions/{session}
+  // =========================
+  let loadedFromSubcollections = false;
 
-    const sessSnap = await getDocs(
-      collection(db, "users", currentUser.uid, "programs", programId, "weeks", weekId, "sessions")
+  try{
+    const weeksSnap = await getDocs(
+      collection(db, "users", currentUser.uid, "programs", programId, "weeks")
     );
 
-    const sessionDocs = sessSnap.docs.sort((a,b)=>{
-      return parseSessionOrder(a.id, a.data()) - parseSessionOrder(b.id, b.data());
+    const weekDocs = weeksSnap.docs.sort((a,b)=>{
+      return parseWeekNumber(a.id) - parseWeekNumber(b.id);
     });
 
-    sessionDocs.forEach((d, idx)=>{
-      const data = d.data() || {};
-      const sessionObj = (data.session && typeof data.session === "object") ? data.session : data;
-      const sessionOrder =
-        parseSessionOrder(d.id, data) > 0 && parseSessionOrder(d.id, data) !== 999
-          ? parseSessionOrder(d.id, data)
-          : (idx + 1);
+    if(weekDocs.length){
+      loadedFromSubcollections = true;
 
-      const key = `PROG_${programId}__W${weekNumber}_S${sessionOrder}`;
+      for(const weekDoc of weekDocs){
+        const weekId = String(weekDoc.id || "");
+        const weekData = weekDoc.data() || {};
+        const weekNumber =
+          Number(weekData.weekNumber || weekData.order || parseWeekNumber(weekId)) || 1;
 
-      const warmupList = (Array.isArray(sessionObj.warmup) ? sessionObj.warmup : []).map(enrichById);
-      const itemsList  = (Array.isArray(sessionObj.items) ? sessionObj.items : []).map(enrichById);
-      const coolList   = (Array.isArray(sessionObj.cooldown) ? sessionObj.cooldown : []).map(enrichById);
+        const sessSnap = await getDocs(
+          collection(db, "users", currentUser.uid, "programs", programId, "weeks", weekId, "sessions")
+        );
 
-      programs[key] = {
-        name: String(
-          sessionObj.name ||
-          data.title ||
+        const sessionDocs = sessSnap.docs.sort((a,b)=>{
+          return parseSessionOrder(a.id, a.data()) - parseSessionOrder(b.id, b.data());
+        });
+
+        sessionDocs.forEach((d, idx)=>{
+          const data = d.data() || {};
+          const sessionObj = (data.session && typeof data.session === "object") ? data.session : data;
+          const sessionOrder =
+            parseSessionOrder(d.id, data) > 0 && parseSessionOrder(d.id, data) !== 999
+              ? parseSessionOrder(d.id, data)
+              : (idx + 1);
+
+          const key = `PROG_${programId}__W${weekNumber}_S${sessionOrder}`;
+
+          programs[key] = {
+            name: String(
+              sessionObj.name ||
+              data.title ||
+              `Week ${weekNumber} - Séance ${sessionOrder}`
+            ),
+            warmup: (Array.isArray(sessionObj.warmup) ? sessionObj.warmup : []).map(enrichById),
+            items: (Array.isArray(sessionObj.items) ? sessionObj.items : []).map(enrichById),
+            cooldown: (Array.isArray(sessionObj.cooldown) ? sessionObj.cooldown : []).map(enrichById),
+            estimatedMinutes: (typeof sessionObj.estimatedMinutes === "number")
+              ? sessionObj.estimatedMinutes
+              : null,
+
+            source: "program",
+            programId,
+            programName,
+            programTitle: programName,
+            programWeek: weekNumber,
+            programWeekId: weekId,
+            programSessionNumber: sessionOrder,
+            programSessionKey: d.id,
+            programWeeksCount: weeksCount,
+            programSessionsPerWeek: sessionsPerWeek
+          };
+        });
+      }
+    }
+  }catch(e){
+    console.warn("[PROGRAM] subcollection format not available:", e);
+  }
+
+  // =========================
+  // FORMAT B — doc unique avec plan.sessionsByWeek[]
+  // =========================
+  if(!loadedFromSubcollections){
+    const weeks = Array.isArray(progData?.plan?.sessionsByWeek)
+      ? progData.plan.sessionsByWeek
+      : [];
+
+    weeks.forEach((weekBlock, weekIdx)=>{
+      const weekNumber =
+        Number(weekBlock?.week || 0) ||
+        (weekIdx + 1);
+
+      const sessions = Array.isArray(weekBlock?.sessions)
+        ? weekBlock.sessions
+        : [];
+
+      sessions.forEach((sess, idx)=>{
+        const sessionOrder =
+          Number(sess?.dayIndex || 0) ||
+          Number(sess?.sessionNumber || 0) ||
+          (idx + 1);
+
+        const sessionName = String(
+          sess?.title ||
+          sess?.name ||
           `Week ${weekNumber} - Séance ${sessionOrder}`
-        ),
-        warmup: warmupList,
-        items: itemsList,
-        cooldown: coolList,
-        estimatedMinutes: (typeof sessionObj.estimatedMinutes === "number")
-          ? sessionObj.estimatedMinutes
-          : null,
+        );
 
-        source: "program",
-        programId,
-        programName,
-        programTitle: programName,
-        programWeek: weekNumber,
-        programWeekId: weekId,
-        programSessionNumber: sessionOrder,
-        programSessionKey: d.id,
-        programWeeksCount: weeksCount,
-        programSessionsPerWeek: sessionsPerWeek
-      };
+        const key = `PROG_${programId}__W${weekNumber}_S${sessionOrder}`;
+
+        programs[key] = {
+          name: sessionName,
+          warmup: [],
+          items: [],
+          cooldown: [],
+          estimatedMinutes:
+            Number(progData?.sessionMinutes || 0) ||
+            Number(progData?.plan?.sessionMinutes || 0) ||
+            null,
+
+          source: "program",
+          programId,
+          programName,
+          programTitle: programName,
+          programWeek: weekNumber,
+          programWeekId: `week${weekNumber}`,
+          programSessionNumber: sessionOrder,
+          programSessionKey: String(sess?.key || `W${weekNumber}-D${sessionOrder}`),
+          programWeeksCount: weeksCount || weeks.length,
+          programSessionsPerWeek: sessionsPerWeek || sessions.length,
+
+          // utile si plus tard tu veux enrichir l’ouverture
+          lightweightPlanOnly: true,
+          planFocus: String(sess?.focus || "").trim()
+        };
+      });
     });
   }
 
@@ -7166,7 +7233,7 @@ async function reloadProgramsIntoSESSIONS(forceProgramId){
     window.SESSIONS = { ...programs, ...(window.SESSIONS || {}) };
     console.log("[PROGRAM] Sessions merged:", Object.keys(programs).length, "program", programId);
   }else{
-    console.log("[PROGRAM] No sessions found for program", programId);
+    console.log("[PROGRAM] No sessions found for program", programId, progData);
   }
 }
 
@@ -9338,7 +9405,7 @@ window.renderAIScreen = function renderAIScreen(){
             data.name ||
             `Programme AI ${index + 1}`
           ).trim(),
-          subtitle: `${Number(data.weeks || 0) || "?"} sem • ${Number(data.sessionsPerWeek || 0) || "?"}/sem`,
+          subtitle: `${Number(data.weeks || 0) || "?"} sem • ${Number(data.sessionsPerWeek || data.daysPerWeek || 0) || "?"}/sem`,
           image: getProgramImageByIndex(index + 1),
           createdAtValue: getCreatedAtValue(data)
         }));
