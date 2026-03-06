@@ -6819,6 +6819,70 @@ await setDoc(ref, payloadClean, { merge: true });
   return sessionId;
 }
 
+function buildAISessionTitle(aiSession){
+  const items = Array.isArray(aiSession?.items) ? aiSession.items : [];
+
+  const clean = (v)=>String(v || "").trim();
+
+  // Priorité 1 : champ muscle déjà présent sur les exercices
+  let muscles = items
+    .map(it => clean(it?.muscle))
+    .filter(Boolean);
+
+  // Priorité 2 : fallback léger à partir du nom si muscle absent
+  if(!muscles.length){
+    const detectFromName = (name)=>{
+      const n = clean(name).toLowerCase();
+      if(!n) return "";
+      if(n.includes("biceps")) return "Biceps";
+      if(n.includes("triceps")) return "Triceps";
+      if(n.includes("épaule") || n.includes("epaule") || n.includes("shoulder")) return "Épaules";
+      if(n.includes("dos") || n.includes("rowing") || n.includes("row") || n.includes("pull")) return "Dos";
+      if(n.includes("pec") || n.includes("chest") || n.includes("bench")) return "Pectoraux";
+      if(n.includes("quad") || n.includes("leg") || n.includes("squat")) return "Jambes";
+      if(n.includes("fess") || n.includes("glute")) return "Fessiers";
+      if(n.includes("abdo") || n.includes("core")) return "Abdos";
+      return "";
+    };
+
+    muscles = items
+      .map(it => detectFromName(it?.name))
+      .filter(Boolean);
+  }
+
+  // Normalisation FR
+  const normalizeMuscle = (m)=>{
+    const s = clean(m).toLowerCase();
+    if(!s) return "";
+    if(s.includes("biceps")) return "Biceps";
+    if(s.includes("triceps")) return "Triceps";
+    if(s.includes("épaule") || s.includes("epaule") || s.includes("shoulder")) return "Épaules";
+    if(s.includes("dos") || s.includes("back")) return "Dos";
+    if(s.includes("pec") || s.includes("chest")) return "Pectoraux";
+    if(s.includes("jambe") || s.includes("leg") || s.includes("quadr")) return "Jambes";
+    if(s.includes("fess") || s.includes("glute")) return "Fessiers";
+    if(s.includes("abdo") || s.includes("core")) return "Abdos";
+    return m.charAt(0).toUpperCase() + m.slice(1);
+  };
+
+  const counts = new Map();
+  muscles.forEach(m=>{
+    const key = normalizeMuscle(m);
+    if(!key) return;
+    counts.set(key, (counts.get(key) || 0) + 1);
+  });
+
+  const top = [...counts.entries()]
+    .sort((a,b)=>b[1] - a[1])
+    .slice(0, 2)
+    .map(x=>x[0]);
+
+  if(top.length >= 2) return `Session IA : ${top[0]} & ${top[1]}`;
+  if(top.length === 1) return `Session IA : ${top[0]}`;
+
+  return "Session IA : Workout";
+}
+
 // =========================
 // IA V2 — Save direct to Firestore (sans ouvrir l'éditeur)
 // =========================
@@ -6840,7 +6904,7 @@ async function saveAISessionToFirestore(aiSession){
   const cooldown = (aiSession.cooldown || []).map(c => csCleanWarmBlock(c, "CD"));
 
   const payload = {
-    name: ("Session IA : " + String(aiSession.goalText || aiSession.name || "Workout")).trim(),
+    name: buildAISessionTitle(aiSession),
     estimatedMinutes: Number.isFinite(aiSession.estimatedMinutes) ? aiSession.estimatedMinutes : 0,
     warmup,
     items,
