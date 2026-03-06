@@ -8964,7 +8964,7 @@ window.renderAIScreen = function renderAIScreen(){
         );
 
 
-        await withTimeout(window.saveAISessionToFirestore(aiSession), 25000);
+        await withTimeout(window.saveAISessionToFirestore(session), 30000);
 
         toast("✅ Séance IA créée");
 
