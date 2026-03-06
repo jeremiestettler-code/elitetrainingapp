@@ -6980,6 +6980,15 @@ async function reloadCustomSessionsIntoSESSIONS(){
 // ✅ expose global (debug + page Workouts AI)
 window.reloadCustomSessionsIntoSESSIONS = reloadCustomSessionsIntoSESSIONS;
 
+function purgeProgramsFromSessions(){
+  const prev = window.SESSIONS || {};
+  const cleaned = {};
+  for(const [k,v] of Object.entries(prev)){
+    if(!String(k).startsWith("PROG_")) cleaned[k] = v;
+  }
+  window.SESSIONS = cleaned;
+}
+
 async function reloadProgramsIntoSESSIONS(forceProgramId){
   if(!currentUser?.uid) return;
 
@@ -6988,7 +6997,6 @@ async function reloadProgramsIntoSESSIONS(forceProgramId){
   let programId = forceProgramId || null;
   let progData = null;
 
-  // 1) trouver le programme cible
   if(!programId){
     let progSnap = null;
 
@@ -7095,9 +7103,6 @@ async function reloadProgramsIntoSESSIONS(forceProgramId){
 
   const programs = {};
 
-  // =========================
-  // FORMAT A — sous-collections weeks/{week}/sessions/{session}
-  // =========================
   let loadedFromSubcollections = false;
 
   try{
@@ -7167,9 +7172,6 @@ async function reloadProgramsIntoSESSIONS(forceProgramId){
     console.warn("[PROGRAM] subcollection format not available:", e);
   }
 
-  // =========================
-  // FORMAT B — doc unique avec plan.sessionsByWeek[]
-  // =========================
   if(!loadedFromSubcollections){
     const weeks = Array.isArray(progData?.plan?.sessionsByWeek)
       ? progData.plan.sessionsByWeek
@@ -7218,8 +7220,6 @@ async function reloadProgramsIntoSESSIONS(forceProgramId){
           programSessionKey: String(sess?.key || `W${weekNumber}-D${sessionOrder}`),
           programWeeksCount: weeksCount || weeks.length,
           programSessionsPerWeek: sessionsPerWeek || sessions.length,
-
-          // utile si plus tard tu veux enrichir l’ouverture
           lightweightPlanOnly: true,
           planFocus: String(sess?.focus || "").trim()
         };
