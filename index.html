@@ -6982,33 +6982,44 @@ window.reloadCustomSessionsIntoSESSIONS = reloadCustomSessionsIntoSESSIONS;
 
 function purgeProgramsFromSessions(){
   const prev = window.SESSIONS || {};
-  const cleaned = {};
-  for(const [k,v] of Object.entries(prev)){
-    if(!String(k).startsWith("PROG_")) cleaned[k] = v;
-  }
-  window.SESSIONS = cleaned;
-}
-
 async function reloadProgramsIntoSESSIONS(forceProgramId){
   if(!currentUser?.uid) return;
 
-  // 1) trouver le programme actif le plus récent
-   let programId = forceProgramId || null;
+  const userProgramsRef = collection(db, "users", currentUser.uid, "programs");
+
+  let programId = forceProgramId || null;
   let progData = null;
 
+  // 1) trouver le programme cible
   if(!programId){
-    const progQ = query(
-      collection(db, "users", currentUser.uid, "programs"),
-      where("active", "==", true),
-      orderBy("createdAt", "desc"),
-      limit(1)
-    );
+    let progSnap = null;
 
-    const progSnap = await getDocs(progQ);
+    try{
+      const progQ = query(
+        userProgramsRef,
+        where("active", "==", true),
+        orderBy("createdAt", "desc"),
+        limit(1)
+      );
+      progSnap = await getDocs(progQ);
+    }catch(e){
+      // fallback si index/orderBy non prêt
+      const rawSnap = await getDocs(userProgramsRef);
+      const docs = rawSnap.docs
+        .filter(d => !!(d.data() || {}).active)
+        .sort((a,b)=>{
+          const av = a.data()?.createdAt?.seconds || 0;
+          const bv = b.data()?.createdAt?.seconds || 0;
+          return bv - av;
+        });
+      progSnap = { empty: docs.length === 0, docs };
+    }
+
     if(progSnap.empty){
       purgeProgramsFromSessions();
       return;
     }
+
     const progDoc = progSnap.docs[0];
     programId = progDoc.id;
     progData = progDoc.data() || {};
@@ -7021,40 +7032,21 @@ async function reloadProgramsIntoSESSIONS(forceProgramId){
     }
     progData = progSnap.data() || {};
   }
-  // ✅ expose global (page Workouts AI)
-window.reloadProgramsIntoSESSIONS = reloadProgramsIntoSESSIONS;
 
-  const programName = String(progData.goalText || "Programme 4 semaines");
+  const programName = String(
+    progData.title ||
+    progData.goalText ||
+    progData.goal ||
+    progData.name ||
+    "Programme AI"
+  ).trim();
 
-  // 2) déterminer la semaine courante (par défaut 1)
-  let currentWeek = "1";
-  try{
-    const weekQ = query(
-      collection(db, "users", currentUser.uid, "programs", programId, "weeks"),
-      where("status", "==", "current"),
-      limit(1)
-    );
-    const weekSnap = await getDocs(weekQ);
-    if(!weekSnap.empty){
-      currentWeek = String(weekSnap.docs[0].id || "1");
-    }
-  }catch(e){
-    // si pas de doc current, on garde week 1
-  }
+  const weeksCount = Number(progData.weeks || 0) || null;
+  const sessionsPerWeek = Number(progData.sessionsPerWeek || 0) || null;
 
-  // 3) charger les séances de la semaine courante
-  const sessSnap = await getDocs(
-    collection(db, "users", currentUser.uid, "programs", programId, "weeks", currentWeek, "sessions")
-  );
-
-  const programs = {};
-
-sessSnap.forEach((d)=>{
-  const data = d.data() || {};
-  const sessionObj = (data.session && typeof data.session === "object") ? data.session : data;
-  const key = `PROG_${programId}__${d.id}`; // ex: PROG_xxx__W1-D1
-
-  const libById = (window.EXERCISE_LIBRARY && window.EXERCISE_LIBRARY.byId) ? window.EXERCISE_LIBRARY.byId : {};
+  const libById = (window.EXERCISE_LIBRARY && window.EXERCISE_LIBRARY.byId)
+    ? window.EXERCISE_LIBRARY.byId
+    : {};
 
   function enrichById(x){
     if(!x || typeof x !== "object") return x;
@@ -7063,26 +7055,17 @@ sessSnap.forEach((d)=>{
     if(!exoId) return x;
 
     const ref = libById[exoId];
-
-    // Si pas trouvé dans la lib, on garde l'entrée telle quelle mais on force id + name minimal
     if(!ref || typeof ref !== "object"){
       return { ...x, id: exoId, name: x.name || exoId };
     }
 
-    // ⚠️ Chez toi ref.icon est souvent une "clé" (ex: "dbbench"), pas un chemin direct.
-    // On la garde, car ton renderer sait la convertir via normalizeStepIcon / images.js.
-    // On remonte aussi gif/img/image si jamais ref les possède.
     return {
-      ...ref,     // base (name/icon/etc)
-      ...x,       // x override pour sets/reps/work/rest/etc
+      ...ref,
+      ...x,
       id: exoId,
-
-      // texte
       name: x.name || ref.name || exoId,
       desc: x.desc || ref.desc || "",
       todo: x.todo || ref.todo || "",
-
-      // média: on remonte tout ce qui peut être utilisé par le renderer
       icon: x.icon || ref.icon || ref.gif || ref.img || ref.image || "",
       gif: x.gif || ref.gif || "",
       img: x.img || ref.img || "",
@@ -7091,34 +7074,95 @@ sessSnap.forEach((d)=>{
     };
   }
 
-  const warmupList = (Array.isArray(sessionObj.warmup) ? sessionObj.warmup : []).map(enrichById);
-  const itemsList  = (Array.isArray(sessionObj.items) ? sessionObj.items : []).map(enrichById);
-  const coolList   = (Array.isArray(sessionObj.cooldown) ? sessionObj.cooldown : []).map(enrichById);
+  function parseWeekNumber(weekId){
+    const m = String(weekId || "").match(/(\d+)/);
+    return m ? (parseInt(m[1], 10) || 0) : 0;
+  }
 
-  programs[key] = {
-    name: String(sessionObj.name || data.title || `Programme — ${d.id}`),
-    warmup: warmupList,
-    items: itemsList,
-    cooldown: coolList,
-    estimatedMinutes: (typeof sessionObj.estimatedMinutes === "number") ? sessionObj.estimatedMinutes : null,
+  function parseSessionOrder(sessionId, data){
+    const explicit =
+      Number(data?.order ?? data?.position ?? data?.index ?? data?.sessionNumber ?? 0) || 0;
+    if(explicit > 0) return explicit;
 
-    // tags pour le "dossier"
-    source: "program",
-    programId,
-    programName,
-    programWeek: Number(currentWeek) || 1,
-    programSessionKey: d.id
-  };
-});
+    const m = String(sessionId || "").match(/(\d+)(?!.*\d)/);
+    return m ? (parseInt(m[1], 10) || 999) : 999;
+  }
+
+  const weeksSnap = await getDocs(
+    collection(db, "users", currentUser.uid, "programs", programId, "weeks")
+  );
+
+  const weekDocs = weeksSnap.docs.sort((a,b)=>{
+    return parseWeekNumber(a.id) - parseWeekNumber(b.id);
+  });
+
+  const programs = {};
+
+  for(const weekDoc of weekDocs){
+    const weekId = String(weekDoc.id || "");
+    const weekData = weekDoc.data() || {};
+    const weekNumber =
+      Number(weekData.weekNumber || weekData.order || parseWeekNumber(weekId)) || 1;
+
+    const sessSnap = await getDocs(
+      collection(db, "users", currentUser.uid, "programs", programId, "weeks", weekId, "sessions")
+    );
+
+    const sessionDocs = sessSnap.docs.sort((a,b)=>{
+      return parseSessionOrder(a.id, a.data()) - parseSessionOrder(b.id, b.data());
+    });
+
+    sessionDocs.forEach((d, idx)=>{
+      const data = d.data() || {};
+      const sessionObj = (data.session && typeof data.session === "object") ? data.session : data;
+      const sessionOrder =
+        parseSessionOrder(d.id, data) > 0 && parseSessionOrder(d.id, data) !== 999
+          ? parseSessionOrder(d.id, data)
+          : (idx + 1);
+
+      const key = `PROG_${programId}__W${weekNumber}_S${sessionOrder}`;
+
+      const warmupList = (Array.isArray(sessionObj.warmup) ? sessionObj.warmup : []).map(enrichById);
+      const itemsList  = (Array.isArray(sessionObj.items) ? sessionObj.items : []).map(enrichById);
+      const coolList   = (Array.isArray(sessionObj.cooldown) ? sessionObj.cooldown : []).map(enrichById);
+
+      programs[key] = {
+        name: String(
+          sessionObj.name ||
+          data.title ||
+          `Week ${weekNumber} - Séance ${sessionOrder}`
+        ),
+        warmup: warmupList,
+        items: itemsList,
+        cooldown: coolList,
+        estimatedMinutes: (typeof sessionObj.estimatedMinutes === "number")
+          ? sessionObj.estimatedMinutes
+          : null,
+
+        source: "program",
+        programId,
+        programName,
+        programTitle: programName,
+        programWeek: weekNumber,
+        programWeekId: weekId,
+        programSessionNumber: sessionOrder,
+        programSessionKey: d.id,
+        programWeeksCount: weeksCount,
+        programSessionsPerWeek: sessionsPerWeek
+      };
+    });
+  }
+
   purgeProgramsFromSessions();
 
   if(Object.keys(programs).length){
     window.SESSIONS = { ...programs, ...(window.SESSIONS || {}) };
-    console.log("[PROGRAM] Sessions merged:", Object.keys(programs).length, "week", currentWeek, "program", programId);
+    console.log("[PROGRAM] Sessions merged:", Object.keys(programs).length, "program", programId);
   }else{
-    console.log("[PROGRAM] No sessions found for week", currentWeek, "program", programId);
+    console.log("[PROGRAM] No sessions found for program", programId);
   }
 }
+window.reloadProgramsIntoSESSIONS = reloadProgramsIntoSESSIONS;
 /* ===== FIN B2.0-3-SAFE ===== */
 
 
@@ -9117,13 +9161,12 @@ window.renderAIScreen = function renderAIScreen(){
       _setProgramScreen({ title:"Séances AI", subtitle:"Tes séances créées", sessions:list });
     }catch(e){
       console.warn("openAISessionsPack error:", e);
-      notify("Impossible d’ouvrir tes séances AI.");
+      notify("Impossible d’ouvrir les séances AI.");
     }
   };
 
   window.openAIProgram = async function openAIProgram(programId){
     try{
-      // Recharge PROG_ dans window.SESSIONS (ta fonction existante)
       if(typeof window.reloadProgramsIntoSESSIONS === "function"){
         await window.reloadProgramsIntoSESSIONS(programId);
       }else if(typeof reloadProgramsIntoSESSIONS === "function"){
@@ -9133,18 +9176,51 @@ window.renderAIScreen = function renderAIScreen(){
       }
 
       const S = window.SESSIONS || {};
-      const prefix = `PROG_${programId}__`;
-      const keys = Object.keys(S).filter(k=>String(k).startsWith(prefix));
-      if(!keys.length) return notify("Programme vide (aucune séance chargée).");
+      const sessions = Object.entries(S)
+        .filter(([k,v])=>{
+          return String(k).startsWith(`PROG_${programId}__`) && (v?.programId === programId || true);
+        })
+        .map(([k,v])=>({ key:k, data:v }))
+        .sort((a,b)=>{
+          const wa = Number(a.data?.programWeek || 0) || 0;
+          const wb = Number(b.data?.programWeek || 0) || 0;
+          if(wa !== wb) return wa - wb;
 
-      const list = keys.map(k=>({ id:k, blurb: (S[k]?.name || "Séance programme") }));
-      _setProgramScreen({ title:"Programme AI", subtitle:"Semaine 1", sessions:list });
+          const sa = Number(a.data?.programSessionNumber || 0) || 0;
+          const sb = Number(b.data?.programSessionNumber || 0) || 0;
+          if(sa !== sb) return sa - sb;
+
+          return String(a.key).localeCompare(String(b.key));
+        });
+
+      if(!sessions.length){
+        return notify("Programme vide (aucune séance chargée).");
+      }
+
+      const first = sessions[0]?.data || {};
+      const weeksCount =
+        Number(first.programWeeksCount || 0) ||
+        Math.max(...sessions.map(x=>Number(x.data?.programWeek || 1) || 1), 1);
+
+      const list = sessions.map(({ key, data })=>{
+        const week = Number(data?.programWeek || 1) || 1;
+        const num  = Number(data?.programSessionNumber || 1) || 1;
+        return {
+          id: key,
+          blurb: `Week ${week} - Séance ${num}`
+        };
+      });
+
+      _setProgramScreen({
+        title: String(first.programTitle || first.programName || "Programme AI"),
+        subtitle: `${weeksCount} semaine${weeksCount > 1 ? "s" : ""} • ${list.length} séance${list.length > 1 ? "s" : ""}`,
+        sessions: list
+      });
     }catch(e){
       console.warn("openAIProgram error:", e);
       notify("Impossible d’ouvrir ce programme.");
     }
   };
-
   // =========================
   // Card rendering
   // =========================
@@ -9178,6 +9254,27 @@ window.renderAIScreen = function renderAIScreen(){
     const hostAIP = document.getElementById("workoutsAIPrograms");
     if(!hostT || !hostAIS || !hostAIP) return;
 
+    function slugGoal(s){
+      return String(s || "")
+        .trim()
+        .replace(/\s+/g, " ")
+        .slice(0, 80);
+    }
+
+    function getProgramImageByIndex(i){
+      const idx = Math.max(1, Math.min(10, Number(i || 1) || 1));
+      return `images/workout-programm${idx}.jpg`;
+    }
+
+    function getCreatedAtValue(data){
+      const c = data?.createdAt;
+      if(!c) return 0;
+      if(typeof c?.seconds === "number") return c.seconds * 1000;
+      if(typeof c?.toMillis === "function") return c.toMillis();
+      const t = new Date(c).getTime();
+      return Number.isFinite(t) ? t : 0;
+    }
+
     // Trending
     hostT.innerHTML = "";
     (window.WORKOUT_CATALOG?.trending || []).forEach(t=>{
@@ -9205,10 +9302,9 @@ window.renderAIScreen = function renderAIScreen(){
       hostAIS.innerHTML = `<div class="muted small">Aucune séance IA enregistrée.</div>`;
     }
 
-    // AI programs (Firestore list) — utilise db/currentUser du module s’ils existent, sinon fallback
+    // AI programs
     hostAIP.innerHTML = "";
     try{
-      // db/currentUser sont souvent des variables locales dans ton module
       const _db = (typeof db !== "undefined") ? db : window.db;
       const _user = (typeof currentUser !== "undefined") ? currentUser : window.currentUser;
 
@@ -9218,20 +9314,34 @@ window.renderAIScreen = function renderAIScreen(){
       }
 
       const snap = await getDocs(collection(_db, "users", _user.uid, "programs"));
-      const programs = [];
-      snap.forEach(d=>{
-        const data = d.data() || {};
-        programs.push({
+      const programs = snap.docs
+        .map((d)=>({
           programId: d.id,
-          title: String(data.goalText || data.title || data.name || "Programme AI").trim(),
-          image: "images/workout_programme.jpg"
-        });
-      });
+          ...(d.data() || {})
+        }))
+        .sort((a,b)=>getCreatedAtValue(b) - getCreatedAtValue(a))
+        .slice(0, 10)
+        .map((data, index)=>({
+          programId: data.programId,
+          title: String(
+            data.title ||
+            data.goalText ||
+            data.goal ||
+            data.name ||
+            `Programme AI ${index + 1}`
+          ).trim(),
+          subtitle: `${Number(data.weeks || 0) || "?"} sem • ${Number(data.sessionsPerWeek || 0) || "?"}/sem`,
+          image: getProgramImageByIndex(index + 1),
+          createdAtValue: getCreatedAtValue(data)
+        }));
 
       if(programs.length){
         programs.forEach(p=>{
           hostAIP.appendChild(makeCard(
-            { title: p.title, image: p.image },
+            {
+              title: p.title,
+              image: p.image
+            },
             ()=>window.openAIProgram(p.programId)
           ));
         });
