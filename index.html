@@ -6840,7 +6840,7 @@ async function saveAISessionToFirestore(aiSession){
   const cooldown = (aiSession.cooldown || []).map(c => csCleanWarmBlock(c, "CD"));
 
   const payload = {
-    name: String(aiSession.name || "Séance IA").trim(),
+    name: ("Session IA : " + String(aiSession.goalText || aiSession.name || "Workout")).trim(),
     estimatedMinutes: Number.isFinite(aiSession.estimatedMinutes) ? aiSession.estimatedMinutes : 0,
     warmup,
     items,
@@ -8962,7 +8962,7 @@ window.renderAIScreen = function renderAIScreen(){
           window.generateSessionWithAI({ goalText, minutes, constraints }),
           30000
         );
-
+        session.goalText = goalText;
 
         await withTimeout(window.saveAISessionToFirestore(session), 30000);
 
