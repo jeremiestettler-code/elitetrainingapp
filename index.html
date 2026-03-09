@@ -2944,6 +2944,8 @@ const db   = getFirestore(app);
 // ✅ expose pour les helpers/UI qui retombent sur window.*
 window.auth = auth;
 window.db = db;
+window.fsCollection = collection;
+window.fsGetDocs = getDocs;
 
 const $ = (id)=>document.getElementById(id);
 
@@ -9211,9 +9213,11 @@ window.renderAIScreen = function renderAIScreen(){
       try{
         const _db = (typeof db !== "undefined") ? db : window.db;
         const _user = (typeof currentUser !== "undefined") ? currentUser : window.currentUser;
+        const _getDocs = (typeof getDocs !== "undefined") ? getDocs : window.fsGetDocs;
+        const _collection = (typeof collection !== "undefined") ? collection : window.fsCollection;
 
-        if(_db && _user?.uid){
-          const snap = await getDocs(collection(_db, "users", _user.uid, "programs"));
+        if(_db && _user?.uid && _getDocs && _collection){
+          const snap = await _getDocs(_collection(_db, "users", _user.uid, "programs"));
           const docs = snap.docs
             .map(d => ({ id: d.id, ...(d.data() || {}) }))
             .sort((a,b)=>{
@@ -9448,18 +9452,22 @@ window.renderAIScreen = function renderAIScreen(){
     try{
       const _db = (typeof db !== "undefined") ? db : window.db;
       const _user = (typeof currentUser !== "undefined") ? currentUser : window.currentUser;
+      const _getDocs = (typeof getDocs !== "undefined") ? getDocs : window.fsGetDocs;
+      const _collection = (typeof collection !== "undefined") ? collection : window.fsCollection;
 
       console.log("[WORKOUTS] AI programs debug:start", {
         hasDb: !!_db,
+        hasGetDocs: !!_getDocs,
+        hasCollection: !!_collection,
         uid: _user?.uid || null
       });
 
-      if(!_db || !_user?.uid){
-        hostAIP.innerHTML = `<div class="muted small">Connecte-toi pour voir tes programmes.</div>`;
+      if(!_db || !_user?.uid || !_getDocs || !_collection){
+        hostAIP.innerHTML = `<div class="muted small">Erreur chargement programmes AI.</div>`;
         return;
       }
 
-      const snap = await getDocs(collection(_db, "users", _user.uid, "programs"));
+      const snap = await _getDocs(_collection(_db, "users", _user.uid, "programs"));
       const docs = snap.docs.map(d => ({
         id: d.id,
         ...(d.data() || {})
