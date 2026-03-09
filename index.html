@@ -9272,7 +9272,7 @@ window.renderAIScreen = function renderAIScreen(){
   // =========================
   // AI packs
   // =========================
-  window.openAISessionsPack = async function openAISessionsPack(){
+    window.openAISessionsPack = async function openAISessionsPack(){
     try{
       if(typeof window.reloadCustomSessionsIntoSESSIONS === "function"){
         await window.reloadCustomSessionsIntoSESSIONS();
@@ -9289,72 +9289,56 @@ window.renderAIScreen = function renderAIScreen(){
     }
   };
 
-    window.openAIProgram = async function openAIProgram(programId){
+  window.openAIProgram = async function openAIProgram(programId){
     try{
-      const _db = (typeof db !== "undefined") ? db : window.db;
-      const _user = (typeof currentUser !== "undefined") ? currentUser : window.currentUser;
-
-      if(!_db || !_user?.uid || !programId){
-        return notify("Programme introuvable.");
+      if(typeof window.reloadProgramsIntoSESSIONS === "function"){
+        await window.reloadProgramsIntoSESSIONS(programId);
+      }else if(typeof reloadProgramsIntoSESSIONS === "function"){
+        await reloadProgramsIntoSESSIONS(programId);
+      }else{
+        return notify("reloadProgramsIntoSESSIONS introuvable.");
       }
 
-      const progRef = doc(_db, "users", _user.uid, "programs", programId);
-      const progSnap = await getDoc(progRef);
+      const S = window.SESSIONS || {};
+      const sessions = Object.entries(S)
+        .filter(([k,v])=>{
+          return String(k).startsWith(`PROG_${programId}__`) && (v?.programId === programId || true);
+        })
+        .map(([k,v])=>({ key:k, data:v }))
+        .sort((a,b)=>{
+          const wa = Number(a.data?.programWeek || 0) || 0;
+          const wb = Number(b.data?.programWeek || 0) || 0;
+          if(wa !== wb) return wa - wb;
 
-      if(!progSnap.exists()){
-        return notify("Programme introuvable.");
-      }
+          const sa = Number(a.data?.programSessionNumber || 0) || 0;
+          const sb = Number(b.data?.programSessionNumber || 0) || 0;
+          if(sa !== sb) return sa - sb;
 
-      const progData = progSnap.data() || {};
-
-      const title = String(
-        progData.title ||
-        progData.goalText ||
-        progData.goal ||
-        progData.name ||
-        "Programme AI"
-      ).trim();
-
-      const weeks =
-        Array.isArray(progData?.plan?.sessionsByWeek) ? progData.plan.sessionsByWeek :
-        Array.isArray(progData?.sessionsByWeek) ? progData.sessionsByWeek :
-        [];
-
-      const list = [];
-
-      weeks.forEach((weekBlock, weekIdx)=>{
-        const weekNumber =
-          Number(weekBlock?.week || 0) ||
-          (weekIdx + 1);
-
-        const sessions = Array.isArray(weekBlock?.sessions)
-          ? weekBlock.sessions
-          : [];
-
-        sessions.forEach((sess, idx)=>{
-          const num =
-            Number(sess?.dayIndex || 0) ||
-            Number(sess?.sessionNumber || 0) ||
-            (idx + 1);
-
-          list.push({
-            id: `PLANONLY__${programId}__W${weekNumber}_S${num}`,
-            blurb: `Week ${weekNumber} - Séance ${num}`
-          });
+          return String(a.key).localeCompare(String(b.key));
         });
+
+      console.log("[PROGRAM OPEN] programId:", programId, "sessions:", sessions.length);
+
+      if(!sessions.length){
+        return notify("Programme vide (aucune séance chargée).");
+      }
+
+      const first = sessions[0]?.data || {};
+      const weeksCount =
+        Number(first.programWeeksCount || 0) ||
+        Math.max(...sessions.map(x=>Number(x.data?.programWeek || 1) || 1), 1);
+
+      const list = sessions.map(({ key, data })=>{
+        const week = Number(data?.programWeek || 1) || 1;
+        const num  = Number(data?.programSessionNumber || 1) || 1;
+        return {
+          id: key,
+          blurb: `Week ${week} - Séance ${num}`
+        };
       });
 
-      if(!list.length){
-        return notify("Programme créé, mais aucune séance exploitable n’a été trouvée.");
-      }
-
-      const weeksCount =
-        Number(progData.weeks || 0) ||
-        weeks.length ||
-        1;
-
       _setProgramScreen({
-        title,
+        title: String(first.programTitle || first.programName || "Programme AI"),
         subtitle: `${weeksCount} semaine${weeksCount > 1 ? "s" : ""} • ${list.length} séance${list.length > 1 ? "s" : ""}`,
         sessions: list
       });
@@ -9363,6 +9347,7 @@ window.renderAIScreen = function renderAIScreen(){
       notify("Impossible d’ouvrir ce programme.");
     }
   };
+
   // =========================
   // Card rendering
   // =========================
@@ -9376,9 +9361,10 @@ window.renderAIScreen = function renderAIScreen(){
         <div class="wCardOverlay"></div>
         <div class="wCardText">
           <div class="wCardTitle">${esc(item.title || "—")}</div>
+          ${item.subtitle ? `<div class="wCardSub">${esc(item.subtitle)}</div>` : ``}
         </div>
         <div class="wCardCta">
-          <span class="wBadge">${esc(item.title || "")}</span>
+          <span class="wBadge">${esc(item.badge || item.title || "")}</span>
           <span class="wBtn">Play</span>
         </div>
       </div>
@@ -9394,14 +9380,14 @@ window.renderAIScreen = function renderAIScreen(){
     const hostT   = document.getElementById("workoutsTrending");
     const hostAIS = document.getElementById("workoutsAISessions");
     const hostAIP = document.getElementById("workoutsAIPrograms");
-    if(!hostT || !hostAIS || !hostAIP) return;
 
-    function slugGoal(s){
-      return String(s || "")
-        .trim()
-        .replace(/\s+/g, " ")
-        .slice(0, 80);
-    }
+    console.log("[WORKOUTS] renderWorkoutsScreen", {
+      hostT: !!hostT,
+      hostAIS: !!hostAIS,
+      hostAIP: !!hostAIP
+    });
+
+    if(!hostT || !hostAIS || !hostAIP) return;
 
     function getProgramImageByIndex(i){
       const idx = Math.max(1, Math.min(10, Number(i || 1) || 1));
@@ -9431,9 +9417,15 @@ window.renderAIScreen = function renderAIScreen(){
       }
       const S = window.SESSIONS || {};
       const customKeys = Object.keys(S).filter(k=>String(k).startsWith("CUSTOM_"));
+
       if(customKeys.length){
         hostAIS.appendChild(makeCard(
-          { title:`Séances AI (${customKeys.length})`, image:"images/workout_ai.jpg" },
+          {
+            title:`Séances AI (${customKeys.length})`,
+            subtitle:"Tes séances créées",
+            image:"images/workout_ai.jpg",
+            badge:"AI"
+          },
           ()=>window.openAISessionsPack()
         ));
       }else{
@@ -9474,15 +9466,19 @@ window.renderAIScreen = function renderAIScreen(){
           ).trim(),
           subtitle: `${Number(data.weeks || 0) || "?"} sem • ${Number(data.sessionsPerWeek || data.daysPerWeek || data.plan?.daysPerWeek || 0) || "?"}/sem`,
           image: getProgramImageByIndex(index + 1),
-          createdAtValue: getCreatedAtValue(data)
+          badge: "Programme"
         }));
+
+      console.log("[WORKOUTS] AI programs found:", programs.length, programs);
 
       if(programs.length){
         programs.forEach(p=>{
           hostAIP.appendChild(makeCard(
             {
               title: p.title,
-              image: p.image
+              subtitle: p.subtitle,
+              image: p.image,
+              badge: p.badge
             },
             ()=>window.openAIProgram(p.programId)
           ));
