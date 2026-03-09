@@ -8954,12 +8954,6 @@ function openProfileEntrySafe(){
     requestAnimationFrame(()=>{ try{ window.renderWorkoutProgramScreen?.(); }catch(e){} });
   }
 
-  window.openWorkoutProgram = function openWorkoutProgram(programId){
-    const p = (window.WORKOUT_CATALOG?.trending || []).find(x=>String(x.id)===String(programId));
-    if(!p) return notify("Programme introuvable.");
-    _setProgramScreen(p);
-  };
-
   window.renderWorkoutProgramScreen = function renderWorkoutProgramScreen(){
     const p = window.CURRENT_WORKOUT_PROGRAM || null;
     const titleEl = document.getElementById("wpTitle");
@@ -8983,13 +8977,22 @@ function openProfileEntrySafe(){
       const meta = S[sid] || null;
       const name = meta?.name || sid || "Séance";
       const blurb = String(s?.blurb || "").trim();
+
+      const hasWarmup = Array.isArray(meta?.warmup) && meta.warmup.length > 0;
+      const hasItems = Array.isArray(meta?.items) && meta.items.length > 0;
+      const hasCooldown = Array.isArray(meta?.cooldown) && meta.cooldown.length > 0;
+      const isPlanOnly = !!meta?.lightweightPlanOnly || (!hasWarmup && !hasItems && !hasCooldown);
+      const playLabel = isPlanOnly ? "Plan" : "Play";
+      const playDisabledAttr = isPlanOnly ? "disabled aria-disabled=\"true\"" : "";
+
       return `
         <div class="wpItem" data-sid="${esc(sid)}">
           <div class="wpItemLeft">
             <div class="wpItemTitle">${esc(name)}</div>
             <div class="wpItemSub">${esc(blurb || "Séance prête à lancer.")}</div>
+            ${isPlanOnly ? `<div class="wpItemSub" style="opacity:.7;margin-top:4px;">Séance générée comme structure de programme uniquement.</div>` : ``}
           </div>
-          <button class="wpPlay" type="button" data-play="${esc(sid)}">Play</button>
+          <button class="wpPlay" type="button" data-play="${esc(sid)}" ${playDisabledAttr}>${playLabel}</button>
         </div>
       `;
     }).join("");
@@ -9257,17 +9260,23 @@ window.renderAIScreen = function renderAIScreen(){
     if(window.__wpBoundOnce) return;
     window.__wpBoundOnce = true;
 
-    document.getElementById("btnBackFromProgram")?.addEventListener("click", ()=>{
-      if(typeof window.showScreen === "function") window.showScreen("sessions");
-      requestAnimationFrame(()=>{ try{ window.renderWorkoutsScreen?.(); }catch(e){} });
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    });
-
-    document.getElementById("wpSessionList")?.addEventListener("click", (e)=>{
+        document.getElementById("wpSessionList")?.addEventListener("click", (e)=>{
       const btn = e.target.closest("[data-play]");
       if(!btn) return;
+
       const sid = btn.getAttribute("data-play");
       if(!sid) return;
+
+      const meta = (window.SESSIONS || {})[sid] || null;
+      const hasWarmup = Array.isArray(meta?.warmup) && meta.warmup.length > 0;
+      const hasItems = Array.isArray(meta?.items) && meta.items.length > 0;
+      const hasCooldown = Array.isArray(meta?.cooldown) && meta.cooldown.length > 0;
+      const isPlanOnly = !!meta?.lightweightPlanOnly || (!hasWarmup && !hasItems && !hasCooldown);
+
+      if(isPlanOnly){
+        notify("Cette séance est un plan de programme, mais elle n’a pas encore de contenu jouable.");
+        return;
+      }
 
       if(typeof window.startSession === "function"){
         window.startSession(sid);
