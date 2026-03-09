@@ -9163,7 +9163,7 @@ window.renderAIScreen = function renderAIScreen(){
         return;
       }
 
-      // =====================
+       // =====================
       // PROGRAMME (calé Home + reloadProgramsIntoSESSIONS)
       // =====================
       const weeks = Number(document.getElementById("aiWeeks")?.value || 4) || 4;
@@ -9172,7 +9172,7 @@ window.renderAIScreen = function renderAIScreen(){
 
       console.log("[AI] generate program…", { goalText, weeks, perWeek, minutes, constraints });
 
-            const programResult = await withTimeout(
+      const programResult = await withTimeout(
         createProgramViaBackend({
           goalText,
           weeks,
@@ -9183,7 +9183,13 @@ window.renderAIScreen = function renderAIScreen(){
         60000
       );
 
-                  if(programResult?.softWarning){
+      if(typeof window.reloadProgramsIntoSESSIONS === "function"){
+        await window.reloadProgramsIntoSESSIONS();
+      }else if(typeof reloadProgramsIntoSESSIONS === "function"){
+        await reloadProgramsIntoSESSIONS();
+      }
+
+      if(programResult?.softWarning){
         toast("✅ Programme créé (avec ajustements IA)");
       }else{
         toast("✅ Programme IA créé");
@@ -9191,12 +9197,39 @@ window.renderAIScreen = function renderAIScreen(){
 
       if(typeof window.showScreen === "function") window.showScreen("sessions");
       if(typeof setBottomNavActive === "function") setBottomNavActive("sessions");
-      await new Promise(r => setTimeout(r, 0));
-      try{ await window.renderWorkoutsScreen?.(); }catch(e){}
 
-      // ouverture auto seulement si le backend renvoie explicitement un programId
-      if(programResult?.programId){
-        try{ await window.openAIProgram(programResult.programId); }catch(e){}
+      await new Promise(r => requestAnimationFrame(r));
+
+      if(typeof window.renderWorkoutsScreen === "function"){
+        await window.renderWorkoutsScreen();
+      }
+
+      try{
+        const _db = (typeof db !== "undefined") ? db : window.db;
+        const _user = (typeof currentUser !== "undefined") ? currentUser : window.currentUser;
+
+        if(_db && _user?.uid){
+          const snap = await getDocs(collection(_db, "users", _user.uid, "programs"));
+          const docs = snap.docs
+            .map(d => ({ id: d.id, ...(d.data() || {}) }))
+            .sort((a,b)=>{
+              const av = (typeof a.createdAt?.toMillis === "function")
+                ? a.createdAt.toMillis()
+                : ((a.createdAt?.seconds || 0) * 1000);
+              const bv = (typeof b.createdAt?.toMillis === "function")
+                ? b.createdAt.toMillis()
+                : ((b.createdAt?.seconds || 0) * 1000);
+              return bv - av;
+            });
+
+          const latestProgramId = programResult?.programId || docs[0]?.id || null;
+
+          if(latestProgramId && typeof window.openAIProgram === "function"){
+            await window.openAIProgram(latestProgramId);
+          }
+        }
+      }catch(e){
+        console.warn("[AI] post-create open latest program failed:", e);
       }
 
     }catch(e){
@@ -9256,7 +9289,7 @@ window.renderAIScreen = function renderAIScreen(){
     }
   };
 
-   window.openAIProgram = async function openAIProgram(programId){
+    window.openAIProgram = async function openAIProgram(programId){
     try{
       const _db = (typeof db !== "undefined") ? db : window.db;
       const _user = (typeof currentUser !== "undefined") ? currentUser : window.currentUser;
