@@ -2938,10 +2938,14 @@ const firebaseConfig = {
 
     const app = initializeApp(firebaseConfig);
     console.log("🔥 Firebase project:", firebaseConfig.projectId);
-    const auth = getAuth(app);
-    const db   = getFirestore(app);
+const auth = getAuth(app);
+const db   = getFirestore(app);
 
-    const $ = (id)=>document.getElementById(id);
+// ✅ expose pour les helpers/UI qui retombent sur window.*
+window.auth = auth;
+window.db = db;
+
+const $ = (id)=>document.getElementById(id);
 
     const APP_TITLE = "EliteTraining";
     const ELITE_LAST_EMAIL = "elite_last_email";
@@ -9409,6 +9413,36 @@ window.renderAIScreen = function renderAIScreen(){
       hostT.appendChild(makeCard(t, ()=>window.openWorkoutProgram(t.id)));
     });
 
+    // AI sessions
+    hostAIS.innerHTML = "";
+    try{
+      if(typeof window.reloadCustomSessionsIntoSESSIONS === "function"){
+        await window.reloadCustomSessionsIntoSESSIONS();
+      }
+
+      const S = window.SESSIONS || {};
+      const customKeys = Object.keys(S).filter(k=>String(k).startsWith("CUSTOM_"));
+
+      console.log("[WORKOUTS] AI sessions found:", customKeys.length, customKeys);
+
+      if(customKeys.length){
+        hostAIS.appendChild(makeCard(
+          {
+            title:`Séances AI (${customKeys.length})`,
+            subtitle:"Tes séances créées",
+            image:"images/workout_ai.jpg",
+            badge:"AI"
+          },
+          ()=>window.openAISessionsPack()
+        ));
+      }else{
+        hostAIS.innerHTML = `<div class="muted small">Aucune séance IA enregistrée.</div>`;
+      }
+    }catch(e){
+      console.warn("render AI sessions error:", e);
+      hostAIS.innerHTML = `<div class="muted small">Aucune séance IA enregistrée.</div>`;
+    }
+
     // AI programs
     hostAIP.innerHTML = "";
     try{
@@ -9434,15 +9468,7 @@ window.renderAIScreen = function renderAIScreen(){
       console.log("[WORKOUTS] AI programs raw docs:", docs.length, docs);
 
       const programs = docs
-        .sort((a,b)=>{
-          const av = (typeof a.createdAt?.toMillis === "function")
-            ? a.createdAt.toMillis()
-            : ((a.createdAt?.seconds || 0) * 1000);
-          const bv = (typeof b.createdAt?.toMillis === "function")
-            ? b.createdAt.toMillis()
-            : ((b.createdAt?.seconds || 0) * 1000);
-          return bv - av;
-        })
+        .sort((a,b)=>getCreatedAtValue(b) - getCreatedAtValue(a))
         .slice(0, 10)
         .map((data, index)=>({
           programId: data.id,
@@ -9454,41 +9480,27 @@ window.renderAIScreen = function renderAIScreen(){
             `Programme AI ${index + 1}`
           ).trim(),
           subtitle: `${Number(data.weeks || 0) || "?"} sem • ${Number(data.sessionsPerWeek || data.daysPerWeek || data.plan?.daysPerWeek || 0) || "?"}/sem`,
-          image: `images/workout-programm${Math.max(1, Math.min(10, index + 1))}.jpg`
+          image: getProgramImageByIndex(index + 1),
+          badge: "Programme"
         }));
 
       console.log("[WORKOUTS] AI programs mapped:", programs.length, programs);
 
-      if(!programs.length){
-        hostAIP.innerHTML = `<div class="muted small">Aucun programme IA créé.</div>`;
-        return;
-      }
-
-      hostAIP.innerHTML = `
-        <div style="display:grid; gap:12px;">
-          ${programs.map(p => `
-            <button
-              type="button"
-              class="btn secondary"
-              data-open-program="${esc(p.programId)}"
-              style="width:100%; text-align:left; padding:14px; border-radius:14px;"
-            >
-              <div style="font-weight:700;">${esc(p.title)}</div>
-              <div style="opacity:.75; font-size:.92em; margin-top:4px;">${esc(p.subtitle)}</div>
-              <div style="opacity:.6; font-size:.85em; margin-top:6px;">ID: ${esc(p.programId)}</div>
-            </button>
-          `).join("")}
-        </div>
-      `;
-
-      hostAIP.querySelectorAll("[data-open-program]").forEach(btn=>{
-        btn.addEventListener("click", ()=>{
-          const pid = btn.getAttribute("data-open-program");
-          console.log("[WORKOUTS] click program", pid);
-          window.openAIProgram?.(pid);
+      if(programs.length){
+        programs.forEach(p=>{
+          hostAIP.appendChild(makeCard(
+            {
+              title: p.title,
+              subtitle: p.subtitle,
+              image: p.image,
+              badge: p.badge
+            },
+            ()=>window.openAIProgram(p.programId)
+          ));
         });
-      });
-
+      }else{
+        hostAIP.innerHTML = `<div class="muted small">Aucun programme IA créé.</div>`;
+      }
     }catch(e){
       console.warn("render AI programs error:", e);
       hostAIP.innerHTML = `
