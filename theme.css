@@ -503,20 +503,21 @@ html[data-theme="light"] .etLogoWordmark{
 
 .workoutsTop{
   display:flex;
-  align-items:center;
+  align-items:flex-end;
   gap:14px;
   padding: calc(var(--safe-top) + 10px) 2px 12px;
 }
 
 .workoutsBrandMark{
-  width: 14px;
-  height: 34px;
-  flex: 0 0 14px;
-  background: linear-gradient(135deg, rgba(139,195,74,1), rgba(139,195,74,.42));
-  border-radius: 3px;
-  transform: skewX(-20deg);
-  opacity: .95;
-  margin-bottom: 0;
+  width:14px;
+  height:30px;
+  flex:0 0 14px;
+
+  background: linear-gradient(135deg,#8BC34A,#6FBF3A);
+  border-radius:3px;
+
+  transform:skewX(-18deg);
+  margin-bottom:4px;
 }
 
 .workoutsTitle{
