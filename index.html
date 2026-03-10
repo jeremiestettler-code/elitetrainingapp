@@ -9445,54 +9445,110 @@ window.renderAIScreen = function renderAIScreen(){
 
   window.openAIProgram = async function openAIProgram(programId){
     try{
-      if(typeof window.reloadProgramsIntoSESSIONS === "function"){
-        await window.reloadProgramsIntoSESSIONS(programId);
-      }else if(typeof reloadProgramsIntoSESSIONS === "function"){
-        await reloadProgramsIntoSESSIONS(programId);
-      }else{
-        return notify("reloadProgramsIntoSESSIONS introuvable.");
+      const _db = (typeof db !== "undefined") ? db : window.db;
+      const _user = (typeof currentUser !== "undefined") ? currentUser : window.currentUser;
+      const _getDoc = (typeof getDoc !== "undefined") ? getDoc : window.getDoc;
+      const _getDocs = (typeof getDocs !== "undefined") ? getDocs : window.fsGetDocs;
+      const _doc = (typeof doc !== "undefined") ? doc : window.doc;
+      const _collection = (typeof collection !== "undefined") ? collection : window.fsCollection;
+
+      if(!_db || !_user?.uid || !programId || !_getDoc || !_getDocs || !_doc || !_collection){
+        return notify("Programme introuvable.");
       }
 
-      const S = window.SESSIONS || {};
-      const sessions = Object.entries(S)
-        .filter(([k,v])=>{
-          return String(k).startsWith(`PROG_${programId}__`) && (v?.programId === programId || true);
-        })
-        .map(([k,v])=>({ key:k, data:v }))
-        .sort((a,b)=>{
-          const wa = Number(a.data?.programWeek || 0) || 0;
-          const wb = Number(b.data?.programWeek || 0) || 0;
-          if(wa !== wb) return wa - wb;
+      const progRef = _doc(_db, "users", _user.uid, "programs", programId);
+      const progSnap = await _getDoc(progRef);
 
-          const sa = Number(a.data?.programSessionNumber || 0) || 0;
-          const sb = Number(b.data?.programSessionNumber || 0) || 0;
-          if(sa !== sb) return sa - sb;
+      if(!progSnap.exists()){
+        return notify("Programme introuvable.");
+      }
 
-          return String(a.key).localeCompare(String(b.key));
+      const progData = progSnap.data() || {};
+      const title = String(
+        progData.title ||
+        progData.goalText ||
+        progData.goal ||
+        progData.name ||
+        "Programme AI"
+      ).trim();
+
+      const weeksSnap = await _getDocs(_collection(_db, "users", _user.uid, "programs", programId, "weeks"));
+      const weekDocs = weeksSnap.docs.sort((a,b)=>{
+        const wa = Number(String(a.id).match(/\d+/)?.[0] || 0);
+        const wb = Number(String(b.id).match(/\d+/)?.[0] || 0);
+        return wa - wb;
+      });
+
+      const list = [];
+      const sessionsForMerge = {};
+
+      for(const weekDoc of weekDocs){
+        const weekData = weekDoc.data() || {};
+        const weekNumber =
+          Number(weekData.week || weekData.weekNumber || String(weekDoc.id).match(/\d+/)?.[0] || 1) || 1;
+
+        const sessSnap = await _getDocs(
+          _collection(_db, "users", _user.uid, "programs", programId, "weeks", String(weekDoc.id), "sessions")
+        );
+
+        const sessionDocs = sessSnap.docs.sort((a,b)=>{
+          const da = a.data() || {};
+          const dbb = b.data() || {};
+          const na = Number(da.dayIndex || da.sessionNumber || 0) || 0;
+          const nb = Number(dbb.dayIndex || dbb.sessionNumber || 0) || 0;
+          if(na !== nb) return na - nb;
+          return String(a.id).localeCompare(String(b.id));
         });
 
-      console.log("[PROGRAM OPEN] programId:", programId, "sessions:", sessions.length);
+        sessionDocs.forEach((d, idx)=>{
+          const data = d.data() || {};
+          const sessionObj = (data.session && typeof data.session === "object") ? data.session : data;
+          const num = Number(data.dayIndex || data.sessionNumber || (idx + 1)) || (idx + 1);
 
-      if(!sessions.length){
+          const sid = `PROG_${programId}__W${weekNumber}_S${num}`;
+
+          sessionsForMerge[sid] = {
+            name: String(sessionObj.name || data.title || `Week ${weekNumber} - Séance ${num}`),
+            warmup: Array.isArray(sessionObj.warmup) ? sessionObj.warmup : [],
+            items: Array.isArray(sessionObj.items) ? sessionObj.items : [],
+            cooldown: Array.isArray(sessionObj.cooldown) ? sessionObj.cooldown : [],
+            estimatedMinutes: (typeof sessionObj.estimatedMinutes === "number") ? sessionObj.estimatedMinutes : null,
+            source: "program",
+            programId,
+            programName: title,
+            programTitle: title,
+            programWeek: weekNumber,
+            programSessionNumber: num,
+            programSessionKey: d.id
+          };
+
+          list.push({
+            id: sid,
+            blurb: `Week ${weekNumber} - Séance ${num}`
+          });
+        });
+      }
+
+      if(!list.length){
         return notify("Programme vide (aucune séance chargée).");
       }
 
-      const first = sessions[0]?.data || {};
-      const weeksCount =
-        Number(first.programWeeksCount || 0) ||
-        Math.max(...sessions.map(x=>Number(x.data?.programWeek || 1) || 1), 1);
+      window.SESSIONS = {
+        ...(window.SESSIONS || {}),
+        ...sessionsForMerge
+      };
 
-      const list = sessions.map(({ key, data })=>{
-        const week = Number(data?.programWeek || 1) || 1;
-        const num  = Number(data?.programSessionNumber || 1) || 1;
-        return {
-          id: key,
-          blurb: `Week ${week} - Séance ${num}`
-        };
-      });
+      console.log("[PROGRAM OPEN] programId:", programId, "sessions:", list.length);
+
+      const weeksCount =
+        Number(progData.weeks || 0) ||
+        Math.max(...list.map(x=>{
+          const m = String(x.blurb).match(/Week\s+(\d+)/i);
+          return Number(m?.[1] || 1);
+        }), 1);
 
       _setProgramScreen({
-        title: String(first.programTitle || first.programName || "Programme AI"),
+        title,
         subtitle: `${weeksCount} semaine${weeksCount > 1 ? "s" : ""} • ${list.length} séance${list.length > 1 ? "s" : ""}`,
         sessions: list
       });
