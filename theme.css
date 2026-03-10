@@ -66,21 +66,22 @@ html, body{
 
 /* Topbar : actuellement en rgba bleu-ish dans l’inline CSS */
 .topbar{
-  background: transparent !important;
+  background: rgba(11,15,20,.88) !important;
   border: none !important;
   box-shadow: none !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
 }
 [data-theme="light"] .topbar{
-  background: rgba(255,255,255,.82) !important;
-  border: 1px solid rgba(10,20,40,.10) !important;
-  box-shadow: 0 10px 22px rgba(10,20,40,.10) !important;
+  background: rgba(248,250,252,.92) !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
 }
-.topbar::after{
-  display:none;
-}
-}
+.topbar::after,
 [data-theme="light"] .topbar::after{
-  background: rgba(10,20,40,.10) !important;
+  display:none !important;
 }
 
 /* Switch coach : remplace le bleu checked par le vert logo */
