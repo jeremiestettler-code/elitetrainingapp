@@ -9484,8 +9484,27 @@ window.renderAIScreen = function renderAIScreen(){
         return wa - wb;
       });
 
-      const list = [];
+            const list = [];
       const sessionsForMerge = {};
+      const LIB = window.EXERCISE_LIBRARY || {};
+      const BY_ID = LIB.byId || {};
+
+      function enrichProgramEntry(raw, fallbackType){
+        const e = raw && typeof raw === "object" ? { ...raw } : {};
+        const ref = BY_ID[String(e.id || "").trim()] || null;
+
+        return {
+          ...e,
+          type: e.type || ref?.type || fallbackType || "",
+          id: e.id || ref?.id || "",
+          name: e.name || ref?.name || e.id || "",
+          icon: e.icon || ref?.icon || "",
+          desc: e.desc || ref?.desc || undefined,
+          muscle: e.muscle || ref?.muscle || undefined,
+          steps: Array.isArray(e.steps) ? e.steps : (Array.isArray(ref?.steps) ? ref.steps : undefined),
+          mistakes: Array.isArray(e.mistakes) ? e.mistakes : (Array.isArray(ref?.mistakes) ? ref.mistakes : undefined)
+        };
+      }
 
       for(const weekDoc of weekDocs){
         const weekData = weekDoc.data() || {};
@@ -9512,11 +9531,17 @@ window.renderAIScreen = function renderAIScreen(){
 
           const sid = `PROG_${programId}__W${weekNumber}_S${num}`;
 
-          sessionsForMerge[sid] = {
+                    sessionsForMerge[sid] = {
             name: String(sessionObj.name || data.title || `Week ${weekNumber} - Séance ${num}`),
-            warmup: Array.isArray(sessionObj.warmup) ? sessionObj.warmup : [],
-            items: Array.isArray(sessionObj.items) ? sessionObj.items : [],
-            cooldown: Array.isArray(sessionObj.cooldown) ? sessionObj.cooldown : [],
+            warmup: Array.isArray(sessionObj.warmup)
+              ? sessionObj.warmup.map(x => enrichProgramEntry(x, "warmup"))
+              : [],
+            items: Array.isArray(sessionObj.items)
+              ? sessionObj.items.map(x => enrichProgramEntry(x, "items"))
+              : [],
+            cooldown: Array.isArray(sessionObj.cooldown)
+              ? sessionObj.cooldown.map(x => enrichProgramEntry(x, "cooldown"))
+              : [],
             estimatedMinutes: (typeof sessionObj.estimatedMinutes === "number") ? sessionObj.estimatedMinutes : null,
             source: "program",
             programId,
