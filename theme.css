@@ -505,7 +505,7 @@ html[data-theme="light"] .etLogoWordmark{
   display:flex;
   align-items:flex-end;
   gap:14px;
-  padding: calc(var(--safe-top) + 10px) 2px 12px;
+  padding: 10px 2px 12px;
 }
 
 .workoutsBrandMark{
