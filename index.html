@@ -3071,6 +3071,8 @@ window.auth = auth;
 window.db = db;
 window.fsCollection = collection;
 window.fsGetDocs = getDocs;
+window.doc = doc;
+window.getDoc = getDoc;
 
 const $ = (id)=>document.getElementById(id);
 
@@ -9443,7 +9445,7 @@ window.renderAIScreen = function renderAIScreen(){
     }
   };
 
-  window.openAIProgram = async function openAIProgram(programId){
+   window.openAIProgram = async function openAIProgram(programId){
     try{
       const _db = (typeof db !== "undefined") ? db : window.db;
       const _user = (typeof currentUser !== "undefined") ? currentUser : window.currentUser;
@@ -9472,7 +9474,10 @@ window.renderAIScreen = function renderAIScreen(){
         "Programme AI"
       ).trim();
 
-      const weeksSnap = await _getDocs(_collection(_db, "users", _user.uid, "programs", programId, "weeks"));
+      const weeksSnap = await _getDocs(
+        _collection(_db, "users", _user.uid, "programs", programId, "weeks")
+      );
+
       const weekDocs = weeksSnap.docs.sort((a,b)=>{
         const wa = Number(String(a.id).match(/\d+/)?.[0] || 0);
         const wb = Number(String(b.id).match(/\d+/)?.[0] || 0);
