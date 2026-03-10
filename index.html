@@ -185,61 +185,62 @@ body.inWorkout .bottomNav{ display:none !important; }
 
 /* On la cache aussi sur login si besoin (on le fera en JS, mais ce fallback évite les flash) */
 .screenLoginActive .bottomNav{ display:none !important; }
-    /* =========================
-       Topbar premium (plus cohérente avec le design global)
-       ========================= */
-    .topbar{
-      position: sticky;
-      top: 0;
-      z-index: 60;
+/* =========================
+   Minimal topbar
+========================= */
 
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
+.topbar{
+  position: sticky;
+  top: 0;
+  z-index: 60;
 
-      margin: 0 0 14px;
-      padding: calc(10px + var(--safe-top)) 14px 12px;
+  height: 64px;
 
-      border-radius: 24px;
-      border: 1px solid rgba(139,195,74,.16);
+  display:flex;
+  align-items:center;
+  justify-content:center;
 
-      background:
-        linear-gradient(180deg, rgba(18,24,34,.88), rgba(11,15,20,.78));
-      box-shadow:
-        0 14px 34px rgba(0,0,0,.28),
-        0 0 0 1px rgba(255,255,255,.03) inset;
+  padding-top: var(--safe-top);
+}
 
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      overflow: hidden;
-    }
+/* centre le logo */
+.topbarCenter{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+}
 
-    .topbar::before{
-      content:"";
-      position:absolute;
-      inset:0;
-      pointer-events:none;
-      background:
-        radial-gradient(circle at top left, rgba(139,195,74,.10), transparent 42%),
-        linear-gradient(180deg, rgba(255,255,255,.04), transparent 55%);
-    }
+.appLogo{
+  height:36px;
+  width:auto;
+  opacity:.95;
+}
 
-    .topbar::after{
-      content:"";
-      position:absolute;
-      left:14px;
-      right:14px;
-      bottom:0;
-      height:1px;
-      background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(139,195,74,.26),
-        transparent
-      );
-      pointer-events:none;
-    }
+/* bouton logout */
+.topbarLogout{
+  position:absolute;
+  right:14px;
+  top: calc(14px + var(--safe-top));
+
+  width:34px;
+  height:34px;
+
+  border-radius:10px;
+  border:none;
+
+  background:transparent;
+  color:var(--text);
+
+  font-size:18px;
+  cursor:pointer;
+
+  opacity:.7;
+}
+
+.topbarLogout:hover{
+  opacity:1;
+}
 
     [data-theme="light"] .topbar{
       background:
@@ -2297,17 +2298,13 @@ html[data-profile-edit="1"] .profileEditOnly{ display:block; }
   
   <div class="app">
     <!-- TOPBAR -->
-    <div class="topbar">
-      <div class="brandWrap">
-        <img class="appLogo" src="./images/icon-192.png" alt="EliteTraining" />
-        <div class="brand">
-          <div class="title" id="brandTitle">EliteTraining</div>
-          <div class="sub" id="userLine">Non connecté</div>
-        </div>
-      </div>
-      <div class="pill" id="pillAuth">
-        <span id="pillStatus">🔒</span>
-<button id="btnLogout" style="display:none">Déconnexion</button>
+      <div class="topbarCenter">
+    <img src="images/logo.svg" class="appLogo">
+  </div>
+
+  <button id="logoutBtn" class="topbarLogout" aria-label="Se déconnecter">
+    ⎋
+  </button>
       </div>
     </div>
 
@@ -9679,6 +9676,21 @@ function initBottomNav(){
 
   setBottomNavActive("home");
 }
+
+// =========================
+// Logout button
+// =========================
+document.getElementById("logoutBtn")?.addEventListener("click", async ()=>{
+  try{
+    if(typeof signOutUser === "function"){
+      await signOutUser();
+    }else if(window.auth){
+      await signOut(window.auth);
+    }
+  }catch(e){
+    console.warn("Logout error:", e);
+  }
+});
 
 function syncBottomNavVisibility(){
   const nav = document.getElementById("bottomNav");
