@@ -9484,10 +9484,51 @@ window.renderAIScreen = function renderAIScreen(){
         return wa - wb;
       });
 
-            const list = [];
+                  const list = [];
       const sessionsForMerge = {};
       const LIB = window.EXERCISE_LIBRARY || {};
       const BY_ID = LIB.byId || {};
+
+      function looksLikeExerciseCode(v){
+        const s = String(v || "").trim();
+        if(!s) return true;
+        return /^[A-Z]\d+(?:-\d+)?$/i.test(s) || /^[A-Z]{1,4}\d+(?:-\d+)?$/i.test(s);
+      }
+
+      function humanizeToken(v){
+        return String(v || "")
+          .replace(/[_-]+/g, " ")
+          .replace(/\bdb\b/gi, "dumbbell")
+          .replace(/\bohp\b/gi, "overhead press")
+          .replace(/\brdl\b/gi, "romanian deadlift")
+          .replace(/\btri\b/gi, "triceps")
+          .replace(/\bcurl\b/gi, "curl")
+          .replace(/\brow\b/gi, "row")
+          .replace(/\bpress\b/gi, "press")
+          .replace(/\b([a-z])/g, (m, c)=>c.toUpperCase())
+          .trim();
+      }
+
+      function resolveDisplayName(e, ref){
+        const rawName = String(e?.name || "").trim();
+        const refName = String(ref?.name || "").trim();
+        const rawDesc = String(e?.desc || "").trim();
+        const refDesc = String(ref?.desc || "").trim();
+        const rawIcon = String(e?.icon || "").trim();
+        const refIcon = String(ref?.icon || "").trim();
+        const rawId   = String(e?.id || "").trim();
+        const refId   = String(ref?.id || "").trim();
+
+        if(rawName && !looksLikeExerciseCode(rawName)) return rawName;
+        if(refName && !looksLikeExerciseCode(refName)) return refName;
+        if(rawDesc) return rawDesc;
+        if(refDesc) return refDesc;
+        if(rawIcon) return humanizeToken(rawIcon);
+        if(refIcon) return humanizeToken(refIcon);
+        if(rawId) return rawId;
+        if(refId) return refId;
+        return "Exercice";
+      }
 
       function enrichProgramEntry(raw, fallbackType){
         const e = raw && typeof raw === "object" ? { ...raw } : {};
@@ -9497,7 +9538,7 @@ window.renderAIScreen = function renderAIScreen(){
           ...e,
           type: e.type || ref?.type || fallbackType || "",
           id: e.id || ref?.id || "",
-          name: e.name || ref?.name || e.id || "",
+          name: resolveDisplayName(e, ref),
           icon: e.icon || ref?.icon || "",
           desc: e.desc || ref?.desc || undefined,
           muscle: e.muscle || ref?.muscle || undefined,
