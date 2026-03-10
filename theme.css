@@ -514,10 +514,10 @@ html[data-theme="light"] .etLogoWordmark{
   flex:0 0 14px;
 
   background: linear-gradient(
-    180deg,
+    270deg,
     #C6F08A 0%,
     #8BC34A 45%,
-    #5FAF2F 100%
+    #284914 100%
   );
 
   border-radius:4px;
