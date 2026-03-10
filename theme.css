@@ -514,19 +514,18 @@ html[data-theme="light"] .etLogoWordmark{
   flex:0 0 14px;
 
   background: linear-gradient(
-    135deg,
-    #A5D66A 0%,
-    #8BC34A 40%,
-    #6FBF3A 100%
+    180deg,
+    #C6F08A 0%,
+    #8BC34A 45%,
+    #5FAF2F 100%
   );
 
-  border-radius:3px;
+  border-radius:4px;
   transform:skewX(-18deg);
   margin-bottom:4px;
 
-  box-shadow:0 0 10px rgba(139,195,74,.35);
+  box-shadow:0 2px 10px rgba(139,195,74,.35);
 }
-
 .workoutsTitle{
   font-size: 34px;
   line-height: 1;
