@@ -2298,15 +2298,20 @@ html[data-profile-edit="1"] .profileEditOnly{ display:block; }
   
   <div class="app">
     <!-- TOPBAR -->
-      <div class="topbarCenter">
-    <img src="images/logo.svg" class="appLogo">
+<div class="topbar">
+  <div class="topbarCenter">
+    <img src="./images/icon-192.png" class="appLogo" alt="EliteTraining">
   </div>
 
-  <button id="logoutBtn" class="topbarLogout" aria-label="Se déconnecter">
+  <button id="btnLogout" class="topbarLogout" aria-label="Se déconnecter" style="display:none;">
     ⎋
   </button>
-      </div>
-    </div>
+
+  <!-- éléments legacy gardés cachés pour ne rien casser dans le JS existant -->
+  <div id="brandTitle" style="display:none;">EliteTraining</div>
+  <div id="userLine" style="display:none;">Non connecté</div>
+  <div id="pillStatus" style="display:none;">🔒</div>
+</div>
 
     <!-- LOGIN -->
     <section class="screen active" id="screenLogin">
@@ -3605,6 +3610,7 @@ function portalModalToBody(modalId){
 
       const bt = $("brandTitle");
       if(bt) bt.textContent = (name === "workout") ? (curSession?.name || "Séance") : APP_TITLE;
+
       const ul = $("userLine");
       if(ul && name !== "workout") ul.textContent = topbarUserText;
 
@@ -3612,6 +3618,7 @@ function portalModalToBody(modalId){
 
       const wrap = $("coachSwitchWrap");
       if(wrap) wrap.style.display = "none";
+
       const lo = $("btnLogout");
       if(lo) lo.style.display = (name === "workout") ? "none" : (currentUser ? "inline-flex" : "none");
 
@@ -6687,15 +6694,25 @@ window.showScreen = showScreen;
 window.loadWorkoutHistory = loadWorkoutHistory;
       if(!user){
         topbarUserText = "Non connecté";
-        $("userLine").textContent = topbarUserText;
-        $("pillStatus").textContent = "🔒";
-        $("btnLogout").style.display = "none";
+
+        const ul = $("userLine");
+        if(ul) ul.textContent = topbarUserText;
+
+        const ps = $("pillStatus");
+        if(ps) ps.textContent = "🔒";
+
+        const lo = $("btnLogout");
+        if(lo) lo.style.display = "none";
+
         showScreen("login");
         return;
       }
 
-      $("pillStatus").textContent = "";
-      $("btnLogout").style.display = "inline-flex";
+      const ps = $("pillStatus");
+      if(ps) ps.textContent = "";
+
+      const lo = $("btnLogout");
+      if(lo) lo.style.display = "inline-flex";
 
       try{
         try{ migrateTrophyStorage(user.uid); }catch(e){}
