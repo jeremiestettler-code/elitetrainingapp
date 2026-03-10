@@ -502,23 +502,28 @@ html[data-theme="light"] .etLogoWordmark{
 }
 
 .workoutsTop{
-  padding: calc(var(--safe-top) + 10px) 2px 8px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding: calc(var(--safe-top) + 10px) 2px 12px;
 }
 
 .workoutsBrandMark{
-  width: 42px;
-  height: 24px;
-  background: linear-gradient(90deg, rgba(139,195,74,1), rgba(139,195,74,.2));
-  clip-path: polygon(0 0, 70% 0, 100% 100%, 30% 100%);
+  width: 14px;
+  height: 34px;
+  flex: 0 0 14px;
+  background: linear-gradient(135deg, rgba(139,195,74,1), rgba(139,195,74,.42));
+  border-radius: 3px;
+  transform: skewX(-20deg);
   opacity: .95;
-  margin-bottom: 10px;
+  margin-bottom: 0;
 }
 
 .workoutsTitle{
-  font-size: 36px;
-  line-height: .95;
+  font-size: 34px;
+  line-height: 1;
   font-weight: 900;
-  letter-spacing: .2px;
+  letter-spacing: -.4px;
 }
 
 .workoutsSectionHdr{
