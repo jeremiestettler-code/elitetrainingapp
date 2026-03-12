@@ -9203,7 +9203,7 @@ window.renderAIScreen = function renderAIScreen(){
     const libraryCompact = (typeof buildLibraryCompact === "function") ? buildLibraryCompact() : [];
 
     const ac = new AbortController();
-    const kill = setTimeout(()=>ac.abort(), 1000000);
+    const kill = setTimeout(()=>ac.abort(), 240000);
 
     let res, raw, data;
     try{
@@ -9225,7 +9225,7 @@ window.renderAIScreen = function renderAIScreen(){
         signal: ac.signal
       });
     }catch(e){
-      if(e?.name === "AbortError") throw new Error("IA trop lente (180s). Réessaie.");
+      if(e?.name === "AbortError") throw new Error("IA trop lente (240s). Réessaie.");
       throw e;
     }finally{
       clearTimeout(kill);
@@ -9328,7 +9328,7 @@ window.renderAIScreen = function renderAIScreen(){
           minutesPerSession: minutes,
           constraints
         }),
-        60000
+        240000
       );
 
       if(typeof window.reloadProgramsIntoSESSIONS === "function"){
