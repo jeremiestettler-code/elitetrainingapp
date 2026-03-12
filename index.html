@@ -4392,8 +4392,12 @@ function buildLibraryCompact(){
     name: String(e.name || ""),
     tags: Array.isArray(e.tags) ? e.tags : [],
     equipment: Array.isArray(e.equipment) ? e.equipment : [],
-    kneeImpact: e.kneeImpact || "low"
-  })).filter(x => x.id); // garde uniquement ceux avec id
+    kneeImpact: e.kneeImpact || "low",
+    difficulty: e.difficulty || "beginner",
+    pattern: e.pattern || "",
+    overheadAllowed: typeof e.overheadAllowed === "boolean" ? e.overheadAllowed : true,
+    floorAllowed: typeof e.floorAllowed === "boolean" ? e.floorAllowed : false
+  })).filter(x => x.id);
 }
 
 // Expose pour debug console
@@ -4833,46 +4837,673 @@ window.__AI = {
 
 
 /* =========================
-   B-SAFE — Enrich EXERCISE_LIBRARY (tags/equipment/kneeImpact)
-   Objectif: rendre le catalogue exploitable par Mode IA + éditeur intelligent
+   B-SAFE — Enrich EXERCISE_LIBRARY V2
+   Objectif:
+   - enrichir le catalogue sans casser l’existant
+   - standardiser les métadonnées utiles pour UI + IA
+   - conserver les champs déjà présents dans sessions.js
 ========================= */
 
-// Dictionnaire simple (tu enrichiras au fil du temps)
 const EX_META = {
-  // clés = id si possible (mieux), sinon on matchera au nom
-  // Exemple (à adapter/compléter progressivement):
-  // "Jumping jacks": { tags:["cardio","warmup"], equipment:["bodyweight"], kneeImpact:"medium" },
+  // ===== ITEMS — haut du panier actuel =====
+  "A1-1": {
+    equipment: ["dumbbell", "bench"],
+    difficulty: "intermediate",
+    tags: ["push", "chest", "upper_body", "strength"],
+    pattern: "horizontal_push",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "A1-2": {
+    equipment: ["dumbbell"],
+    difficulty: "beginner",
+    tags: ["push", "chest", "isolation", "upper_body"],
+    pattern: "horizontal_adduction",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "A1-3": {
+    equipment: ["cable"],
+    difficulty: "beginner",
+    tags: ["arms", "triceps", "push", "isolation"],
+    pattern: "elbow_extension",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "H3-2": {
+    equipment: ["dumbbell"],
+    difficulty: "beginner",
+    tags: ["push", "chest", "upper_body", "strength"],
+    pattern: "horizontal_push",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "goblet": {
+    equipment: ["dumbbell"],
+    difficulty: "beginner",
+    tags: ["legs", "quads", "glutes", "squat"],
+    pattern: "squat",
+    kneeImpact: "medium",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "rdl": {
+    equipment: ["dumbbell"],
+    difficulty: "beginner",
+    tags: ["legs", "glutes", "hamstrings", "hinge"],
+    pattern: "hip_hinge",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "rdl_db": {
+    equipment: ["dumbbell"],
+    difficulty: "beginner",
+    tags: ["legs", "glutes", "hamstrings", "hinge"],
+    pattern: "hip_hinge",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "onearmrow": {
+    equipment: ["dumbbell"],
+    difficulty: "beginner",
+    tags: ["pull", "back", "lats", "upper_body", "unilateral"],
+    pattern: "horizontal_pull",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "onearm_row_db": {
+    equipment: ["dumbbell"],
+    difficulty: "beginner",
+    tags: ["pull", "back", "lats", "upper_body", "unilateral"],
+    pattern: "horizontal_pull",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "landminerow": {
+    equipment: ["barbell", "landmine"],
+    difficulty: "intermediate",
+    tags: ["pull", "back", "upper_body", "strength"],
+    pattern: "horizontal_pull",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "dbcurl": {
+    equipment: ["dumbbell"],
+    difficulty: "beginner",
+    tags: ["arms", "biceps", "isolation"],
+    pattern: "elbow_flexion",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "hammer": {
+    equipment: ["dumbbell"],
+    difficulty: "beginner",
+    tags: ["arms", "biceps", "forearms", "isolation"],
+    pattern: "elbow_flexion",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "hammer_curl": {
+    equipment: ["dumbbell"],
+    difficulty: "beginner",
+    tags: ["arms", "biceps", "forearms", "isolation"],
+    pattern: "elbow_flexion",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "ohp": {
+    equipment: ["dumbbell"],
+    difficulty: "intermediate",
+    tags: ["push", "shoulders", "upper_body", "overhead"],
+    pattern: "vertical_push",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "db_ohp_seated": {
+    equipment: ["dumbbell", "bench"],
+    difficulty: "beginner",
+    tags: ["push", "shoulders", "upper_body", "overhead"],
+    pattern: "vertical_push",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "landminepress": {
+    equipment: ["barbell", "landmine"],
+    difficulty: "beginner",
+    tags: ["push", "shoulders", "chest", "upper_body"],
+    pattern: "angled_push",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "landmine_press": {
+    equipment: ["barbell", "landmine"],
+    difficulty: "beginner",
+    tags: ["push", "shoulders", "chest", "upper_body"],
+    pattern: "angled_push",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "lateral": {
+    equipment: ["dumbbell"],
+    difficulty: "beginner",
+    tags: ["shoulders", "isolation", "upper_body"],
+    pattern: "shoulder_abduction",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "lateral_raise": {
+    equipment: ["dumbbell"],
+    difficulty: "beginner",
+    tags: ["shoulders", "isolation", "upper_body"],
+    pattern: "shoulder_abduction",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "reversefly": {
+    equipment: ["dumbbell"],
+    difficulty: "beginner",
+    tags: ["shoulders", "rear_delts", "upper_back", "pull"],
+    pattern: "horizontal_abduction",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "deadbug": {
+    equipment: ["bodyweight"],
+    difficulty: "beginner",
+    tags: ["core", "abs", "stability", "spine_friendly"],
+    pattern: "anti_extension",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: true
+  },
+  "dead_bug": {
+    equipment: ["bodyweight"],
+    difficulty: "beginner",
+    tags: ["core", "abs", "stability", "spine_friendly"],
+    pattern: "anti_extension",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: true
+  },
+  "plank": {
+    equipment: ["bodyweight"],
+    difficulty: "beginner",
+    tags: ["core", "abs", "stability", "anti_extension"],
+    pattern: "anti_extension",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: true
+  },
+  "sideplank": {
+    equipment: ["bodyweight"],
+    difficulty: "beginner",
+    tags: ["core", "obliques", "stability", "anti_lateral_flexion"],
+    pattern: "anti_lateral_flexion",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: true
+  },
+  "side_plank": {
+    equipment: ["bodyweight"],
+    difficulty: "beginner",
+    tags: ["core", "obliques", "stability", "anti_lateral_flexion"],
+    pattern: "anti_lateral_flexion",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: true
+  },
+  "hip_thrust_db": {
+    equipment: ["dumbbell", "bench"],
+    difficulty: "beginner",
+    tags: ["glutes", "legs", "hinge"],
+    pattern: "hip_extension",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: true
+  },
+  "glute_bridge_db": {
+    equipment: ["dumbbell"],
+    difficulty: "beginner",
+    tags: ["glutes", "legs", "hinge"],
+    pattern: "hip_extension",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: true
+  },
+  "hip_thrust_pause": {
+    equipment: ["bodyweight", "dumbbell", "bench"],
+    difficulty: "beginner",
+    tags: ["glutes", "legs", "tempo", "hinge"],
+    pattern: "hip_extension",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: true
+  },
+  "band_abduction_standing": {
+    equipment: ["band"],
+    difficulty: "beginner",
+    tags: ["glutes", "abductors", "activation"],
+    pattern: "hip_abduction",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "band_row_seated": {
+    equipment: ["band"],
+    difficulty: "beginner",
+    tags: ["pull", "back", "upper_body"],
+    pattern: "horizontal_pull",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: true
+  },
+  "facepull_band": {
+    equipment: ["band"],
+    difficulty: "beginner",
+    tags: ["pull", "rear_delts", "upper_back", "posture"],
+    pattern: "horizontal_pull",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "pallof_press_band": {
+    equipment: ["band"],
+    difficulty: "beginner",
+    tags: ["core", "obliques", "stability", "anti_rotation"],
+    pattern: "anti_rotation",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "farmer": {
+    equipment: ["dumbbell", "kettlebell"],
+    difficulty: "beginner",
+    tags: ["grip", "core", "conditioning", "carry"],
+    pattern: "carry",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "farmer_hold": {
+    equipment: ["dumbbell", "kettlebell"],
+    difficulty: "beginner",
+    tags: ["grip", "core", "carry", "static"],
+    pattern: "carry",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "incline_pushup_bench": {
+    equipment: ["bench", "bodyweight"],
+    difficulty: "beginner",
+    tags: ["push", "chest", "triceps", "bodyweight"],
+    pattern: "horizontal_push",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "chest_supported_row": {
+    equipment: ["dumbbell", "bench"],
+    difficulty: "beginner",
+    tags: ["pull", "back", "upper_body"],
+    pattern: "horizontal_pull",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "hollow_hold": {
+    equipment: ["bodyweight"],
+    difficulty: "intermediate",
+    tags: ["core", "abs", "anti_extension", "static"],
+    pattern: "anti_extension",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: true
+  },
+  "pushup": {
+    equipment: ["bodyweight"],
+    difficulty: "intermediate",
+    tags: ["push", "chest", "triceps", "bodyweight"],
+    pattern: "horizontal_push",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: true
+  },
+  "bulgarian": {
+    equipment: ["bodyweight", "dumbbell"],
+    difficulty: "intermediate",
+    tags: ["legs", "glutes", "quads", "unilateral"],
+    pattern: "lunge",
+    kneeImpact: "high",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "swing": {
+    equipment: ["kettlebell"],
+    difficulty: "intermediate",
+    tags: ["hinge", "glutes", "conditioning", "power"],
+    pattern: "hip_hinge",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+
+  // ===== WARMUP / COOLDOWN =====
+  "wu_breath_core": {
+    equipment: ["bodyweight"],
+    difficulty: "beginner",
+    tags: ["warmup", "core", "breathing", "activation"],
+    pattern: "breathing",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: true
+  },
+  "wu_hip_mobility": {
+    equipment: ["bodyweight"],
+    difficulty: "beginner",
+    tags: ["warmup", "mobility", "hips"],
+    pattern: "mobility",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: true
+  },
+  "wu_band_abduction": {
+    equipment: ["band"],
+    difficulty: "beginner",
+    tags: ["warmup", "glutes", "activation"],
+    pattern: "hip_abduction",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "wu_band_pullapart": {
+    equipment: ["band"],
+    difficulty: "beginner",
+    tags: ["warmup", "upper_back", "shoulders", "activation"],
+    pattern: "horizontal_pull",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "wu_shoulder_mob": {
+    equipment: ["bodyweight", "band"],
+    difficulty: "beginner",
+    tags: ["warmup", "mobility", "shoulders"],
+    pattern: "mobility",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "wu_hip_hinge": {
+    equipment: ["bodyweight"],
+    difficulty: "beginner",
+    tags: ["warmup", "hinge", "patterning"],
+    pattern: "hip_hinge",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "wu_glute_bridge": {
+    equipment: ["bodyweight"],
+    difficulty: "beginner",
+    tags: ["warmup", "glutes", "activation"],
+    pattern: "hip_extension",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: true
+  },
+  "wu_band_row": {
+    equipment: ["band"],
+    difficulty: "beginner",
+    tags: ["warmup", "back", "activation", "pull"],
+    pattern: "horizontal_pull",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "wu_cardio_lowimpact": {
+    equipment: ["bodyweight"],
+    difficulty: "beginner",
+    tags: ["warmup", "cardio", "low_impact"],
+    pattern: "conditioning",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "wu_tspine_open": {
+    equipment: ["bodyweight"],
+    difficulty: "beginner",
+    tags: ["warmup", "mobility", "tspine"],
+    pattern: "mobility",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: true
+  },
+  "wu_glute_bridge_iso": {
+    equipment: ["bodyweight"],
+    difficulty: "beginner",
+    tags: ["warmup", "glutes", "activation", "isometric"],
+    pattern: "hip_extension",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: true
+  },
+  "wu_facepull": {
+    equipment: ["band"],
+    difficulty: "beginner",
+    tags: ["warmup", "upper_back", "rear_delts", "posture"],
+    pattern: "horizontal_pull",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "wu_wrist_shoulder": {
+    equipment: ["bodyweight"],
+    difficulty: "beginner",
+    tags: ["warmup", "mobility", "wrists", "shoulders"],
+    pattern: "mobility",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "wu_external_rotation": {
+    equipment: ["band"],
+    difficulty: "beginner",
+    tags: ["warmup", "shoulders", "rotator_cuff", "activation"],
+    pattern: "external_rotation",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "wu_glute_kickback": {
+    equipment: ["band", "bodyweight"],
+    difficulty: "beginner",
+    tags: ["warmup", "glutes", "activation"],
+    pattern: "hip_extension",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: true
+  },
+  "wu_dead_bug_light": {
+    equipment: ["bodyweight"],
+    difficulty: "beginner",
+    tags: ["warmup", "core", "activation", "spine_friendly"],
+    pattern: "anti_extension",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: true
+  }
 };
 
-// Helpers: déduction légère depuis le nom (fallback)
+function uniq(arr){
+  return Array.from(new Set((arr || []).filter(Boolean)));
+}
+
+function normalizeEquipment(arr){
+  const map = {
+    bodyweight: "bodyweight",
+    poidsducorps: "bodyweight",
+    dumbbell: "dumbbell",
+    dumbbells: "dumbbell",
+    haltere: "dumbbell",
+    halteres: "dumbbell",
+    bench: "bench",
+    banc: "bench",
+    cable: "cable",
+    poulie: "cable",
+    band: "band",
+    bands: "band",
+    elastique: "band",
+    elastiques: "band",
+    barbell: "barbell",
+    barre: "barbell",
+    kettlebell: "kettlebell",
+    landmine: "landmine"
+  };
+
+  return uniq(
+    (arr || []).map(x => String(x || "").trim().toLowerCase().replace(/\s+/g, ""))
+      .map(x => map[x] || x)
+  );
+}
+
 function inferMetaFromName(name, type){
-  const n = String(name||"").toLowerCase();
+  const n = String(name || "").toLowerCase();
+
   const tags = [];
   const equipment = [];
   let kneeImpact = "low";
+  let difficulty = "beginner";
+  let pattern = "";
+  let overheadAllowed = true;
+  let floorAllowed = false;
 
-  // tags génériques
   if(type === "warmup") tags.push("warmup");
   if(type === "cooldown") tags.push("cooldown");
-  if(n.includes("mobilité") || n.includes("mobility")) tags.push("mobility");
-  if(n.includes("étirement") || n.includes("stretch")) tags.push("stretch");
-  if(n.includes("abdos") || n.includes("core")) tags.push("core");
-  if(n.includes("cardio") || n.includes("jumping") || n.includes("burpee")) tags.push("cardio");
 
-  // équipement
-  if(n.includes("élastique") || n.includes("band")) equipment.push("band");
-  if(n.includes("haltère") || n.includes("dumbbell")) equipment.push("dumbbell");
-  if(n.includes("barre") || n.includes("barbell")) equipment.push("barbell");
-  if(n.includes("poids du corps") || n.includes("bodyweight")) equipment.push("bodyweight");
+  if(n.includes("mobilité") || n.includes("mobility")) {
+    tags.push("mobility");
+    pattern = pattern || "mobility";
+  }
+  if(n.includes("étirement") || n.includes("stretch")) {
+    tags.push("stretch");
+    pattern = pattern || "mobility";
+  }
+  if(n.includes("abdos") || n.includes("core") || n.includes("plank") || n.includes("dead bug")) {
+    tags.push("core");
+    floorAllowed = true;
+  }
+  if(n.includes("jumping") || n.includes("burpee") || n.includes("cardio")) {
+    tags.push("cardio");
+    pattern = pattern || "conditioning";
+  }
 
-  // impact genou (heuristique simple)
-  if(n.includes("squat") || n.includes("fente") || n.includes("jump") || n.includes("burpee")) kneeImpact = "high";
-  if(n.includes("montées de genoux") || n.includes("jumping jacks")) kneeImpact = "medium";
+  if(n.includes("band") || n.includes("élastique")) equipment.push("band");
+  if(n.includes("dumbbell") || n.includes("haltère")) equipment.push("dumbbell");
+  if(n.includes("barbell") || n.includes("barre")) equipment.push("barbell");
+  if(n.includes("bench") || n.includes("banc")) equipment.push("bench");
+  if(n.includes("cable") || n.includes("poulie")) equipment.push("cable");
+  if(n.includes("bodyweight") || n.includes("poids du corps")) equipment.push("bodyweight");
 
-  // dédup
-  const uniq = (arr)=>Array.from(new Set(arr)).filter(Boolean);
+  if(n.includes("row")) {
+    tags.push("pull", "back");
+    pattern = pattern || "horizontal_pull";
+  }
+  if(n.includes("press") || n.includes("push-up") || n.includes("push up")) {
+    tags.push("push");
+  }
+  if(n.includes("curl")) {
+    tags.push("arms", "biceps");
+    pattern = pattern || "elbow_flexion";
+  }
+  if(n.includes("triceps")) {
+    tags.push("arms", "triceps");
+    pattern = pattern || "elbow_extension";
+  }
+  if(n.includes("squat")) {
+    tags.push("legs");
+    pattern = pattern || "squat";
+    kneeImpact = "medium";
+  }
+  if(n.includes("lunge") || n.includes("split squat") || n.includes("bulgarian")) {
+    tags.push("legs", "unilateral");
+    pattern = pattern || "lunge";
+    kneeImpact = "high";
+  }
+  if(n.includes("rdl") || n.includes("deadlift") || n.includes("hinge")) {
+    tags.push("glutes", "hamstrings", "hinge");
+    pattern = pattern || "hip_hinge";
+  }
+  if(n.includes("glute bridge") || n.includes("hip thrust")) {
+    tags.push("glutes");
+    pattern = pattern || "hip_extension";
+    floorAllowed = true;
+  }
+  if(n.includes("overhead")) {
+    tags.push("shoulders", "overhead");
+    pattern = pattern || "vertical_push";
+  }
 
-  return { tags: uniq(tags), equipment: uniq(equipment), kneeImpact };
+  if(n.includes("burpee") || n.includes("jump")) kneeImpact = "high";
+  if(n.includes("jumping jacks")) kneeImpact = "medium";
+
+  return {
+    tags: uniq(tags),
+    equipment: normalizeEquipment(equipment),
+    kneeImpact,
+    difficulty,
+    pattern,
+    overheadAllowed,
+    floorAllowed
+  };
+}
+
+function mergeExerciseMeta(base, meta, inferred){
+  return {
+    ...base,
+    tags: uniq([
+      ...(Array.isArray(base?.tags) ? base.tags : []),
+      ...(Array.isArray(meta?.tags) ? meta.tags : []),
+      ...(Array.isArray(inferred?.tags) ? inferred.tags : [])
+    ]),
+    equipment: normalizeEquipment([
+      ...(Array.isArray(base?.equipment) ? base.equipment : []),
+      ...(Array.isArray(meta?.equipment) ? meta.equipment : []),
+      ...(Array.isArray(inferred?.equipment) ? inferred.equipment : [])
+    ]),
+    difficulty: meta?.difficulty || base?.difficulty || inferred?.difficulty || "beginner",
+    pattern: meta?.pattern || base?.pattern || inferred?.pattern || "",
+    kneeImpact: meta?.kneeImpact || base?.kneeImpact || inferred?.kneeImpact || "low",
+    overheadAllowed:
+      typeof meta?.overheadAllowed === "boolean" ? meta.overheadAllowed
+      : typeof base?.overheadAllowed === "boolean" ? base.overheadAllowed
+      : typeof inferred?.overheadAllowed === "boolean" ? inferred.overheadAllowed
+      : true,
+    floorAllowed:
+      typeof meta?.floorAllowed === "boolean" ? meta.floorAllowed
+      : typeof base?.floorAllowed === "boolean" ? base.floorAllowed
+      : typeof inferred?.floorAllowed === "boolean" ? inferred.floorAllowed
+      : false
+  };
 }
 
 function enrichExerciseLibrary(lib){
@@ -4881,24 +5512,20 @@ function enrichExerciseLibrary(lib){
   const apply = (e)=>{
     const keyId = e.id ? String(e.id) : "";
     const keyName = e.name ? String(e.name) : "";
-    const direct = (keyId && EX_META[keyId]) ? EX_META[keyId]
-                 : (keyName && EX_META[keyName]) ? EX_META[keyName]
-                 : null;
+
+    const direct =
+      (keyId && EX_META[keyId]) ? EX_META[keyId]
+      : (keyName && EX_META[keyName]) ? EX_META[keyName]
+      : null;
 
     const inferred = inferMetaFromName(e.name, e.type);
-
-    e.tags = Array.isArray(direct?.tags) ? direct.tags : inferred.tags;
-    e.equipment = Array.isArray(direct?.equipment) ? direct.equipment : inferred.equipment;
-    e.kneeImpact = direct?.kneeImpact || inferred.kneeImpact;
-
-    return e;
+    return mergeExerciseMeta(e, direct, inferred);
   };
 
-  lib.warmup = lib.warmup.map(apply);
-  lib.items = lib.items.map(apply);
-  lib.cooldown = lib.cooldown.map(apply);
+  lib.warmup = (lib.warmup || []).map(apply);
+  lib.items = (lib.items || []).map(apply);
+  lib.cooldown = (lib.cooldown || []).map(apply);
 
-  // refresh byId index (inclut les champs enrichis)
   lib.byId = lib.byId || {};
   [...lib.warmup, ...lib.items, ...lib.cooldown].forEach(e=>{
     if(e.id) lib.byId[e.id] = e;
@@ -4906,7 +5533,7 @@ function enrichExerciseLibrary(lib){
 
   return lib;
 }
-/* ===== FIN B-SAFE enrich ===== */
+/* ===== FIN B-SAFE enrich V2 ===== */
 
 
 
