@@ -9203,7 +9203,7 @@ window.renderAIScreen = function renderAIScreen(){
     const libraryCompact = (typeof buildLibraryCompact === "function") ? buildLibraryCompact() : [];
 
     const ac = new AbortController();
-    const kill = setTimeout(()=>ac.abort(), 55000);
+    const kill = setTimeout(()=>ac.abort(), 1000000);
 
     let res, raw, data;
     try{
@@ -9225,7 +9225,7 @@ window.renderAIScreen = function renderAIScreen(){
         signal: ac.signal
       });
     }catch(e){
-      if(e?.name === "AbortError") throw new Error("IA trop lente (55s). Réessaie.");
+      if(e?.name === "AbortError") throw new Error("IA trop lente (180s). Réessaie.");
       throw e;
     }finally{
       clearTimeout(kill);
@@ -9297,11 +9297,11 @@ window.renderAIScreen = function renderAIScreen(){
 
         const session = await withTimeout(
           window.generateSessionWithAI({ goalText, minutes, constraints }),
-          30000
+          1000000
         );
         session.goalText = goalText;
 
-        await withTimeout(window.saveAISessionToFirestore(session), 30000);
+        await withTimeout(window.saveAISessionToFirestore(session), 1000000);
 
         toast("✅ Séance IA créée");
 
