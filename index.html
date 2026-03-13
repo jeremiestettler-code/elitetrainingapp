@@ -4377,7 +4377,7 @@ function rememberRecentExerciseIds(session, max = 50){
 
 // -------- C3: compact library for AI (GLOBAL) --------
 function buildLibraryCompact(){
-  const lib = window.EXERCISE_LIBRARY;
+  const lib = window.AI_EXERCISE_LIBRARY || window.EXERCISE_LIBRARY;
   if(!lib) return [];
 
   const all = [
@@ -4408,7 +4408,7 @@ window.generateSessionWithAI = generateSessionWithAI;
 
 /* Helper: injecte une session générée dans l’éditeur custom */
 async function openGeneratedSessionInEditor(goalText, minutes, constraints){
-  const lib = window.EXERCISE_LIBRARY;
+  const lib = window.AI_EXERCISE_LIBRARY || window.EXERCISE_LIBRARY;
   const session = await generateSessionWithAI({ goalText, minutes, constraints });
 
   const check = validateAISessionAgainstLibrary(session, lib);
