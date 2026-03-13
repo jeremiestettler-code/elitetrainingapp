@@ -4643,7 +4643,7 @@ async function aiGenerate({ regen=false } = {}){
   try{
     aiSetBusy(true, regen ? "Regénération d’une variation…" : "Génération en cours…");
 
-    const lib = window.EXERCISE_LIBRARY;
+    const lib = window.AI_EXERCISE_LIBRARY || window.EXERCISE_LIBRARY;
     const session = await generateSessionWithAI(AI_LAST_REQUEST);
 
     const check = validateAISessionAgainstLibrary(session, lib);
