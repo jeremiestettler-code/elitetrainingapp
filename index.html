@@ -6821,17 +6821,35 @@ window.TROPHIES = TROPHIES;
       }
     }
 
-    function setImg(imgEl, iconKey){
-      const map = window.IMG || {};
-      const path = map[iconKey] || iconKey || "";
-      if(!path){
-        imgEl.removeAttribute("src");
-        imgEl.style.display = "none";
-        return;
-      }
-      imgEl.style.display = "block";
-      imgEl.src = path;
-    }
+function setImg(imgEl, iconKey){
+  const map = window.IMG || {};
+
+  let path = "";
+
+  // cas normal : icon dans images.js
+  if(iconKey && map[iconKey]){
+    path = map[iconKey];
+  }
+
+  // si l'iconKey est déjà un chemin
+  else if(typeof iconKey === "string" && iconKey.includes("/")){
+    path = iconKey;
+  }
+
+  // fallback image générique
+  else if(map["deadbug"]){
+    path = map["deadbug"];
+  }
+
+  if(!path){
+    imgEl.removeAttribute("src");
+    imgEl.style.display = "none";
+    return;
+  }
+
+  imgEl.style.display = "block";
+  imgEl.src = path;
+}
 
     function updateInfoOverlayContent(cur){
       const body = $("infoBody");
