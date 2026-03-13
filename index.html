@@ -3033,7 +3033,7 @@ html[data-profile-edit="1"] .profileEditOnly{ display:block; }
   </div>
 
   <script src="./images.js"></script>
-
+  <script src="./ai-exercise-library.js"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -4390,6 +4390,7 @@ function buildLibraryCompact(){
     id: String(e.id || ""),
     type: String(e.type || ""),
     name: String(e.name || ""),
+    muscle: String(e.muscle || ""),
     tags: Array.isArray(e.tags) ? e.tags : [],
     equipment: Array.isArray(e.equipment) ? e.equipment : [],
     kneeImpact: e.kneeImpact || "low",
@@ -5169,6 +5170,69 @@ const EX_META = {
     kneeImpact: "low",
     overheadAllowed: true,
     floorAllowed: false
+  },
+    "H1-1": {
+    equipment: ["bodyweight", "dumbbell"],
+    difficulty: "intermediate",
+    tags: ["legs", "glutes", "quads", "strength", "unilateral", "hockey", "skating", "lower_body"],
+    pattern: "lunge",
+    kneeImpact: "high",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "H1-2": {
+    equipment: ["dumbbell"],
+    difficulty: "beginner",
+    tags: ["legs", "glutes", "hamstrings", "strength", "hinge", "hockey", "lower_body"],
+    pattern: "hip_hinge",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "H2-1": {
+    equipment: ["kettlebell"],
+    difficulty: "intermediate",
+    tags: ["legs", "glutes", "power", "conditioning", "hinge", "hockey", "lower_body"],
+    pattern: "hip_hinge",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "H2-2": {
+    equipment: ["dumbbell", "bench"],
+    difficulty: "beginner",
+    tags: ["glutes", "legs", "strength", "hip_extension", "hockey", "lower_body"],
+    pattern: "hip_extension",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: true
+  },
+  "H2-3": {
+    equipment: ["barbell", "landmine"],
+    difficulty: "beginner",
+    tags: ["legs", "glutes", "quads", "strength", "squat", "hockey", "lower_body"],
+    pattern: "squat",
+    kneeImpact: "medium",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "H4-1": {
+    equipment: ["kettlebell"],
+    difficulty: "intermediate",
+    tags: ["legs", "glutes", "power", "conditioning", "hinge", "hockey", "lower_body"],
+    pattern: "hip_hinge",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: false
+  },
+  "H4-3": {
+    equipment: ["bodyweight", "dumbbell", "bench"],
+    difficulty: "beginner",
+    tags: ["glutes", "legs", "strength", "tempo", "hip_extension", "hockey", "lower_body"],
+    pattern: "hip_extension",
+    kneeImpact: "low",
+    overheadAllowed: true,
+    floorAllowed: true
   },
   "hollow_hold": {
     equipment: ["bodyweight"],
