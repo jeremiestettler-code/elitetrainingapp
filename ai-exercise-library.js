@@ -895,7 +895,6 @@ window.AI_EXERCISE_LIBRARY = {
         "Retour trop rapide"
       ]
     },
-        ,
     {
       id: "hammer",
       type: "items",
