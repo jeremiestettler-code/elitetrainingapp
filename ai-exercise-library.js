@@ -809,64 +809,6 @@ window.AI_EXERCISE_LIBRARY = {
       ]
     },
     {
-      id: "pallof_press_band",
-      type: "items",
-      name: "Pallof press élastique",
-      icon: "pallof_press_band",
-      muscle: "Core + obliques",
-      equipment: ["band"],
-      difficulty: "beginner",
-      pattern: "anti_rotation",
-      tags: ["core", "obliques", "stability", "anti_rotation", "band"],
-      kneeImpact: "low",
-      overheadAllowed: true,
-      floorAllowed: false,
-      sets: 3,
-      reps: "10–12 / côté",
-      work: 40,
-      rest: 45,
-      desc: "Exercice anti-rotation utile pour le gainage fonctionnel.",
-      steps: [
-        "Tiens l’élastique devant le sternum.",
-        "Pousse devant toi sans tourner le buste.",
-        "Ramène lentement."
-      ],
-      mistakes: [
-        "Buste qui pivote",
-        "Épaules haussées",
-        "Tension relâchée"
-      ]
-    },
-    {
-      id: "facepull_band",
-      type: "items",
-      name: "Face pull élastique",
-      icon: "facepull_band",
-      muscle: "Arrière d’épaules + haut du dos",
-      equipment: ["band"],
-      difficulty: "beginner",
-      pattern: "horizontal_pull",
-      tags: ["pull", "rear_delts", "upper_back", "posture", "band"],
-      kneeImpact: "low",
-      overheadAllowed: true,
-      floorAllowed: false,
-      sets: 3,
-      reps: "12–15",
-      work: 40,
-      rest: 60,
-      desc: "Exercice postural pour le haut du dos et l’arrière d’épaules.",
-      steps: [
-        "Tire l’élastique vers le visage.",
-        "Ouvre les coudes sur les côtés.",
-        "Contrôle le retour."
-      ],
-      mistakes: [
-        "Épaules hautes",
-        "Dos relâché",
-        "Trop d’élan"
-      ]
-    },
-    {
       id: "band_abduction_standing",
       type: "items",
       name: "Abduction debout à l’élastique",
@@ -1041,35 +983,6 @@ window.AI_EXERCISE_LIBRARY = {
       ]
     },
     {
-      id: "band_abduction_standing",
-      type: "items",
-      name: "Abduction debout élastique",
-      icon: "band_abduction_standing",
-      muscle: "Fessiers moyens",
-      equipment: ["band"],
-      difficulty: "beginner",
-      pattern: "hip_abduction",
-      tags: ["glutes", "abductors", "activation", "band", "knee_friendly"],
-      kneeImpact: "low",
-      overheadAllowed: true,
-      floorAllowed: false,
-      sets: 3,
-      reps: "15–20 / côté",
-      work: 35,
-      rest: 40,
-      desc: "Exercice ciblé pour le moyen fessier et la stabilité du bassin.",
-      steps: [
-        "Reste gainé et stable.",
-        "Écarte la jambe contre la tension de l’élastique.",
-        "Reviens lentement sans perdre le contrôle."
-      ],
-      mistakes: [
-        "Buste qui se balance",
-        "Amplitude forcée",
-        "Retour trop rapide"
-      ]
-    },
-    {
       id: "hip_thrust_pause",
       type: "items",
       name: "Hip thrust avec pause",
@@ -1183,35 +1096,6 @@ window.AI_EXERCISE_LIBRARY = {
         "Cambrure",
         "Amplitude incomplète",
         "Épaules haussées"
-      ]
-    },
-    {
-      id: "band_row_seated",
-      type: "items",
-      name: "Tirage assis élastique strict",
-      icon: "band_row_seated",
-      muscle: "Dos",
-      equipment: ["band"],
-      difficulty: "beginner",
-      pattern: "horizontal_pull",
-      tags: ["pull", "back", "upper_body", "band", "beginner", "home_workout"],
-      kneeImpact: "low",
-      overheadAllowed: true,
-      floorAllowed: true,
-      sets: 3,
-      reps: "15–20",
-      work: 35,
-      rest: 45,
-      desc: "Variante accessible à l’élastique pour le dos à domicile.",
-      steps: [
-        "Assieds-toi grand et stable.",
-        "Ramène les coudes vers l’arrière.",
-        "Freine complètement le retour."
-      ],
-      mistakes: [
-        "Dos arrondi",
-        "Retour lâché",
-        "Épaules qui montent"
       ]
     },
     {
