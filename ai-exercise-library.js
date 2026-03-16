@@ -1477,7 +1477,444 @@ window.AI_EXERCISE_LIBRARY = {
         "Retour trop rapide"
       ]
     }
-    
+
+        ,
+    {
+      id: "split_squat_bodyweight",
+      type: "items",
+      name: "Split squat poids du corps",
+      icon: "split_squat_bodyweight",
+      muscle: "Quadriceps + fessiers",
+      equipment: ["bodyweight"],
+      difficulty: "beginner",
+      pattern: "lunge",
+      tags: ["legs", "glutes", "quads", "unilateral", "bodyweight", "home_workout"],
+      kneeImpact: "medium",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 3,
+      reps: "8–12 / côté",
+      work: 40,
+      rest: 60,
+      desc: "Fente statique au poids du corps pour renforcer jambes et stabilité.",
+      steps: [
+        "Place-toi en fente stable.",
+        "Descends verticalement avec contrôle.",
+        "Remonte en poussant dans le pied avant."
+      ],
+      mistakes: [
+        "Genou avant qui rentre",
+        "Perte d’équilibre",
+        "Buste trop penché"
+      ]
+    },
+    {
+      id: "box_squat",
+      type: "items",
+      name: "Box squat",
+      icon: "box_squat",
+      muscle: "Quadriceps + fessiers",
+      equipment: ["bodyweight", "dumbbell", "box", "bench"],
+      difficulty: "beginner",
+      pattern: "squat",
+      tags: ["legs", "glutes", "quads", "box", "knee_friendly", "strength"],
+      kneeImpact: "low",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 3,
+      reps: "8–12",
+      work: 40,
+      rest: 60,
+      desc: "Squat vers une box ou un banc pour apprendre un pattern stable et genou-friendly.",
+      steps: [
+        "Descends vers la box sous contrôle.",
+        "Effleure ou assieds-toi brièvement sans te relâcher.",
+        "Remonte en poussant fort dans le sol."
+      ],
+      mistakes: [
+        "Tomber sur la box",
+        "Buste qui s’effondre",
+        "Genoux qui rentrent"
+      ]
+    },
+    {
+      id: "wall_sit",
+      type: "items",
+      name: "Wall sit",
+      icon: "wall_sit",
+      muscle: "Quadriceps + gainage",
+      equipment: ["bodyweight"],
+      difficulty: "beginner",
+      pattern: "isometric_squat",
+      tags: ["legs", "quads", "isometric", "bodyweight", "home_workout"],
+      kneeImpact: "medium",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 3,
+      reps: "30–45 s",
+      work: 35,
+      rest: 45,
+      desc: "Exercice isométrique simple pour les quadriceps.",
+      steps: [
+        "Place ton dos contre le mur.",
+        "Descends jusqu’à une position assise contrôlée.",
+        "Tiens la position sans perdre l’alignement."
+      ],
+      mistakes: [
+        "Position trop basse trop vite",
+        "Pieds trop proches",
+        "Dos qui quitte le mur"
+      ]
+    },
+    {
+      id: "single_leg_rdl",
+      type: "items",
+      name: "Soulevé de terre roumain une jambe",
+      icon: "single_leg_rdl",
+      muscle: "Ischios + fessiers + équilibre",
+      equipment: ["bodyweight", "dumbbell"],
+      difficulty: "intermediate",
+      pattern: "hip_hinge",
+      tags: ["hinge", "glutes", "hamstrings", "unilateral", "balance", "athletic"],
+      kneeImpact: "low",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 3,
+      reps: "8–10 / côté",
+      work: 40,
+      rest: 60,
+      desc: "Charnière unilatérale utile pour la chaîne postérieure et la stabilité.",
+      steps: [
+        "Garde le bassin aligné.",
+        "Pousse les hanches en arrière.",
+        "Reviens en gardant le contrôle de l’équilibre."
+      ],
+      mistakes: [
+        "Rotation du bassin",
+        "Dos arrondi",
+        "Perte d’équilibre non contrôlée"
+      ]
+    },
+    {
+      id: "skater_squat_assist",
+      type: "items",
+      name: "Skater squat assisté",
+      icon: "skater_squat_assist",
+      muscle: "Quadriceps + fessiers",
+      equipment: ["bodyweight", "bench"],
+      difficulty: "intermediate",
+      pattern: "single_leg_squat",
+      tags: ["legs", "glutes", "quads", "unilateral", "athletic", "balance"],
+      kneeImpact: "medium",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 3,
+      reps: "6–8 / côté",
+      work: 35,
+      rest: 60,
+      desc: "Variante unilatérale assistée pour contrôle, force et stabilité.",
+      steps: [
+        "Descends sur une jambe avec assistance légère si besoin.",
+        "Garde le genou dans l’axe.",
+        "Remonte sous contrôle."
+      ],
+      mistakes: [
+        "Genou qui rentre",
+        "Perte de contrôle en bas",
+        "Aide excessive"
+      ]
+    },
+    {
+      id: "jump_squat",
+      type: "items",
+      name: "Jump squat",
+      icon: "jump_squat",
+      muscle: "Quadriceps + fessiers + puissance",
+      equipment: ["bodyweight"],
+      difficulty: "intermediate",
+      pattern: "jump",
+      tags: ["legs", "power", "conditioning", "athletic", "plyometric"],
+      kneeImpact: "high",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 4,
+      reps: "6–10",
+      work: 25,
+      rest: 60,
+      desc: "Exercice explosif pour développer la puissance du bas du corps.",
+      steps: [
+        "Précharge légèrement le squat.",
+        "Saute de façon explosive.",
+        "Atterris doucement et relance proprement."
+      ],
+      mistakes: [
+        "Atterrissage bruyant",
+        "Genoux qui rentrent",
+        "Perte de contrôle à la réception"
+      ]
+    },
+    {
+      id: "broad_jump",
+      type: "items",
+      name: "Saut horizontal",
+      icon: "broad_jump",
+      muscle: "Bas du corps + puissance",
+      equipment: ["bodyweight"],
+      difficulty: "intermediate",
+      pattern: "jump",
+      tags: ["legs", "power", "athletic", "plyometric", "hockey"],
+      kneeImpact: "high",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 4,
+      reps: "4–6",
+      work: 20,
+      rest: 60,
+      desc: "Saut horizontal pour développer la projection et la puissance.",
+      steps: [
+        "Charge les hanches en arrière.",
+        "Projette-toi loin vers l’avant.",
+        "Atterris stable et équilibré."
+      ],
+      mistakes: [
+        "Atterrissage instable",
+        "Manque de gainage",
+        "Réception trop raide"
+      ]
+    },
+    {
+      id: "lateral_bound",
+      type: "items",
+      name: "Bond latéral",
+      icon: "lateral_bound",
+      muscle: "Fessiers + stabilité latérale",
+      equipment: ["bodyweight"],
+      difficulty: "intermediate",
+      pattern: "lateral_jump",
+      tags: ["legs", "glutes", "athletic", "plyometric", "lateral", "hockey"],
+      kneeImpact: "high",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 4,
+      reps: "5–8 / côté",
+      work: 25,
+      rest: 60,
+      desc: "Travail latéral explosif très pertinent pour l’athlétique et le hockey.",
+      steps: [
+        "Pousse fort latéralement.",
+        "Atterris sur une jambe avec contrôle.",
+        "Stabilise avant la répétition suivante."
+      ],
+      mistakes: [
+        "Genou instable à la réception",
+        "Atterrissage trop dur",
+        "Perte d’équilibre"
+      ]
+    },
+    {
+      id: "bear_crawl",
+      type: "items",
+      name: "Bear crawl",
+      icon: "bear_crawl",
+      muscle: "Core + épaules + full body",
+      equipment: ["bodyweight"],
+      difficulty: "intermediate",
+      pattern: "crawl",
+      tags: ["core", "conditioning", "shoulders", "full_body", "athletic"],
+      kneeImpact: "low",
+      overheadAllowed: true,
+      floorAllowed: true,
+      sets: 3,
+      reps: "20–30 s",
+      work: 30,
+      rest: 45,
+      desc: "Déplacement quadrupédique pour gainage dynamique et condition physique.",
+      steps: [
+        "Garde les genoux proches du sol.",
+        "Déplace main et pied opposés.",
+        "Reste gainé et avance avec contrôle."
+      ],
+      mistakes: [
+        "Bassin trop haut",
+        "Dos relâché",
+        "Mouvement trop rapide"
+      ]
+    },
+    {
+      id: "mountain_climber_slow",
+      type: "items",
+      name: "Mountain climber lent",
+      icon: "mountain_climber_slow",
+      muscle: "Core + conditioning",
+      equipment: ["bodyweight"],
+      difficulty: "beginner",
+      pattern: "dynamic_core",
+      tags: ["core", "conditioning", "bodyweight", "home_workout"],
+      kneeImpact: "low",
+      overheadAllowed: true,
+      floorAllowed: true,
+      sets: 3,
+      reps: "20–30 s",
+      work: 25,
+      rest: 40,
+      desc: "Version contrôlée du mountain climber pour le gainage dynamique.",
+      steps: [
+        "Place-toi en position de planche.",
+        "Ramène les genoux alternativement sous le buste.",
+        "Garde les épaules stables."
+      ],
+      mistakes: [
+        "Bassin qui monte trop",
+        "Rythme désordonné",
+        "Perte de gainage"
+      ]
+    },
+    {
+      id: "bird_dog",
+      type: "items",
+      name: "Bird dog",
+      icon: "bird_dog",
+      muscle: "Core + stabilité lombaire",
+      equipment: ["bodyweight"],
+      difficulty: "beginner",
+      pattern: "anti_rotation",
+      tags: ["core", "stability", "spine_friendly", "bodyweight"],
+      kneeImpact: "low",
+      overheadAllowed: true,
+      floorAllowed: true,
+      sets: 3,
+      reps: "8–10 / côté",
+      work: 35,
+      rest: 40,
+      desc: "Exercice de stabilité croisée pour le tronc.",
+      steps: [
+        "Allonge bras et jambe opposés.",
+        "Garde le bassin stable.",
+        "Reviens lentement sans bouger le tronc."
+      ],
+      mistakes: [
+        "Rotation du bassin",
+        "Dos qui se creuse",
+        "Mouvement trop rapide"
+      ]
+    },
+    {
+      id: "glute_bridge_march",
+      type: "items",
+      name: "Glute bridge march",
+      icon: "glute_bridge_march",
+      muscle: "Fessiers + core",
+      equipment: ["bodyweight"],
+      difficulty: "beginner",
+      pattern: "hip_extension",
+      tags: ["glutes", "core", "knee_friendly", "bodyweight", "stability"],
+      kneeImpact: "low",
+      overheadAllowed: true,
+      floorAllowed: true,
+      sets: 3,
+      reps: "8–10 / côté",
+      work: 35,
+      rest: 40,
+      desc: "Pont fessier dynamique avec alternance des jambes.",
+      steps: [
+        "Monte en pont fessier.",
+        "Décolle un pied à la fois sans faire tomber le bassin.",
+        "Reste gainé pendant toute la série."
+      ],
+      mistakes: [
+        "Bassin qui se vrille",
+        "Cambrure excessive",
+        "Perte de contrôle"
+      ]
+    },
+    {
+      id: "reverse_lunge_bodyweight",
+      type: "items",
+      name: "Fente arrière poids du corps",
+      icon: "reverse_lunge_bodyweight",
+      muscle: "Quadriceps + fessiers",
+      equipment: ["bodyweight"],
+      difficulty: "beginner",
+      pattern: "lunge",
+      tags: ["legs", "glutes", "quads", "bodyweight", "home_workout"],
+      kneeImpact: "medium",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 3,
+      reps: "8–10 / côté",
+      work: 40,
+      rest: 60,
+      desc: "Variante de fente souvent plus contrôlable que la fente avant.",
+      steps: [
+        "Recule un pied loin derrière.",
+        "Descends droit avec contrôle.",
+        "Ramène-toi en poussant dans la jambe avant."
+      ],
+      mistakes: [
+        "Pas trop court",
+        "Genou qui rentre",
+        "Perte d’équilibre"
+      ]
+    },
+    {
+      id: "sit_to_stand",
+      type: "items",
+      name: "Sit to stand",
+      icon: "sit_to_stand",
+      muscle: "Quadriceps + fessiers",
+      equipment: ["bodyweight", "bench"],
+      difficulty: "beginner",
+      pattern: "squat",
+      tags: ["legs", "glutes", "quads", "beginner", "knee_friendly", "home_workout"],
+      kneeImpact: "low",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 3,
+      reps: "10–15",
+      work: 35,
+      rest: 45,
+      desc: "Mouvement simple et efficace pour apprendre à pousser avec les jambes.",
+      steps: [
+        "Assieds-toi contrôlé sur le banc ou la chaise.",
+        "Penche légèrement le buste.",
+        "Relève-toi en poussant fort dans les pieds."
+      ],
+      mistakes: [
+        "Impulsion excessive",
+        "Genoux qui rentrent",
+        "Perte de contrôle à la descente"
+      ]
+    },
+    {
+      id: "tempo_squat",
+      type: "items",
+      name: "Squat tempo",
+      icon: "tempo_squat",
+      muscle: "Quadriceps + fessiers",
+      equipment: ["bodyweight", "dumbbell"],
+      difficulty: "beginner",
+      pattern: "squat",
+      tags: ["legs", "glutes", "quads", "tempo", "control", "home_workout"],
+      kneeImpact: "medium",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 3,
+      reps: "8–12",
+      work: 40,
+      rest: 60,
+      desc: "Squat lent pour améliorer contrôle, temps sous tension et technique.",
+      steps: [
+        "Descends lentement en comptant.",
+        "Marque un court arrêt en bas.",
+        "Remonte avec contrôle."
+      ],
+      mistakes: [
+        "Descente trop rapide",
+        "Buste qui tombe",
+        "Perte d’alignement"
+      ]
+    }
+
   ],
 
   cooldown: [
