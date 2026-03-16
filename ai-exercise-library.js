@@ -111,7 +111,7 @@ window.AI_EXERCISE_LIBRARY = {
     }
   ],
 
-  items: [
+    items: [
     {
       id: "dbbench",
       type: "items",
@@ -318,30 +318,30 @@ window.AI_EXERCISE_LIBRARY = {
     {
       id: "band_row_seated",
       type: "items",
-      name: "Row assis à l’élastique",
+      name: "Tirage assis élastique strict",
       icon: "band_row_seated",
       muscle: "Dos",
       equipment: ["band"],
       difficulty: "beginner",
       pattern: "horizontal_pull",
-      tags: ["pull", "back", "upper_body", "band", "beginner"],
+      tags: ["pull", "back", "upper_body", "band", "beginner", "home_workout"],
       kneeImpact: "low",
       overheadAllowed: true,
       floorAllowed: true,
       sets: 3,
-      reps: "12–15",
-      work: 40,
-      rest: 60,
-      desc: "Tirage simple et accessible avec élastique.",
+      reps: "15–20",
+      work: 35,
+      rest: 45,
+      desc: "Variante accessible à l’élastique pour le dos à domicile.",
       steps: [
-        "Assieds-toi bien droit.",
+        "Assieds-toi grand et stable.",
         "Ramène les coudes vers l’arrière.",
-        "Contrôle complètement le retour."
+        "Freine complètement le retour."
       ],
       mistakes: [
-        "Épaules hautes",
-        "Dos qui s’arrondit",
-        "Retour non contrôlé"
+        "Dos arrondi",
+        "Retour lâché",
+        "Épaules qui montent"
       ]
     },
     {
@@ -432,6 +432,35 @@ window.AI_EXERCISE_LIBRARY = {
       ]
     },
     {
+      id: "bulgarian",
+      type: "items",
+      name: "Bulgarian split squat",
+      icon: "bulgarian",
+      muscle: "Quadriceps + fessiers",
+      equipment: ["bodyweight", "dumbbell", "bench"],
+      difficulty: "intermediate",
+      pattern: "lunge",
+      tags: ["legs", "glutes", "quads", "unilateral", "strength", "hypertrophy"],
+      kneeImpact: "high",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 3,
+      reps: "8–10 / côté",
+      work: 45,
+      rest: 75,
+      desc: "Exercice unilatéral très efficace pour jambes et fessiers.",
+      steps: [
+        "Place le pied arrière sur le support.",
+        "Descends droit en gardant le genou avant dans l’axe.",
+        "Remonte en poussant fort dans le sol."
+      ],
+      mistakes: [
+        "Perte d’équilibre",
+        "Genou qui rentre",
+        "Buste trop incliné"
+      ]
+    },
+    {
       id: "hip_thrust_db",
       type: "items",
       name: "Hip thrust haltère",
@@ -463,30 +492,88 @@ window.AI_EXERCISE_LIBRARY = {
     {
       id: "glute_bridge_db",
       type: "items",
-      name: "Glute bridge haltère",
+      name: "Glute bridge haltère contrôlé",
       icon: "glute_bridge_db",
       muscle: "Fessiers",
       equipment: ["dumbbell"],
       difficulty: "beginner",
       pattern: "hip_extension",
-      tags: ["glutes", "legs", "hinge", "beginner"],
+      tags: ["glutes", "legs", "hinge", "beginner", "knee_friendly"],
       kneeImpact: "low",
       overheadAllowed: true,
       floorAllowed: true,
       sets: 3,
-      reps: "10–15",
-      work: 40,
-      rest: 60,
-      desc: "Variante simple pour renforcer les fessiers.",
+      reps: "12–15",
+      work: 35,
+      rest: 50,
+      desc: "Version contrôlée du glute bridge pour les fessiers.",
       steps: [
-        "Garde le bas du dos neutre.",
+        "Place la charge stable sur le bassin.",
         "Pousse dans les talons.",
-        "Serre les fessiers en haut."
+        "Serre les fessiers en haut sans cambrer."
       ],
       mistakes: [
-        "Cambrure excessive",
+        "Charge instable",
         "Amplitude partielle",
-        "Pieds mal placés"
+        "Descente trop rapide"
+      ]
+    },
+    {
+      id: "hip_thrust_pause",
+      type: "items",
+      name: "Hip thrust avec pause",
+      icon: "hip_thrust_pause",
+      muscle: "Fessiers",
+      equipment: ["bodyweight", "dumbbell", "bench"],
+      difficulty: "beginner",
+      pattern: "hip_extension",
+      tags: ["glutes", "legs", "tempo", "hinge", "pause", "knee_friendly"],
+      kneeImpact: "low",
+      overheadAllowed: true,
+      floorAllowed: true,
+      sets: 3,
+      reps: "10–12",
+      work: 40,
+      rest: 60,
+      desc: "Hip thrust avec pause en haut pour accentuer le travail des fessiers.",
+      steps: [
+        "Monte en poussant dans les talons.",
+        "Marque une pause nette en haut.",
+        "Redescends lentement sous contrôle."
+      ],
+      mistakes: [
+        "Pause absente",
+        "Cambrure excessive",
+        "Descente précipitée"
+      ]
+    },
+    {
+      id: "band_abduction_standing",
+      type: "items",
+      name: "Abduction debout élastique",
+      icon: "band_abduction_standing",
+      muscle: "Fessiers moyens",
+      equipment: ["band"],
+      difficulty: "beginner",
+      pattern: "hip_abduction",
+      tags: ["glutes", "abductors", "activation", "band", "knee_friendly"],
+      kneeImpact: "low",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 3,
+      reps: "15–20 / côté",
+      work: 35,
+      rest: 40,
+      desc: "Exercice ciblé pour le moyen fessier et la stabilité du bassin.",
+      steps: [
+        "Reste gainé et stable.",
+        "Écarte la jambe contre la tension de l’élastique.",
+        "Reviens lentement sans perdre le contrôle."
+      ],
+      mistakes: [
+        "Buste qui se balance",
+        "Amplitude forcée",
+        "Retour trop rapide"
       ]
     },
     {
@@ -527,24 +614,24 @@ window.AI_EXERCISE_LIBRARY = {
       equipment: ["dumbbell", "bench"],
       difficulty: "beginner",
       pattern: "vertical_push",
-      tags: ["push", "shoulders", "triceps", "upper_body", "overhead", "joint_friendly"],
+      tags: ["push", "shoulders", "triceps", "upper_body", "overhead", "stable"],
       kneeImpact: "low",
       overheadAllowed: true,
       floorAllowed: false,
-      sets: 4,
+      sets: 3,
       reps: "8–12",
-      work: 45,
-      rest: 75,
-      desc: "Variante assise plus stable pour les épaules.",
+      work: 40,
+      rest: 60,
+      desc: "Variante assise plus stable pour développer les épaules.",
       steps: [
         "Dos bien calé sur le banc.",
-        "Pousse verticalement sans hausser les épaules.",
-        "Descends sous contrôle."
+        "Pousse verticalement en gardant le tronc gainé.",
+        "Redescends sous contrôle complet."
       ],
       mistakes: [
         "Cambrure",
-        "Trajectoire désordonnée",
-        "Amplitude incomplète"
+        "Amplitude incomplète",
+        "Épaules haussées"
       ]
     },
     {
@@ -603,6 +690,35 @@ window.AI_EXERCISE_LIBRARY = {
         "Élan du buste",
         "Trapèzes dominants",
         "Charge trop lourde"
+      ]
+    },
+    {
+      id: "lateral",
+      type: "items",
+      name: "Élévations latérales strictes",
+      icon: "lateral",
+      muscle: "Épaules latérales",
+      equipment: ["dumbbell"],
+      difficulty: "beginner",
+      pattern: "shoulder_abduction",
+      tags: ["shoulders", "side_delts", "isolation", "upper_body", "hypertrophy"],
+      kneeImpact: "low",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 3,
+      reps: "12–20",
+      work: 35,
+      rest: 50,
+      desc: "Isolation stricte des deltoïdes latéraux avec charge légère à modérée.",
+      steps: [
+        "Lève les bras sur les côtés avec contrôle.",
+        "Monte jusqu’à hauteur d’épaule.",
+        "Redescends lentement sans relâcher d’un coup."
+      ],
+      mistakes: [
+        "Élan du buste",
+        "Trapèzes dominants",
+        "Amplitude désordonnée"
       ]
     },
     {
@@ -693,6 +809,35 @@ window.AI_EXERCISE_LIBRARY = {
       ]
     },
     {
+      id: "hammer",
+      type: "items",
+      name: "Curl marteau alterné",
+      icon: "hammer",
+      muscle: "Biceps + avant-bras",
+      equipment: ["dumbbell"],
+      difficulty: "beginner",
+      pattern: "elbow_flexion",
+      tags: ["arms", "biceps", "forearms", "brachialis", "grip", "isolation"],
+      kneeImpact: "low",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 3,
+      reps: "10–12 / côté",
+      work: 40,
+      rest: 60,
+      desc: "Variante alternée du curl marteau pour biceps et avant-bras.",
+      steps: [
+        "Garde une prise neutre.",
+        "Monte un bras à la fois sans élan.",
+        "Contrôle la descente de chaque répétition."
+      ],
+      mistakes: [
+        "Balancer le buste",
+        "Descente trop rapide",
+        "Charge trop lourde"
+      ]
+    },
+    {
       id: "farmer",
       type: "items",
       name: "Farmer walk",
@@ -719,6 +864,35 @@ window.AI_EXERCISE_LIBRARY = {
         "Se pencher",
         "Trapèzes trop hauts",
         "Pas désordonnés"
+      ]
+    },
+    {
+      id: "farmer_hold",
+      type: "items",
+      name: "Farmer hold",
+      icon: "farmer_hold",
+      muscle: "Grip + core",
+      equipment: ["dumbbell", "kettlebell"],
+      difficulty: "beginner",
+      pattern: "carry",
+      tags: ["carry", "grip", "core", "static", "posture", "full_body"],
+      kneeImpact: "low",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 3,
+      reps: "30–45 s",
+      work: 35,
+      rest: 60,
+      desc: "Tenue statique chargée pour renforcer grip, posture et gainage.",
+      steps: [
+        "Tiens-toi grand et stable.",
+        "Serre les poignées sans hausser les épaules.",
+        "Respire en gardant le tronc verrouillé."
+      ],
+      mistakes: [
+        "Trapèzes trop hauts",
+        "Buste qui s’affaisse",
+        "Apnée"
       ]
     },
     {
@@ -788,7 +962,7 @@ window.AI_EXERCISE_LIBRARY = {
       equipment: ["bodyweight"],
       difficulty: "beginner",
       pattern: "anti_lateral_flexion",
-      tags: ["core", "obliques", "stability", "anti_lateral_flexion"],
+      tags: ["core", "obliques", "stability", "anti_lateral_flexion", "spine_friendly"],
       kneeImpact: "low",
       overheadAllowed: true,
       floorAllowed: true,
@@ -806,296 +980,6 @@ window.AI_EXERCISE_LIBRARY = {
         "Bassin qui chute",
         "Épaule écrasée",
         "Corps qui tourne"
-      ]
-    },
-    {
-      id: "band_abduction_standing",
-      type: "items",
-      name: "Abduction debout à l’élastique",
-      icon: "band_abduction_standing",
-      muscle: "Fessiers moyens",
-      equipment: ["band"],
-      difficulty: "beginner",
-      pattern: "hip_abduction",
-      tags: ["glutes", "abductors", "activation", "band"],
-      kneeImpact: "low",
-      overheadAllowed: true,
-      floorAllowed: false,
-      sets: 3,
-      reps: "12–20 / côté",
-      work: 35,
-      rest: 45,
-      desc: "Travail ciblé des abducteurs et du moyen fessier.",
-      steps: [
-        "Reste gainé et stable.",
-        "Écarte la jambe contre la résistance.",
-        "Reviens lentement sans perdre le contrôle."
-      ],
-      mistakes: [
-        "Buste qui se balance",
-        "Amplitude forcée",
-        "Retour trop rapide"
-      ]
-    },
-    {
-      id: "hammer",
-      type: "items",
-      name: "Curl marteau alterné",
-      icon: "hammer",
-      muscle: "Biceps + avant-bras",
-      equipment: ["dumbbell"],
-      difficulty: "beginner",
-      pattern: "elbow_flexion",
-      tags: ["arms", "biceps", "forearms", "brachialis", "grip", "isolation"],
-      kneeImpact: "low",
-      overheadAllowed: true,
-      floorAllowed: false,
-      sets: 3,
-      reps: "10–12 / côté",
-      work: 40,
-      rest: 60,
-      desc: "Variante alternée du curl marteau pour biceps et avant-bras.",
-      steps: [
-        "Garde une prise neutre.",
-        "Monte un bras à la fois sans élan.",
-        "Contrôle la descente de chaque répétition."
-      ],
-      mistakes: [
-        "Balancer le buste",
-        "Descente trop rapide",
-        "Charge trop lourde"
-      ]
-    },
-    {
-      id: "lateral",
-      type: "items",
-      name: "Élévations latérales strictes",
-      icon: "lateral",
-      muscle: "Épaules latérales",
-      equipment: ["dumbbell"],
-      difficulty: "beginner",
-      pattern: "shoulder_abduction",
-      tags: ["shoulders", "side_delts", "isolation", "upper_body", "hypertrophy"],
-      kneeImpact: "low",
-      overheadAllowed: true,
-      floorAllowed: false,
-      sets: 3,
-      reps: "12–20",
-      work: 35,
-      rest: 50,
-      desc: "Isolation stricte des deltoïdes latéraux avec charge légère à modérée.",
-      steps: [
-        "Lève les bras sur les côtés avec contrôle.",
-        "Monte jusqu’à hauteur d’épaule.",
-        "Redescends lentement sans relâcher d’un coup."
-      ],
-      mistakes: [
-        "Élan du buste",
-        "Trapèzes dominants",
-        "Amplitude désordonnée"
-      ]
-    },
-    {
-      id: "dead_bug",
-      type: "items",
-      name: "Dead bug contrôlé",
-      icon: "dead_bug",
-      muscle: "Core",
-      equipment: ["bodyweight"],
-      difficulty: "beginner",
-      pattern: "anti_extension",
-      tags: ["core", "abs", "deep_core", "anti_extension", "coordination", "spine_friendly"],
-      kneeImpact: "low",
-      overheadAllowed: true,
-      floorAllowed: true,
-      sets: 3,
-      reps: "8–10 / côté",
-      work: 35,
-      rest: 40,
-      desc: "Version lente et contrôlée pour stabiliser le tronc.",
-      steps: [
-        "Plaque le bas du dos au sol.",
-        "Allonge lentement bras et jambe opposés.",
-        "Reviens sans perdre la tension abdominale."
-      ],
-      mistakes: [
-        "Dos qui se creuse",
-        "Mouvement trop rapide",
-        "Perte de respiration"
-      ]
-    },
-    {
-      id: "sideplank",
-      type: "items",
-      name: "Planche latérale",
-      icon: "sideplank",
-      muscle: "Obliques + core",
-      equipment: ["bodyweight"],
-      difficulty: "beginner",
-      pattern: "anti_lateral_flexion",
-      tags: ["core", "obliques", "stability", "anti_lateral_flexion", "spine_friendly"],
-      kneeImpact: "low",
-      overheadAllowed: true,
-      floorAllowed: true,
-      sets: 3,
-      reps: "20–30 s / côté",
-      work: 30,
-      rest: 40,
-      desc: "Gainage latéral pour renforcer les obliques et stabiliser le bassin.",
-      steps: [
-        "Aligne épaules, bassin et chevilles.",
-        "Pousse fort dans l’avant-bras.",
-        "Garde le bassin haut pendant toute la série."
-      ],
-      mistakes: [
-        "Bassin qui chute",
-        "Épaule écrasée",
-        "Corps qui tourne"
-      ]
-    },
-    {
-      id: "farmer_hold",
-      type: "items",
-      name: "Farmer hold",
-      icon: "farmer_hold",
-      muscle: "Grip + core",
-      equipment: ["dumbbell", "kettlebell"],
-      difficulty: "beginner",
-      pattern: "carry",
-      tags: ["carry", "grip", "core", "static", "posture", "full_body"],
-      kneeImpact: "low",
-      overheadAllowed: true,
-      floorAllowed: false,
-      sets: 3,
-      reps: "30–45 s",
-      work: 35,
-      rest: 60,
-      desc: "Tenue statique chargée pour renforcer grip, posture et gainage.",
-      steps: [
-        "Tiens-toi grand et stable.",
-        "Serre les poignées sans hausser les épaules.",
-        "Respire en gardant le tronc verrouillé."
-      ],
-      mistakes: [
-        "Trapèzes trop hauts",
-        "Buste qui s’affaisse",
-        "Apnée"
-      ]
-    },
-    {
-      id: "hip_thrust_pause",
-      type: "items",
-      name: "Hip thrust avec pause",
-      icon: "hip_thrust_pause",
-      muscle: "Fessiers",
-      equipment: ["bodyweight", "dumbbell", "bench"],
-      difficulty: "beginner",
-      pattern: "hip_extension",
-      tags: ["glutes", "legs", "tempo", "hinge", "pause", "knee_friendly"],
-      kneeImpact: "low",
-      overheadAllowed: true,
-      floorAllowed: true,
-      sets: 3,
-      reps: "10–12",
-      work: 40,
-      rest: 60,
-      desc: "Hip thrust avec pause en haut pour accentuer le travail des fessiers.",
-      steps: [
-        "Monte en poussant dans les talons.",
-        "Marque une pause nette en haut.",
-        "Redescends lentement sous contrôle."
-      ],
-      mistakes: [
-        "Pause absente",
-        "Cambrure excessive",
-        "Descente précipitée"
-      ]
-    },
-    {
-      id: "glute_bridge_db",
-      type: "items",
-      name: "Glute bridge haltère contrôlé",
-      icon: "glute_bridge_db",
-      muscle: "Fessiers",
-      equipment: ["dumbbell"],
-      difficulty: "beginner",
-      pattern: "hip_extension",
-      tags: ["glutes", "legs", "hinge", "beginner", "knee_friendly"],
-      kneeImpact: "low",
-      overheadAllowed: true,
-      floorAllowed: true,
-      sets: 3,
-      reps: "12–15",
-      work: 35,
-      rest: 50,
-      desc: "Version contrôlée du glute bridge pour les fessiers.",
-      steps: [
-        "Place la charge stable sur le bassin.",
-        "Pousse dans les talons.",
-        "Serre les fessiers en haut sans cambrer."
-      ],
-      mistakes: [
-        "Charge instable",
-        "Amplitude partielle",
-        "Descente trop rapide"
-      ]
-    },
-    {
-      id: "landminepress",
-      type: "items",
-      name: "Landmine press unilatéral",
-      icon: "landminepress",
-      muscle: "Épaules + haut des pectoraux",
-      equipment: ["barbell", "landmine"],
-      difficulty: "beginner",
-      pattern: "angled_push",
-      tags: ["push", "shoulders", "upper_chest", "upper_body", "joint_friendly", "unilateral"],
-      kneeImpact: "low",
-      overheadAllowed: true,
-      floorAllowed: false,
-      sets: 3,
-      reps: "8–10 / côté",
-      work: 40,
-      rest: 60,
-      desc: "Poussée diagonale unilatérale, souvent plus confortable pour l’épaule.",
-      steps: [
-        "Gainage fort dès le départ.",
-        "Pousse en diagonale sans hausser l’épaule.",
-        "Ramène sous contrôle vers le point de départ."
-      ],
-      mistakes: [
-        "Cambrure excessive",
-        "Épaule qui monte",
-        "Perte de stabilité"
-      ]
-    },
-    {
-      id: "db_ohp_seated",
-      type: "items",
-      name: "Développé militaire assis haltères",
-      icon: "db_ohp_seated",
-      muscle: "Épaules + triceps",
-      equipment: ["dumbbell", "bench"],
-      difficulty: "beginner",
-      pattern: "vertical_push",
-      tags: ["push", "shoulders", "triceps", "upper_body", "overhead", "stable"],
-      kneeImpact: "low",
-      overheadAllowed: true,
-      floorAllowed: false,
-      sets: 3,
-      reps: "8–12",
-      work: 40,
-      rest: 60,
-      desc: "Variante assise plus stable pour développer les épaules.",
-      steps: [
-        "Dos bien calé sur le banc.",
-        "Pousse verticalement en gardant le tronc gainé.",
-        "Redescends sous contrôle complet."
-      ],
-      mistakes: [
-        "Cambrure",
-        "Amplitude incomplète",
-        "Épaules haussées"
       ]
     },
     {
@@ -1157,64 +1041,6 @@ window.AI_EXERCISE_LIBRARY = {
       ]
     },
     {
-      id: "bulgarian",
-      type: "items",
-      name: "Bulgarian split squat",
-      icon: "bulgarian",
-      muscle: "Quadriceps + fessiers",
-      equipment: ["bodyweight", "dumbbell", "bench"],
-      difficulty: "intermediate",
-      pattern: "lunge",
-      tags: ["legs", "glutes", "quads", "unilateral", "strength", "hypertrophy"],
-      kneeImpact: "high",
-      overheadAllowed: true,
-      floorAllowed: false,
-      sets: 3,
-      reps: "8–10 / côté",
-      work: 45,
-      rest: 75,
-      desc: "Exercice unilatéral très efficace pour jambes et fessiers.",
-      steps: [
-        "Place le pied arrière sur le support.",
-        "Descends droit en gardant le genou avant dans l’axe.",
-        "Remonte en poussant fort dans le sol."
-      ],
-      mistakes: [
-        "Perte d’équilibre",
-        "Genou qui rentre",
-        "Buste trop incliné"
-      ]
-    },
-    {
-      id: "side_plank",
-      type: "items",
-      name: "Side plank contrôlé",
-      icon: "side_plank",
-      muscle: "Obliques + core",
-      equipment: ["bodyweight"],
-      difficulty: "beginner",
-      pattern: "anti_lateral_flexion",
-      tags: ["core", "obliques", "stability", "anti_lateral_flexion", "spine_friendly"],
-      kneeImpact: "low",
-      overheadAllowed: true,
-      floorAllowed: true,
-      sets: 3,
-      reps: "20–30 s / côté",
-      work: 30,
-      rest: 40,
-      desc: "Version stable et contrôlée du gainage latéral.",
-      steps: [
-        "Empile correctement épaules et bassin.",
-        "Pousse le sol avec l’avant-bras.",
-        "Tiens la ligne sans laisser tomber le bassin."
-      ],
-      mistakes: [
-        "Bassin trop bas",
-        "Corps qui tourne",
-        "Épaule écrasée"
-      ]
-    },
-    {
       id: "hollow_hold",
       type: "items",
       name: "Hollow hold",
@@ -1243,6 +1069,415 @@ window.AI_EXERCISE_LIBRARY = {
         "Position trop ambitieuse"
       ]
     }
+
+    ,
+    {
+      id: "lat_pulldown",
+      type: "items",
+      name: "Tirage vertical poulie",
+      icon: "lat_pulldown",
+      muscle: "Grand dorsal + biceps",
+      equipment: ["cable"],
+      difficulty: "beginner",
+      pattern: "vertical_pull",
+      tags: ["pull", "back", "lats", "upper_body", "cable", "hypertrophy"],
+      kneeImpact: "low",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 4,
+      reps: "8–12",
+      work: 45,
+      rest: 75,
+      desc: "Exercice de tirage vertical pour cibler le grand dorsal.",
+      steps: [
+        "Garde le torse légèrement gainé.",
+        "Tire les coudes vers le bas.",
+        "Remonte sous contrôle complet."
+      ],
+      mistakes: [
+        "Tirer derrière la nuque",
+        "Élan du buste",
+        "Amplitude incomplète"
+      ]
+    },
+    {
+      id: "seated_cable_row",
+      type: "items",
+      name: "Rowing assis poulie",
+      icon: "seated_cable_row",
+      muscle: "Dos + milieu du dos",
+      equipment: ["cable"],
+      difficulty: "beginner",
+      pattern: "horizontal_pull",
+      tags: ["pull", "back", "upper_back", "cable", "hypertrophy"],
+      kneeImpact: "low",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 4,
+      reps: "8–12",
+      work: 45,
+      rest: 75,
+      desc: "Tirage horizontal guidé pour développer le dos.",
+      steps: [
+        "Tiens le torse stable.",
+        "Ramène les mains vers le bas du buste.",
+        "Contrôle complètement le retour."
+      ],
+      mistakes: [
+        "Dos arrondi",
+        "Élan excessif",
+        "Épaules qui montent"
+      ]
+    },
+    {
+      id: "cable_chest_press",
+      type: "items",
+      name: "Développé poitrine poulie",
+      icon: "cable_chest_press",
+      muscle: "Pectoraux + triceps",
+      equipment: ["cable"],
+      difficulty: "beginner",
+      pattern: "horizontal_push",
+      tags: ["push", "chest", "triceps", "upper_body", "cable"],
+      kneeImpact: "low",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 3,
+      reps: "10–12",
+      work: 40,
+      rest: 60,
+      desc: "Poussée guidée à la poulie pour les pectoraux.",
+      steps: [
+        "Place-toi stable en fente légère ou debout gainé.",
+        "Pousse devant toi en gardant les épaules basses.",
+        "Reviens lentement sous tension."
+      ],
+      mistakes: [
+        "Épaules hautes",
+        "Perte de contrôle",
+        "Amplitude trop courte"
+      ]
+    },
+    {
+      id: "cable_fly",
+      type: "items",
+      name: "Écartés poulie",
+      icon: "cable_fly",
+      muscle: "Pectoraux",
+      equipment: ["cable"],
+      difficulty: "beginner",
+      pattern: "horizontal_adduction",
+      tags: ["push", "chest", "isolation", "cable", "hypertrophy"],
+      kneeImpact: "low",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 3,
+      reps: "12–15",
+      work: 40,
+      rest: 60,
+      desc: "Isolation des pectoraux à la poulie.",
+      steps: [
+        "Garde une légère flexion de coude.",
+        "Referme les bras devant le buste.",
+        "Contrôle l’ouverture sans perdre la tension."
+      ],
+      mistakes: [
+        "Coudes trop tendus",
+        "Amplitude brusque",
+        "Épaules qui roulent vers l’avant"
+      ]
+    },
+    {
+      id: "triceps_pushdown",
+      type: "items",
+      name: "Extension triceps poulie",
+      icon: "triceps_pushdown",
+      muscle: "Triceps",
+      equipment: ["cable"],
+      difficulty: "beginner",
+      pattern: "elbow_extension",
+      tags: ["arms", "triceps", "isolation", "cable", "hypertrophy"],
+      kneeImpact: "low",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 3,
+      reps: "10–15",
+      work: 35,
+      rest: 50,
+      desc: "Isolation simple et efficace des triceps à la poulie.",
+      steps: [
+        "Garde les coudes serrés au corps.",
+        "Pousse vers le bas sans bouger les épaules.",
+        "Remonte lentement."
+      ],
+      mistakes: [
+        "Coudes qui bougent trop",
+        "Élan du buste",
+        "Amplitude partielle"
+      ]
+    },
+    {
+      id: "cable_biceps_curl",
+      type: "items",
+      name: "Curl biceps poulie",
+      icon: "cable_biceps_curl",
+      muscle: "Biceps",
+      equipment: ["cable"],
+      difficulty: "beginner",
+      pattern: "elbow_flexion",
+      tags: ["arms", "biceps", "isolation", "cable", "hypertrophy"],
+      kneeImpact: "low",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 3,
+      reps: "10–15",
+      work: 35,
+      rest: 50,
+      desc: "Curl guidé à la poulie pour une tension continue sur les biceps.",
+      steps: [
+        "Coudes proches du corps.",
+        "Monte sans élan.",
+        "Descends lentement en gardant la tension."
+      ],
+      mistakes: [
+        "Balancer le buste",
+        "Coudes qui avancent",
+        "Retour trop rapide"
+      ]
+    },
+    {
+      id: "leg_press",
+      type: "items",
+      name: "Leg press",
+      icon: "leg_press",
+      muscle: "Quadriceps + fessiers",
+      equipment: ["machine"],
+      difficulty: "beginner",
+      pattern: "squat",
+      tags: ["legs", "quads", "glutes", "machine", "strength", "hypertrophy"],
+      kneeImpact: "medium",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 4,
+      reps: "10–15",
+      work: 45,
+      rest: 75,
+      desc: "Exercice machine pour les jambes avec forte stabilité.",
+      steps: [
+        "Place bien les pieds sur la plateforme.",
+        "Descends en gardant les genoux dans l’axe.",
+        "Pousse fort sans verrouiller brutalement."
+      ],
+      mistakes: [
+        "Bas du dos qui se décolle",
+        "Genoux qui rentrent",
+        "Amplitude mal contrôlée"
+      ]
+    },
+    {
+      id: "leg_extension",
+      type: "items",
+      name: "Leg extension",
+      icon: "leg_extension",
+      muscle: "Quadriceps",
+      equipment: ["machine"],
+      difficulty: "beginner",
+      pattern: "knee_extension",
+      tags: ["legs", "quads", "machine", "isolation", "hypertrophy"],
+      kneeImpact: "medium",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 3,
+      reps: "12–15",
+      work: 35,
+      rest: 50,
+      desc: "Isolation machine pour les quadriceps.",
+      steps: [
+        "Règle correctement la machine.",
+        "Monte avec contrôle.",
+        "Redescends lentement sans lâcher."
+      ],
+      mistakes: [
+        "Charge trop lourde",
+        "Élan",
+        "Amplitude partielle"
+      ]
+    },
+    {
+      id: "leg_curl",
+      type: "items",
+      name: "Leg curl",
+      icon: "leg_curl",
+      muscle: "Ischios",
+      equipment: ["machine"],
+      difficulty: "beginner",
+      pattern: "knee_flexion",
+      tags: ["legs", "hamstrings", "machine", "isolation", "hypertrophy"],
+      kneeImpact: "low",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 3,
+      reps: "12–15",
+      work: 35,
+      rest: 50,
+      desc: "Isolation machine pour les ischios.",
+      steps: [
+        "Règle bien le point d’appui.",
+        "Ramène les talons vers les fessiers.",
+        "Redescends lentement."
+      ],
+      mistakes: [
+        "Élan",
+        "Bassin qui bouge trop",
+        "Retour non contrôlé"
+      ]
+    },
+    {
+      id: "calf_raise",
+      type: "items",
+      name: "Mollets debout",
+      icon: "calf_raise",
+      muscle: "Mollets",
+      equipment: ["bodyweight", "machine", "dumbbell"],
+      difficulty: "beginner",
+      pattern: "ankle_extension",
+      tags: ["legs", "calves", "isolation"],
+      kneeImpact: "low",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 3,
+      reps: "15–20",
+      work: 30,
+      rest: 40,
+      desc: "Travail ciblé des mollets.",
+      steps: [
+        "Monte haut sur la pointe des pieds.",
+        "Marque un léger temps en haut.",
+        "Redescends lentement."
+      ],
+      mistakes: [
+        "Amplitude trop courte",
+        "Rebond",
+        "Rythme trop rapide"
+      ]
+    },
+    {
+      id: "step_up",
+      type: "items",
+      name: "Step-up",
+      icon: "step_up",
+      muscle: "Quadriceps + fessiers",
+      equipment: ["bodyweight", "dumbbell", "bench", "box"],
+      difficulty: "beginner",
+      pattern: "step_up",
+      tags: ["legs", "glutes", "quads", "unilateral", "functional"],
+      kneeImpact: "medium",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 3,
+      reps: "8–10 / côté",
+      work: 40,
+      rest: 60,
+      desc: "Exercice unilatéral fonctionnel pour jambes et stabilité.",
+      steps: [
+        "Pose tout le pied sur le support.",
+        "Pousse fort dans la jambe avant.",
+        "Redescends avec contrôle."
+      ],
+      mistakes: [
+        "Impulsion excessive avec la jambe arrière",
+        "Genou qui rentre",
+        "Perte d’équilibre"
+      ]
+    },
+    {
+      id: "walking_lunge",
+      type: "items",
+      name: "Fentes marchées",
+      icon: "walking_lunge",
+      muscle: "Quadriceps + fessiers",
+      equipment: ["bodyweight", "dumbbell"],
+      difficulty: "intermediate",
+      pattern: "lunge",
+      tags: ["legs", "glutes", "quads", "unilateral", "conditioning"],
+      kneeImpact: "high",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 3,
+      reps: "10–12 / côté",
+      work: 45,
+      rest: 75,
+      desc: "Fentes dynamiques pour le bas du corps.",
+      steps: [
+        "Fais un grand pas contrôlé.",
+        "Descends en gardant le buste stable.",
+        "Pousse pour avancer sur la répétition suivante."
+      ],
+      mistakes: [
+        "Pas trop courts",
+        "Genoux qui rentrent",
+        "Perte d’alignement"
+      ]
+    },
+    {
+      id: "machine_chest_press",
+      type: "items",
+      name: "Chest press machine",
+      icon: "machine_chest_press",
+      muscle: "Pectoraux + triceps",
+      equipment: ["machine"],
+      difficulty: "beginner",
+      pattern: "horizontal_push",
+      tags: ["push", "chest", "triceps", "machine", "hypertrophy"],
+      kneeImpact: "low",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 4,
+      reps: "8–12",
+      work: 40,
+      rest: 60,
+      desc: "Poussée guidée machine pour les pectoraux.",
+      steps: [
+        "Règle bien le siège.",
+        "Pousse sans hausser les épaules.",
+        "Reviens sous contrôle."
+      ],
+      mistakes: [
+        "Épaules trop hautes",
+        "Amplitude partielle",
+        "Charge trop lourde"
+      ]
+    },
+    {
+      id: "machine_row",
+      type: "items",
+      name: "Row machine",
+      icon: "machine_row",
+      muscle: "Dos + haut du dos",
+      equipment: ["machine"],
+      difficulty: "beginner",
+      pattern: "horizontal_pull",
+      tags: ["pull", "back", "upper_back", "machine", "hypertrophy"],
+      kneeImpact: "low",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 4,
+      reps: "8–12",
+      work: 40,
+      rest: 60,
+      desc: "Tirage guidé machine pour le dos.",
+      steps: [
+        "Garde le torse stable.",
+        "Ramène les poignées vers toi.",
+        "Contrôle complètement le retour."
+      ],
+      mistakes: [
+        "Élan",
+        "Épaules qui montent",
+        "Retour trop rapide"
+      ]
+    }
+    
   ],
 
   cooldown: [
