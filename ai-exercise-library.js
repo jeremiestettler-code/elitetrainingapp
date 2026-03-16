@@ -2286,7 +2286,297 @@ window.AI_EXERCISE_LIBRARY = {
   reps: "6–8",
   work: 45,
   rest: 90
-}
+}    ,
+    {
+      id: "medball_slams",
+      type: "items",
+      name: "Med ball slams",
+      icon: "medball_slams",
+      muscle: "Full body + core",
+      equipment: ["med ball"],
+      difficulty: "beginner",
+      pattern: "power",
+      tags: ["conditioning", "power", "core", "athletic", "med_ball"],
+      kneeImpact: "medium",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 4,
+      reps: "10–12",
+      work: 30,
+      rest: 45,
+      desc: "Exercice explosif full body avec med ball.",
+      steps: [
+        "Monte la balle au-dessus de la tête.",
+        "Slam au sol avec puissance.",
+        "Récupère proprement et recommence."
+      ],
+      mistakes: [
+        "Dos arrondi",
+        "Perte de contrôle",
+        "Rythme désordonné"
+      ]
+    },
+    {
+      id: "bike_sprint",
+      type: "items",
+      name: "Bike sprint",
+      icon: "bike_sprint",
+      muscle: "Conditioning",
+      equipment: ["bike"],
+      difficulty: "beginner",
+      pattern: "conditioning",
+      tags: ["cardio", "conditioning", "intervals", "bike"],
+      kneeImpact: "low",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 6,
+      reps: "20 s",
+      work: 20,
+      rest: 40,
+      desc: "Sprint court sur vélo pour le conditioning.",
+      steps: [
+        "Accélère progressivement.",
+        "Sprint fort sur la durée prévue.",
+        "Récupère activement entre les répétitions."
+      ],
+      mistakes: [
+        "Partir trop fort dès la première série",
+        "Résistance mal réglée",
+        "Récupération insuffisante"
+      ]
+    },
+    {
+      id: "dip_bars_dips",
+      type: "items",
+      name: "Dips aux barres parallèles",
+      icon: "dip_bars_dips",
+      muscle: "Pectoraux + triceps",
+      equipment: ["dip bars"],
+      difficulty: "intermediate",
+      pattern: "vertical_push",
+      tags: ["push", "chest", "triceps", "bodyweight", "dip_bars"],
+      kneeImpact: "low",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 3,
+      reps: "6–10",
+      work: 35,
+      rest: 60,
+      desc: "Poussée poids du corps exigeante pour pectoraux et triceps.",
+      steps: [
+        "Descends sous contrôle.",
+        "Garde les épaules stables.",
+        "Pousse fort pour remonter."
+      ],
+      mistakes: [
+        "Épaules trop en avant",
+        "Amplitude forcée",
+        "Perte de gainage"
+      ]
+    },
+    {
+      id: "parallettes_pushups",
+      type: "items",
+      name: "Pompes sur parallettes",
+      icon: "parallettes_pushups",
+      muscle: "Pectoraux + triceps + core",
+      equipment: ["parallettes"],
+      difficulty: "beginner",
+      pattern: "horizontal_push",
+      tags: ["push", "chest", "triceps", "bodyweight", "parallettes"],
+      kneeImpact: "low",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 3,
+      reps: "8–15",
+      work: 35,
+      rest: 50,
+      desc: "Pompes avec amplitude augmentée grâce aux parallettes.",
+      steps: [
+        "Garde une ligne corps-gainée.",
+        "Descends plus bas que sur des pompes classiques.",
+        "Repousse sous contrôle."
+      ],
+      mistakes: [
+        "Bassin qui tombe",
+        "Amplitude non contrôlée",
+        "Épaules qui montent"
+      ]
+    },
+    {
+      id: "slider_body_saw",
+      type: "items",
+      name: "Body saw sliders",
+      icon: "slider_body_saw",
+      muscle: "Core",
+      equipment: ["sliders"],
+      difficulty: "intermediate",
+      pattern: "anti_extension",
+      tags: ["core", "abs", "sliders", "stability"],
+      kneeImpact: "low",
+      overheadAllowed: true,
+      floorAllowed: true,
+      sets: 3,
+      reps: "8–12",
+      work: 30,
+      rest: 45,
+      desc: "Exercice core avancé avec sliders.",
+      steps: [
+        "Pars en position de planche.",
+        "Glisse doucement vers l’arrière.",
+        "Reviens sans perdre le gainage."
+      ],
+      mistakes: [
+        "Dos qui se creuse",
+        "Amplitude trop grande",
+        "Mouvement trop rapide"
+      ]
+    },
+    {
+      id: "abwheel_rollout",
+      type: "items",
+      name: "Ab wheel rollout",
+      icon: "abwheel_rollout",
+      muscle: "Core + anti-extension",
+      equipment: ["ab wheel"],
+      difficulty: "intermediate",
+      pattern: "anti_extension",
+      tags: ["core", "abs", "ab_wheel", "stability"],
+      kneeImpact: "low",
+      overheadAllowed: true,
+      floorAllowed: true,
+      sets: 3,
+      reps: "6–10",
+      work: 25,
+      rest: 50,
+      desc: "Exercice de gainage avancé à l’ab wheel.",
+      steps: [
+        "Garde les côtes rentrées.",
+        "Roules vers l’avant sous contrôle.",
+        "Reviens sans casser le bas du dos."
+      ],
+      mistakes: [
+        "Dos qui s’écrase",
+        "Amplitude trop ambitieuse",
+        "Retour brusque"
+      ]
+    },
+    {
+      id: "battle_rope_waves",
+      type: "items",
+      name: "Battle rope waves",
+      icon: "battle_rope_waves",
+      muscle: "Full body + conditioning",
+      equipment: ["corde"],
+      difficulty: "beginner",
+      pattern: "conditioning",
+      tags: ["conditioning", "cardio", "power", "rope"],
+      kneeImpact: "low",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 5,
+      reps: "20–30 s",
+      work: 25,
+      rest: 35,
+      desc: "Travail cardio-musculaire avec corde ondulatoire.",
+      steps: [
+        "Position athlétique stable.",
+        "Crée des vagues régulières.",
+        "Reste gainé pendant toute la série."
+      ],
+      mistakes: [
+        "Épaules crispées",
+        "Rythme irrégulier",
+        "Buste relâché"
+      ]
+    },
+    {
+      id: "trx_rows",
+      type: "items",
+      name: "TRX rows",
+      icon: "trx_rows",
+      muscle: "Dos + biceps",
+      equipment: ["trx"],
+      difficulty: "beginner",
+      pattern: "horizontal_pull",
+      tags: ["pull", "back", "trx", "bodyweight", "home_gym"],
+      kneeImpact: "low",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 3,
+      reps: "10–15",
+      work: 35,
+      rest: 50,
+      desc: "Tirage suspendu au TRX pour le dos.",
+      steps: [
+        "Garde le corps gainé.",
+        "Tire le sternum vers les poignées.",
+        "Redescends lentement."
+      ],
+      mistakes: [
+        "Épaules hautes",
+        "Bassin qui casse",
+        "Amplitude partielle"
+      ]
+    },
+    {
+      id: "rowing_machine_intervals",
+      type: "items",
+      name: "Rameur intervalles",
+      icon: "rowing_machine_intervals",
+      muscle: "Conditioning full body",
+      equipment: ["rameur"],
+      difficulty: "beginner",
+      pattern: "conditioning",
+      tags: ["cardio", "conditioning", "rowing", "intervals"],
+      kneeImpact: "low",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 5,
+      reps: "30 s",
+      work: 30,
+      rest: 30,
+      desc: "Intervalles courts sur rameur.",
+      steps: [
+        "Pousse avec les jambes puis tire.",
+        "Garde un rythme propre.",
+        "Récupère activement entre les efforts."
+      ],
+      mistakes: [
+        "Tirer trop tôt avec les bras",
+        "Dos arrondi",
+        "Cadence non maîtrisée"
+      ]
+    },
+    {
+      id: "barbell_back_squat",
+      type: "items",
+      name: "Back squat",
+      icon: "barbell_back_squat",
+      muscle: "Quadriceps + fessiers",
+      equipment: ["barbell"],
+      difficulty: "intermediate",
+      pattern: "squat",
+      tags: ["legs", "quads", "glutes", "barbell", "strength"],
+      kneeImpact: "medium",
+      overheadAllowed: true,
+      floorAllowed: false,
+      sets: 4,
+      reps: "5–8",
+      work: 45,
+      rest: 90,
+      desc: "Mouvement fondamental de force pour le bas du corps.",
+      steps: [
+        "Barre stable sur le dos.",
+        "Descends sous contrôle avec poitrine haute.",
+        "Repousse le sol pour remonter."
+      ],
+      mistakes: [
+        "Genoux qui rentrent",
+        "Buste qui s’effondre",
+        "Amplitude instable"
+      ]
+    }
 
   ],
 
