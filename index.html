@@ -4239,7 +4239,7 @@ async function generateSessionWithAI({ goalText, minutes, constraints }){
     goalText: String(goalText || "").trim(),
     minutes: (minutes === null || minutes === undefined || minutes === "") ? null : Number(minutes),
     constraints: normalizedConstraints,
-    libraryCompact: buildLibraryCompact(),
+    libraryCompact: buildLibraryCompact(normalizedConstraints.equipment || []),
     recentIds: getRecentExerciseIds(25),
     profile: (window.firestoreProfile || window.eliteProfile || null)
   };
@@ -4338,6 +4338,51 @@ async function generateSessionWithAI({ goalText, minutes, constraints }){
   }
 }
 
+window.filterLibraryByAvailableEquipment = function(lib, requestedEquipment){
+  if(!lib) return lib;
+
+  const requested = Array.isArray(requestedEquipment)
+    ? requestedEquipment.filter(Boolean)
+    : [];
+
+  // aucun filtre => on laisse tout passer
+  if(!requested.length) return lib;
+
+  // "none" = bodyweight only
+  const bodyweightOnly = requested.includes("none");
+
+  function isAllowedExercise(e){
+    const eq = Array.isArray(e?.equipment) ? e.equipment : [];
+
+    // sans matériel => bodyweight uniquement
+    if(bodyweightOnly){
+      return eq.length === 0 || eq.includes("bodyweight");
+    }
+
+    // warmup/cooldown sans equipment déclaré => on garde
+    if(eq.length === 0) return true;
+
+    // toujours autoriser bodyweight
+    if(eq.includes("bodyweight")) return true;
+
+    // si au moins un equipment de l'exo est dispo -> OK
+    return eq.some(x => requested.includes(x));
+  }
+
+  const out = {
+    warmup: (lib.warmup || []).filter(isAllowedExercise),
+    items: (lib.items || []).filter(isAllowedExercise),
+    cooldown: (lib.cooldown || []).filter(isAllowedExercise),
+    byId: {}
+  };
+
+  [...out.warmup, ...out.items, ...out.cooldown].forEach(e=>{
+    if(e?.id) out.byId[e.id] = e;
+  });
+
+  return out;
+};
+
 // Expose global (pratique pour debug / autres scripts)
 window.generateSessionWithAI = generateSessionWithAI;
 
@@ -4379,9 +4424,17 @@ function rememberRecentExerciseIds(session, max = 50){
 
 
 // -------- C3: compact library for AI (GLOBAL) --------
-function buildLibraryCompact(){
-  const lib = window.AI_EXERCISE_LIBRARY || window.EXERCISE_LIBRARY;
-  if(!lib) return [];
+function buildLibraryCompact(forcedEquipment){
+  const baseLib = window.AI_EXERCISE_LIBRARY || window.EXERCISE_LIBRARY;
+  if(!baseLib) return [];
+
+  const effectiveEquipment = Array.isArray(forcedEquipment)
+    ? forcedEquipment
+    : window.getProfileEquipmentForAI?.() || [];
+
+  const lib = window.filterLibraryByAvailableEquipment
+    ? window.filterLibraryByAvailableEquipment(baseLib, effectiveEquipment)
+    : baseLib;
 
   const all = [
     ...(lib.warmup || []),
@@ -4877,16 +4930,16 @@ if (ml && usedMin) {
       const token = currentUser ? await currentUser.getIdToken() : null;
 
       const libraryCompact = (typeof buildLibraryCompact === "function")
-        ? buildLibraryCompact()
-        : Object.values(EXERCISE_LIBRARY.byId).map(e => ({
-            id: e.id,
-            name: e.name,
-            primary: e.primary,
-            secondary: e.secondary,
-            equipment: e.equipment || [],
-            kneeImpact: e.kneeImpact || "low",
-            patterns: e.patterns || []
-          }));
+      ? buildLibraryCompact(mergedConstraints.equipment || [])
+      : Object.values(EXERCISE_LIBRARY.byId).map(e => ({
+      id: e.id,
+      name: e.name,
+      primary: e.primary,
+      secondary: e.secondary,
+      equipment: e.equipment || [],
+      kneeImpact: e.kneeImpact || "low",
+      patterns: e.patterns || []
+    }));
 
       const res = await fetch(window.AI_PROGRAM_URL, {
         method: "POST",
