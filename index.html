@@ -4351,22 +4351,31 @@ window.filterLibraryByAvailableEquipment = function(lib, requestedEquipment){
   // "none" = bodyweight only
   const bodyweightOnly = requested.includes("none");
 
-  function isAllowedExercise(e){
-    const eq = Array.isArray(e?.equipment) ? e.equipment : [];
+    function isAllowedExercise(e){
+    const eq = Array.isArray(e?.equipment) ? e.equipment.filter(Boolean) : [];
 
-    // sans matériel => bodyweight uniquement
-    if(bodyweightOnly){
-      return eq.length === 0 || eq.includes("bodyweight");
+    // aucun équipement déclaré :
+    // on garde seulement warmup/cooldown/bodyweight implicites
+    if(eq.length === 0){
+      return e?.type === "warmup" || e?.type === "cooldown";
     }
 
-    // warmup/cooldown sans equipment déclaré => on garde
-    if(eq.length === 0) return true;
+    // mode sans matériel = uniquement bodyweight
+    if(bodyweightOnly){
+      return eq.every(x => x === "bodyweight");
+    }
 
-    // toujours autoriser bodyweight
-    if(eq.includes("bodyweight")) return true;
+    // on ignore bodyweight comme contrainte matérielle
+    const required = eq.filter(x => x !== "bodyweight");
 
-    // si au moins un equipment de l'exo est dispo -> OK
-    return eq.some(x => requested.includes(x));
+    // si après retrait de bodyweight il ne reste rien,
+    // alors l'exercice est faisable partout
+    if(required.length === 0){
+      return true;
+    }
+
+    // tous les équipements requis doivent être disponibles
+    return required.every(x => requested.includes(x));
   }
 
   const out = {
