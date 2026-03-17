@@ -4501,11 +4501,10 @@ function aiParsePrompt(text){
   return { goalText, minutes, constraints, chips };
 }
 
-function normalizeEquipmentValueForAI(v){
+window.normalizeEquipmentValueForAI = function(v){
   const s = String(v || "").trim().toLowerCase();
 
   const map = {
-    // Profil / app keys
     halteres: "dumbbell",
     haltères: "dumbbell",
     dumbbells: "dumbbell",
@@ -4522,35 +4521,24 @@ function normalizeEquipmentValueForAI(v){
     "poulie haute": "cable",
     "poulie basse": "cable",
     cable: "cable",
-    cables: "cable",
 
     elastiques: "band",
     élastiques: "band",
-    elastique: "band",
-    élastique: "band",
     band: "band",
-    bands: "band",
 
     kettlebell: "kettlebell",
     rameur: "rameur",
     trx: "trx",
     box: "box",
     corde: "corde",
-    abwheel: "ab wheel",
     "ab wheel": "ab wheel",
-    slider: "sliders",
     sliders: "sliders",
-    steps: "step",
     step: "step",
-    parallel: "parallettes",
     parallettes: "parallettes",
-    dipbar: "dip bars",
     "dip bars": "dip bars",
     bike: "bike",
-    ball: "med ball",
     "med ball": "med ball",
 
-    // autres
     machine: "machine",
     bodyweight: "bodyweight",
     "poids du corps": "bodyweight",
@@ -4558,28 +4546,27 @@ function normalizeEquipmentValueForAI(v){
   };
 
   return map[s] || s;
-}
+};
 
-function uniqAIEquipment(arr){
+window.uniqAIEquipment = function(arr){
   return Array.from(new Set((arr || []).filter(Boolean)));
-}
+};
 
-function getProfileEquipmentForAI(){
+window.getProfileEquipmentForAI = function(){
   const p = window.firestoreProfile || window.eliteProfile || {};
   const raw = Array.isArray(p?.equipment) ? p.equipment : [];
 
-  return uniqAIEquipment(
-    raw.map(normalizeEquipmentValueForAI)
+  return window.uniqAIEquipment(
+    raw.map(window.normalizeEquipmentValueForAI)
   );
-}
+};
 
-function mergeEquipmentConstraintsForAI(parsedConstraints){
-  const profileEquipment = getProfileEquipmentForAI();
+window.mergeEquipmentConstraintsForAI = function(parsedConstraints){
+  const profileEquipment = window.getProfileEquipmentForAI();
   const requested = Array.isArray(parsedConstraints?.equipment)
-    ? parsedConstraints.equipment.map(normalizeEquipmentValueForAI)
+    ? parsedConstraints.equipment.map(window.normalizeEquipmentValueForAI)
     : [];
 
-  // Si le prompt impose "none", on respecte
   if(requested.includes("none")){
     return {
       ...(parsedConstraints || {}),
@@ -4588,16 +4575,16 @@ function mergeEquipmentConstraintsForAI(parsedConstraints){
     };
   }
 
-  // Si le prompt mentionne explicitement du matériel, il est prioritaire.
-  // Sinon on injecte celui du profil.
-  const effectiveEquipment = requested.length ? uniqAIEquipment(requested) : profileEquipment;
+  const effectiveEquipment = requested.length
+    ? window.uniqAIEquipment(requested)
+    : profileEquipment;
 
   return {
     ...(parsedConstraints || {}),
     equipment: effectiveEquipment,
     availableEquipment: profileEquipment
   };
-}
+};
 
 function aiRenderChips(parsed){
   const host = $("aiChips");
