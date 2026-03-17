@@ -4505,43 +4505,94 @@ window.normalizeEquipmentValueForAI = function(v){
   const s = String(v || "").trim().toLowerCase();
 
   const map = {
+    // haltères
     halteres: "dumbbell",
     haltères: "dumbbell",
+    haltere: "dumbbell",
+    haltère: "dumbbell",
     dumbbells: "dumbbell",
     dumbbell: "dumbbell",
 
+    // barre
     barre: "barbell",
     "barre + disques": "barbell",
     barbell: "barbell",
 
+    // banc
     banc: "bench",
     bench: "bench",
 
+    // poulies
     poulie: "cable",
     "poulie haute": "cable",
     "poulie basse": "cable",
     cable: "cable",
+    cables: "cable",
 
+    // élastiques
+    elastique: "band",
     elastiques: "band",
+    élastique: "band",
     élastiques: "band",
     band: "band",
+    bands: "band",
 
+    // kettlebell
     kettlebell: "kettlebell",
-    rameur: "rameur",
+
+    // traction
+    pullup: "pullup_bar",
+    "pull-up": "pullup_bar",
+    "pull up": "pullup_bar",
+    traction: "pullup_bar",
+    "barre traction": "pullup_bar",
+
+    // trx
     trx: "trx",
+
+    // box
     box: "box",
+
+    // corde
     corde: "corde",
+    rope: "corde",
+
+    // ab wheel
+    abwheel: "ab wheel",
     "ab wheel": "ab wheel",
+
+    // sliders
+    slider: "sliders",
     sliders: "sliders",
+
+    // step
     step: "step",
+    steps: "step",
+
+    // parallettes
+    parallel: "parallettes",
     parallettes: "parallettes",
+
+    // dip bars
+    dipbar: "dip bars",
     "dip bars": "dip bars",
+
+    // cardio
+    rameur: "rameur",
     bike: "bike",
+
+    // med ball
+    ball: "med ball",
     "med ball": "med ball",
 
+    // machine / bodyweight
     machine: "machine",
+    mat: "mat",
+    tapis: "mat",
     bodyweight: "bodyweight",
     "poids du corps": "bodyweight",
+
+    // none
     none: "none"
   };
 
