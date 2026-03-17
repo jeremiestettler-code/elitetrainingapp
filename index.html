@@ -4231,13 +4231,16 @@ function mockGenerateSession(goalText, minutes, constraints){
    Fallback sur le mock si l'appel échoue.
 ----------------------------------------- */
 async function generateSessionWithAI({ goalText, minutes, constraints }){
+    const normalizedConstraints = mergeEquipmentConstraintsForAI(
+    constraints && typeof constraints === "object" ? constraints : {}
+  );
+
   const payload = {
     goalText: String(goalText || "").trim(),
     minutes: (minutes === null || minutes === undefined || minutes === "") ? null : Number(minutes),
-    constraints: constraints && typeof constraints === "object" ? constraints : {},
+    constraints: normalizedConstraints,
     libraryCompact: buildLibraryCompact(),
     recentIds: getRecentExerciseIds(25),
-    // profil optionnel si tu l'exposes plus tard
     profile: (window.firestoreProfile || window.eliteProfile || null)
   };
 
@@ -4498,6 +4501,104 @@ function aiParsePrompt(text){
   return { goalText, minutes, constraints, chips };
 }
 
+function normalizeEquipmentValueForAI(v){
+  const s = String(v || "").trim().toLowerCase();
+
+  const map = {
+    // Profil / app keys
+    halteres: "dumbbell",
+    haltères: "dumbbell",
+    dumbbells: "dumbbell",
+    dumbbell: "dumbbell",
+
+    barre: "barbell",
+    "barre + disques": "barbell",
+    barbell: "barbell",
+
+    banc: "bench",
+    bench: "bench",
+
+    poulie: "cable",
+    "poulie haute": "cable",
+    "poulie basse": "cable",
+    cable: "cable",
+    cables: "cable",
+
+    elastiques: "band",
+    élastiques: "band",
+    elastique: "band",
+    élastique: "band",
+    band: "band",
+    bands: "band",
+
+    kettlebell: "kettlebell",
+    rameur: "rameur",
+    trx: "trx",
+    box: "box",
+    corde: "corde",
+    abwheel: "ab wheel",
+    "ab wheel": "ab wheel",
+    slider: "sliders",
+    sliders: "sliders",
+    steps: "step",
+    step: "step",
+    parallel: "parallettes",
+    parallettes: "parallettes",
+    dipbar: "dip bars",
+    "dip bars": "dip bars",
+    bike: "bike",
+    ball: "med ball",
+    "med ball": "med ball",
+
+    // autres
+    machine: "machine",
+    bodyweight: "bodyweight",
+    "poids du corps": "bodyweight",
+    none: "none"
+  };
+
+  return map[s] || s;
+}
+
+function uniqAIEquipment(arr){
+  return Array.from(new Set((arr || []).filter(Boolean)));
+}
+
+function getProfileEquipmentForAI(){
+  const p = window.firestoreProfile || window.eliteProfile || {};
+  const raw = Array.isArray(p?.equipment) ? p.equipment : [];
+
+  return uniqAIEquipment(
+    raw.map(normalizeEquipmentValueForAI)
+  );
+}
+
+function mergeEquipmentConstraintsForAI(parsedConstraints){
+  const profileEquipment = getProfileEquipmentForAI();
+  const requested = Array.isArray(parsedConstraints?.equipment)
+    ? parsedConstraints.equipment.map(normalizeEquipmentValueForAI)
+    : [];
+
+  // Si le prompt impose "none", on respecte
+  if(requested.includes("none")){
+    return {
+      ...(parsedConstraints || {}),
+      equipment: ["none"],
+      availableEquipment: profileEquipment
+    };
+  }
+
+  // Si le prompt mentionne explicitement du matériel, il est prioritaire.
+  // Sinon on injecte celui du profil.
+  const effectiveEquipment = requested.length ? uniqAIEquipment(requested) : profileEquipment;
+
+  return {
+    ...(parsedConstraints || {}),
+    equipment: effectiveEquipment,
+    availableEquipment: profileEquipment
+  };
+}
+
 function aiRenderChips(parsed){
   const host = $("aiChips");
   if(!host) return;
@@ -4631,6 +4732,7 @@ async function aiGenerate({ regen=false } = {}){
   const promptEl = $("aiPrompt");
   const txt = promptEl ? promptEl.value : "";
   const parsed = aiParsePrompt(txt);
+  const mergedConstraints = mergeEquipmentConstraintsForAI(parsed.constraints || {});
 
   if(!parsed.goalText || !parsed.goalText.trim()){
     alert("Écris un objectif (ex: dos + abdos 35 min).");
@@ -4757,7 +4859,7 @@ if (ml && usedMin) {
         body: JSON.stringify({
           goalText: parsed.goalText,
           weeks: 4,
-          constraints: parsed.constraints || {},
+          constraints: mergedConstraints,
           libraryCompact,
           recentIds: []
   })
