@@ -4157,7 +4157,7 @@ function scoreExerciseForGoal(e, goal){
 }
 
 function mockGenerateSession(goalText, minutes, constraints){
-  const lib = window.EXERCISE_LIBRARY;
+  const lib = window.AI_EXERCISE_LIBRARY || window.EXERCISE_LIBRARY;
   if(!lib || !lib.items?.length) throw new Error("EXERCISE_LIBRARY non prête.");
 
   const goal = String(goalText||"").trim();
@@ -4250,8 +4250,8 @@ async function generateSessionWithAI({ goalText, minutes, constraints }){
     else payload.minutes = Math.max(10, Math.min(120, Math.round(payload.minutes)));
   }
 
-  // --- Helper: enrich entries with name/icon from EXERCISE_LIBRARY ---
-  const lib = window.EXERCISE_LIBRARY;
+  // --- Helper: enrich entries with name/icon from AI_EXERCISE_LIBRARY (fallback EXERCISE_LIBRARY) ---
+  const lib = window.AI_EXERCISE_LIBRARY || window.EXERCISE_LIBRARY;
   function enrichEntry(e){
     const id = String(e?.id || "");
     const ref = lib?.byId?.[id] || null;
@@ -4926,6 +4926,7 @@ if (ml && usedMin) {
     const promptEl = $("aiPrompt");
     const txt = promptEl ? promptEl.value : "";
     const parsed = aiParsePrompt(txt);
+    const mergedConstraints = mergeEquipmentConstraintsForAI(parsed.constraints || {});
 
     if(!parsed.goalText || !parsed.goalText.trim()){
       alert("Écris un objectif (ex: prise de masse 4 semaines, 3 séances/semaine, haltères).");
