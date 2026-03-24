@@ -514,6 +514,377 @@ window.SESSIONS = {
     ]
   },
 
+  /* =====================
+     SUMMER — HAUT DU CORPS + COURSE (8 séances)
+     Objectif : esthétique haut du corps + transfert running
+     ===================== */
+
+  SU1: {
+    name: "Summer SU1 — Push fondation",
+    warmup: [
+      { id:"WU-SU1-1", name:"Rameur léger", icon:"wu_cardio_lowimpact", todo:"2 min", seconds:120, desc:"Monte doucement la température corporelle." },
+      { id:"WU-SU1-2", name:"Mobilité épaules", icon:"wu_shoulder", todo:"2 min", seconds:120, desc:"Cercles d’épaules + ouverture thoracique." },
+      { id:"WU-SU1-3", name:"Band pull-aparts", icon:"wu_bandpull", todo:"2×15", seconds:60, desc:"Active le haut du dos, épaules basses." },
+      { id:"WU-SU1-4", name:"Pompes faciles", icon:"wu_pushup", todo:"1×8", seconds:45, desc:"Activation progressive pectoraux/triceps." }
+    ],
+    cooldown: [
+      { id:"CD-SU1-1", name:"Respiration / relâchement", icon:"wu_breath_core", todo:"2 min", seconds:120, desc:"Inspire 4s, expire 6s." },
+      { id:"CD-SU1-2", name:"Mobilité épaules douce", icon:"wu_shoulder", todo:"75 s", seconds:75, desc:"Relâche les deltoïdes et le haut du dos." },
+      { id:"CD-SU1-3", name:"Ouverture thoracique", icon:"wu_tspine_open", todo:"75 s", seconds:75, desc:"Respire lentement, cage ouverte." }
+    ],
+    items: [
+      { id:"SU1-1", name:"Développé couché haltères", icon:"dbbench", muscle:"Pectoraux + triceps", sets:4, reps:"6–8", work:45, rest:120,
+        desc:"Exercice principal lourd et propre.",
+        steps:["Pieds ancrés au sol.","Omoplates serrées/basses.","Descends contrôlé, pousse fort en expirant."],
+        mistakes:["Épaules hautes","Rebond","Amplitude incomplète"] },
+
+      { id:"SU1-2", name:"Développé incliné haltères", icon:"inclinedb", muscle:"Haut pectoraux + épaules", sets:3, reps:"8–10", work:45, rest:90,
+        desc:"Accent haut des pectoraux.",
+        steps:["Inclinaison légère.","Descends en contrôle.","Pousse sans perdre le gainage."],
+        mistakes:["Inclinaison trop forte","Cambrure excessive","Poignets cassés"] },
+
+      { id:"SU1-3", name:"Landmine press", icon:"landminepress", muscle:"Épaules + haut pec", sets:3, reps:"10", work:45, rest:90,
+        desc:"Trajectoire naturelle, très bonne pour l’épaule.",
+        steps:["Bassin gainé.","Pousse en diagonale.","Retour lent et contrôlé."],
+        mistakes:["Rotation du buste","Épaule qui monte","Cambrure"] },
+
+      { id:"SU1-4", name:"Élévations latérales", icon:"lateral", muscle:"Deltoïde moyen", sets:3, reps:"15", work:45, rest:60,
+        desc:"Travail strict pour la largeur d’épaules.",
+        steps:["Monte à hauteur d’épaule.","Épaules basses.","Descends lentement."],
+        mistakes:["Élan","Trapèzes dominants","Trop lourd"] },
+
+      { id:"SU1-5", name:"Poulie triceps prise serrée", icon:"cabletri", muscle:"Triceps", sets:3, reps:"12", work:45, rest:60,
+        desc:"Extension stricte, amplitude complète.",
+        steps:["Coudes collés.","Pousse jusqu’en bas.","Retour sous contrôle."],
+        mistakes:["Balancer","Coudes qui s’ouvrent","Charge trop lourde"] },
+
+      { id:"SU1-6", name:"Planche", icon:"plank", muscle:"Tronc", sets:3, reps:"45 s", type:"time", seconds:45, work:45, rest:60,
+        desc:"Gainage simple et propre.",
+        steps:["Coudes sous épaules.","Bassin neutre.","Respire sans apnée."],
+        mistakes:["Bassin qui s’affaisse","Épaules hautes","Apnée"] }
+    ]
+  },
+
+  SU2: {
+    name: "Summer SU2 — Pull fondation",
+    warmup: [
+      { id:"WU-SU2-1", name:"Rameur léger", icon:"wu_cardio_lowimpact", todo:"2 min", seconds:120, desc:"Progressif, souffle facile." },
+      { id:"WU-SU2-2", name:"Row élastique", icon:"wu_rowband", todo:"2×12", seconds:60, desc:"Active les omoplates." },
+      { id:"WU-SU2-3", name:"Rotations externes", icon:"wu_external", todo:"2×12", seconds:60, desc:"Prépare les épaules." },
+      { id:"WU-SU2-4", name:"Hip hinge léger", icon:"wu_hinge", todo:"1×10", seconds:45, desc:"Place le dos pour les rowings." }
+    ],
+    cooldown: [
+      { id:"CD-SU2-1", name:"Respiration / relâchement", icon:"wu_breath_core", todo:"2 min", seconds:120, desc:"Redescends progressivement." },
+      { id:"CD-SU2-2", name:"Ouverture T-spine", icon:"wu_tspine_open", todo:"90 s", seconds:90, desc:"Relâche haut du dos et cage thoracique." },
+      { id:"CD-SU2-3", name:"Mobilité épaules douce", icon:"wu_shoulder", todo:"75 s", seconds:75, desc:"Amplitude confortable." }
+    ],
+    items: [
+      { id:"SU2-1", name:"Rowing landmine", icon:"landminerow", muscle:"Dos", sets:4, reps:"8", work:45, rest:90,
+        desc:"Épais du dos + gainage.",
+        steps:["Hinge propre.","Tire vers le bas du sternum.","Pause 1s puis redescends."],
+        mistakes:["Dos rond","Élan","Trapèzes dominants"] },
+
+      { id:"SU2-2", name:"Row élastique assis", icon:"band_row_seated", muscle:"Dos", sets:3, reps:"15", work:45, rest:60,
+        desc:"Volume propre pour le haut du dos.",
+        steps:["Poitrine sortie.","Tire les coudes vers l’arrière.","Contrôle le retour."],
+        mistakes:["Épaules hautes","Retour trop rapide","Buste qui balance"] },
+
+      { id:"SU2-3", name:"Rowing unilatéral haltère", icon:"onearmrow", muscle:"Grand dorsal", sets:3, reps:"10 / côté", work:45, rest:90,
+        desc:"Tire vers la hanche, pas vers l’épaule.",
+        steps:["Buste stable.","Coude vers la hanche.","Pause 1s en haut."],
+        mistakes:["Rotation du buste","Élan","Amplitude courte"] },
+
+      { id:"SU2-4", name:"Reverse fly", icon:"reversefly", muscle:"Arrière d’épaules", sets:3, reps:"15", work:45, rest:60,
+        desc:"Excellent pour équilibrer le travail de poussée.",
+        steps:["Buste penché.","Ouvre les bras.","Contrôle tout le trajet."],
+        mistakes:["Trapèzes","Élan","Dos arrondi"] },
+
+      { id:"SU2-5", name:"Curl haltères alterné", icon:"dbcurl", muscle:"Biceps", sets:3, reps:"12", work:45, rest:60,
+        desc:"Strict et contrôlé.",
+        steps:["Coudes fixes.","Monte sans élan.","Descends lentement."],
+        mistakes:["Balancer","Épaules en avant","Trop lourd"] },
+
+      { id:"SU2-6", name:"Dead bug", icon:"deadbug", muscle:"Gainage profond", sets:3, reps:"10 / côté", work:45, rest:60,
+        desc:"Très utile pour la stabilité en course.",
+        steps:["Dos collé au sol.","Allonge bras/jambe opposés.","Reviens lentement."],
+        mistakes:["Dos creusé","Trop vite","Apnée"] }
+    ]
+  },
+
+  SU3: {
+    name: "Summer SU3 — Push intensification",
+    warmup: [
+      { id:"WU-SU3-1", name:"Tapis de course léger", icon:"wu_cardio_lowimpact", todo:"2 min", seconds:120, desc:"Très facile." },
+      { id:"WU-SU3-2", name:"Mobilité épaules", icon:"wu_shoulder", todo:"90 s", seconds:90, desc:"Prépare le pressing." },
+      { id:"WU-SU3-3", name:"Band pull-aparts", icon:"wu_bandpull", todo:"2×15", seconds:60, desc:"Scapula actives." },
+      { id:"WU-SU3-4", name:"Pompes tempo", icon:"wu_pushup", todo:"1×8", seconds:45, desc:"Descente lente, contrôle." }
+    ],
+    cooldown: [
+      { id:"CD-SU3-1", name:"Respiration / relâchement", icon:"wu_breath_core", todo:"2 min", seconds:120, desc:"Calme progressif." },
+      { id:"CD-SU3-2", name:"Ouverture thoracique", icon:"wu_tspine_open", todo:"90 s", seconds:90, desc:"Déverrouille la cage." },
+      { id:"CD-SU3-3", name:"Mobilité épaules douce", icon:"wu_shoulder", todo:"60 s", seconds:60, desc:"Relâche sans forcer." }
+    ],
+    items: [
+      { id:"SU3-1", name:"Développé couché haltères", icon:"dbbench", muscle:"Pectoraux + triceps", sets:5, reps:"5", work:45, rest:120,
+        desc:"Bloc intensité, propre, sans aller à l’échec.",
+        steps:["Installe les appuis.","Descends avec contrôle.","Pousse explosif mais propre."],
+        mistakes:["Rebond","Perte de gainage","Charge mal maîtrisée"] },
+
+      { id:"SU3-2", name:"Landmine press", icon:"landminepress", muscle:"Épaules + haut pec", sets:4, reps:"8", work:45, rest:90,
+        desc:"Excellent complément lourd.",
+        steps:["Gainage fort.","Pousse en diagonale.","Retour sous contrôle."],
+        mistakes:["Rotation","Cambrure","Épaule haute"] },
+
+      { id:"SU3-3", name:"Pompes pieds sur banc", icon:"pushup", muscle:"Pectoraux + triceps", sets:3, reps:"10–15", work:45, rest:75,
+        desc:"Fin de bloc poussée, bon stress musculaire.",
+        steps:["Corps gainé.","Poitrine vers le support.","Pousse sans casser la ligne."],
+        mistakes:["Hanches basses","Amplitude courte","Coudes trop ouverts"] },
+
+      { id:"SU3-4", name:"Élévations latérales", icon:"lateral", muscle:"Deltoïde moyen", sets:4, reps:"12", work:45, rest:60,
+        desc:"Travail propre, tension continue.",
+        steps:["Léger.","Monte contrôlé.","Descente lente."],
+        mistakes:["Élan","Trapèzes","Poignets cassés"] },
+
+      { id:"SU3-5", name:"Poulie triceps prise serrée", icon:"cabletri", muscle:"Triceps", sets:3, reps:"10–12", work:45, rest:60,
+        desc:"Strict, sans balancer.",
+        steps:["Coudes fixes.","Extension complète.","Retour lent."],
+        mistakes:["Buste qui bouge","Épaules qui montent","Charge trop lourde"] },
+
+      { id:"SU3-6", name:"Gainage latéral", icon:"sideplank", muscle:"Obliques", sets:3, reps:"35 s / côté", type:"time", seconds:35, work:35, rest:60,
+        desc:"Stabilité du bassin, utile pour la foulée.",
+        steps:["Coude sous l’épaule.","Hanches hautes.","Respire régulièrement."],
+        mistakes:["Hanches qui tombent","Apnée","Épaule mal placée"] }
+    ]
+  },
+
+  SU4: {
+    name: "Summer SU4 — Pull intensification",
+    warmup: [
+      { id:"WU-SU4-1", name:"Rameur léger", icon:"wu_cardio_lowimpact", todo:"2 min", seconds:120, desc:"Cardio progressif." },
+      { id:"WU-SU4-2", name:"Row élastique", icon:"wu_rowband", todo:"2×12", seconds:60, desc:"Active les dorsaux." },
+      { id:"WU-SU4-3", name:"Face pull léger", icon:"wu_facepull", todo:"2×12", seconds:60, desc:"Prépare l’arrière d’épaule." },
+      { id:"WU-SU4-4", name:"Hip hinge léger", icon:"wu_hinge", todo:"1×10", seconds:45, desc:"Prépare le gainage du rowing." }
+    ],
+    cooldown: [
+      { id:"CD-SU4-1", name:"Respiration / relâchement", icon:"wu_breath_core", todo:"2 min", seconds:120, desc:"Calme le rythme." },
+      { id:"CD-SU4-2", name:"Ouverture T-spine", icon:"wu_tspine_open", todo:"90 s", seconds:90, desc:"Décompresse le haut du dos." },
+      { id:"CD-SU4-3", name:"Mobilité épaules", icon:"wu_shoulder", todo:"60 s", seconds:60, desc:"Amplitude douce." }
+    ],
+    items: [
+      { id:"SU4-1", name:"Rowing landmine", icon:"landminerow", muscle:"Dos", sets:5, reps:"5", work:45, rest:105,
+        desc:"Bloc force/épaisseur.",
+        steps:["Dos neutre.","Tire fort vers le sternum bas.","Repose proprement."],
+        mistakes:["Dos arrondi","Trajet sale","Élan excessif"] },
+
+      { id:"SU4-2", name:"Row élastique assis", icon:"band_row_seated", muscle:"Dos", sets:4, reps:"12–15", work:45, rest:60,
+        desc:"Volume sans trop fatiguer le bas du corps.",
+        steps:["Poitrine haute.","Tire les coudes vers l’arrière.","Contrôle le retour."],
+        mistakes:["Épaules hautes","Retour brusque","Buste qui recule"] },
+
+      { id:"SU4-3", name:"Face pull", icon:"facepull_band", muscle:"Arrière épaules + posture", sets:3, reps:"15", work:45, rest:60,
+        desc:"Excellent pour équilibrer le haut du corps.",
+        steps:["Tire vers le visage.","Coudes ouverts.","Pause 1s."],
+        mistakes:["Tirage trop bas","Élan","Charge trop lourde"] },
+
+      { id:"SU4-4", name:"Curl marteau", icon:"hammer", muscle:"Brachial + avant-bras", sets:3, reps:"10–12", work:45, rest:60,
+        desc:"Travail prise + bras.",
+        steps:["Poignets neutres.","Monte sans balancer.","Descends lentement."],
+        mistakes:["Élan","Amplitude courte","Trop lourd"] },
+
+      { id:"SU4-5", name:"Farmer walk", icon:"farmer", muscle:"Grip + posture + gainage", sets:3, reps:"40 s", type:"time", seconds:40, work:40, rest:90,
+        desc:"Très bon transfert sur la posture globale.",
+        steps:["Grandis-toi.","Marche lente.","Épaules basses."],
+        mistakes:["Se pencher","Pas précipités","Trapèzes contractés"] },
+
+      { id:"SU4-6", name:"Pallof press", icon:"pallof_press_band", muscle:"Core anti-rotation", sets:3, reps:"10 / côté", work:45, rest:60,
+        desc:"Très utile pour stabiliser le tronc en course.",
+        steps:["Bassin fixe.","Pousse bras devant.","Résiste à la rotation."],
+        mistakes:["Buste qui tourne","Épaules hautes","Charge trop forte"] }
+    ]
+  },
+
+  SU5: {
+    name: "Summer SU5 — Spécial course",
+    warmup: [
+      { id:"WU-SU5-1", name:"Rameur ou tapis léger", icon:"wu_cardio_lowimpact", todo:"3 min", seconds:180, desc:"Très progressif." },
+      { id:"WU-SU5-2", name:"Mobilité hanches", icon:"wu_hip_mobility", todo:"90 s", seconds:90, desc:"Ouvertures contrôlées." },
+      { id:"WU-SU5-3", name:"Fentes dynamiques", icon:"wu_lunge", todo:"1×10 / jambe", seconds:60, desc:"Prépare les appuis." },
+      { id:"WU-SU5-4", name:"Hip hinge", icon:"wu_hip_hinge", todo:"1×10", seconds:45, desc:"Charnière hanche propre." }
+    ],
+    cooldown: [
+      { id:"CD-SU5-1", name:"Respiration / relâchement", icon:"wu_breath_core", todo:"2 min", seconds:120, desc:"Récupération active." },
+      { id:"CD-SU5-2", name:"Mobilité hanches", icon:"wu_hip_mobility", todo:"90 s", seconds:90, desc:"Relâche le bassin." },
+      { id:"CD-SU5-3", name:"Ouverture T-spine", icon:"wu_tspine_open", todo:"60 s", seconds:60, desc:"Détends la chaîne postérieure haute." }
+    ],
+    items: [
+      { id:"SU5-1", name:"Kettlebell swing", icon:"swing", muscle:"Puissance hanche", sets:4, reps:"15", work:45, rest:75,
+        desc:"Explosivité utile pour la foulée.",
+        steps:["Hinge, pas squat.","Explose avec les hanches.","Laisse redescendre sous contrôle."],
+        mistakes:["Dos rond","Lever avec les bras","Squatter le mouvement"] },
+
+      { id:"SU5-2", name:"Hip thrust haltère", icon:"hip_thrust_db", muscle:"Fessiers", sets:3, reps:"12", work:45, rest:90,
+        desc:"Renforce l’extension de hanche.",
+        steps:["Pieds stables.","Monte en serrant les fessiers.","Pause 1s en haut."],
+        mistakes:["Hyperextension lombaire","Pieds mal placés","Descente trop rapide"] },
+
+      { id:"SU5-3", name:"Soulevé de terre roumain haltères", icon:"rdl", muscle:"Ischios + fessiers", sets:3, reps:"10", work:45, rest:90,
+        desc:"Chaîne postérieure solide sans trop de fatigue nerveuse.",
+        steps:["Hanches en arrière.","Dos neutre.","Remonte en serrant les fessiers."],
+        mistakes:["Dos rond","Trop de genoux","Rebond"] },
+
+      { id:"SU5-4", name:"Fentes dynamiques", icon:"wu_lunge", muscle:"Appuis + mobilité", sets:3, reps:"10 / jambe", work:45, rest:60,
+        desc:"Contrôle et mobilité utiles pour courir mieux.",
+        steps:["Grandis-toi.","Pas propre.","Pousse fort au retour."],
+        mistakes:["Genou qui rentre","Buste qui chute","Pas trop court"] },
+
+      { id:"SU5-5", name:"Dead bug", icon:"deadbug", muscle:"Core", sets:3, reps:"10 / côté", work:45, rest:60,
+        desc:"Stabilité lombo-pelvienne.",
+        steps:["Dos collé.","Allonge opposés.","Respire."],
+        mistakes:["Dos creusé","Vitesse","Apnée"] },
+
+      { id:"SU5-6", name:"Planche", icon:"plank", muscle:"Tronc", sets:3, reps:"45 s", type:"time", seconds:45, work:45, rest:60,
+        desc:"Gainage simple, efficace.",
+        steps:["Ligne droite.","Bassin neutre.","Respiration calme."],
+        mistakes:["Bassin qui tombe","Épaules hautes","Apnée"] }
+    ]
+  },
+
+  SU6: {
+    name: "Summer SU6 — Haut du corps volume",
+    warmup: [
+      { id:"WU-SU6-1", name:"Rameur léger", icon:"wu_cardio_lowimpact", todo:"2 min", seconds:120, desc:"Mise en route." },
+      { id:"WU-SU6-2", name:"Mobilité épaules", icon:"wu_shoulder", todo:"90 s", seconds:90, desc:"Épaules libres." },
+      { id:"WU-SU6-3", name:"Row élastique", icon:"wu_rowband", todo:"2×12", seconds:60, desc:"Scapula actives." },
+      { id:"WU-SU6-4", name:"Rotations externes", icon:"wu_external", todo:"2×12", seconds:60, desc:"Prépare le haut du corps." }
+    ],
+    cooldown: [
+      { id:"CD-SU6-1", name:"Respiration / relâchement", icon:"wu_breath_core", todo:"2 min", seconds:120, desc:"Retour au calme." },
+      { id:"CD-SU6-2", name:"Mobilité épaules douce", icon:"wu_shoulder", todo:"75 s", seconds:75, desc:"Relâche les tensions." },
+      { id:"CD-SU6-3", name:"Ouverture thoracique", icon:"wu_tspine_open", todo:"75 s", seconds:75, desc:"Respiration ample." }
+    ],
+    items: [
+      { id:"SU6-1", name:"Développé incliné haltères", icon:"inclinedb", muscle:"Haut pectoraux", sets:4, reps:"10–12", work:45, rest:90,
+        desc:"Volume propre, sans aller à l’échec.",
+        steps:["Inclinaison légère.","Contrôle la descente.","Pousse stable."],
+        mistakes:["Trop lourd","Amplitude courte","Cambrure excessive"] },
+
+      { id:"SU6-2", name:"Rowing unilatéral haltère", icon:"onearmrow", muscle:"Dos", sets:4, reps:"10–12 / côté", work:45, rest:75,
+        desc:"Grand classique très efficace.",
+        steps:["Buste fixe.","Tire vers la hanche.","Pause en haut."],
+        mistakes:["Rotation","Élan","Trajet trop haut"] },
+
+      { id:"SU6-3", name:"Curl haltères alterné", icon:"dbcurl", muscle:"Biceps", sets:3, reps:"12–15", work:45, rest:60,
+        desc:"Volume bras.",
+        steps:["Coudes fixes.","Monte propre.","Descente contrôlée."],
+        mistakes:["Balancer","Trop lourd","Épaules qui avancent"] },
+
+      { id:"SU6-4", name:"Poulie triceps prise serrée", icon:"cabletri", muscle:"Triceps", sets:3, reps:"12–15", work:45, rest:60,
+        desc:"Finition triceps.",
+        steps:["Coudes collés.","Amplitude complète.","Retour lent."],
+        mistakes:["Balancer","Charge excessive","Coudes mobiles"] },
+
+      { id:"SU6-5", name:"Élévations latérales", icon:"lateral", muscle:"Deltoïde moyen", sets:4, reps:"15", work:45, rest:60,
+        desc:"Épaules larges, léger et strict.",
+        steps:["Monte à hauteur d’épaule.","Contrôle.","Épaules basses."],
+        mistakes:["Trapèzes","Élan","Poignets cassés"] },
+
+      { id:"SU6-6", name:"Reverse fly", icon:"reversefly", muscle:"Arrière d’épaules", sets:3, reps:"15", work:45, rest:60,
+        desc:"Bon équilibre postural.",
+        steps:["Buste penché.","Ouvre les bras.","Contrôle."],
+        mistakes:["Trapèzes","Élan","Dos arrondi"] }
+    ]
+  },
+
+  SU7: {
+    name: "Summer SU7 — Haut du corps rapide",
+    warmup: [
+      { id:"WU-SU7-1", name:"Tapis ou rameur léger", icon:"wu_cardio_lowimpact", todo:"2 min", seconds:120, desc:"Rapide mais progressif." },
+      { id:"WU-SU7-2", name:"Mobilité épaules", icon:"wu_shoulder", todo:"60 s", seconds:60, desc:"Prépare le haut du corps." },
+      { id:"WU-SU7-3", name:"Band pull-aparts", icon:"wu_bandpull", todo:"1×20", seconds:45, desc:"Active le haut du dos." }
+    ],
+    cooldown: [
+      { id:"CD-SU7-1", name:"Respiration / relâchement", icon:"wu_breath_core", todo:"90 s", seconds:90, desc:"Fais redescendre le rythme." },
+      { id:"CD-SU7-2", name:"Ouverture T-spine", icon:"wu_tspine_open", todo:"60 s", seconds:60, desc:"Déverrouille le thorax." }
+    ],
+    items: [
+      { id:"SU7-1", name:"Développé couché haltères", icon:"dbbench", muscle:"Pectoraux + triceps", sets:3, reps:"8", work:45, rest:90,
+        desc:"Version courte et efficace.",
+        steps:["Appuis solides.","Descente contrôlée.","Pousse en expirant."],
+        mistakes:["Rebond","Épaules hautes","Perte de trajectoire"] },
+
+      { id:"SU7-2", name:"Rowing landmine", icon:"landminerow", muscle:"Dos", sets:3, reps:"8", work:45, rest:90,
+        desc:"Complément dos rapide.",
+        steps:["Dos neutre.","Tire fort.","Contrôle le retour."],
+        mistakes:["Élan","Dos rond","Trapèzes"] },
+
+      { id:"SU7-3", name:"Landmine press", icon:"landminepress", muscle:"Épaules", sets:3, reps:"10", work:45, rest:75,
+        desc:"Simple, efficace, stable.",
+        steps:["Gainage fort.","Pousse en diagonale.","Retour lent."],
+        mistakes:["Rotation","Cambrure","Épaule haute"] },
+
+      { id:"SU7-4", name:"Curl haltères alterné", icon:"dbcurl", muscle:"Biceps", sets:3, reps:"12", work:45, rest:45,
+        desc:"Bras en fin de séance courte.",
+        steps:["Strict.","Monte sans élan.","Contrôle."],
+        mistakes:["Balancer","Trop lourd","Amplitude courte"] },
+
+      { id:"SU7-5", name:"Poulie triceps prise serrée", icon:"cabletri", muscle:"Triceps", sets:3, reps:"12", work:45, rest:45,
+        desc:"Finition rapide.",
+        steps:["Coudes fixes.","Extension complète.","Retour contrôlé."],
+        mistakes:["Balancer","Épaules hautes","Charge trop lourde"] },
+
+      { id:"SU7-6", name:"Planche", icon:"plank", muscle:"Tronc", sets:3, reps:"40 s", type:"time", seconds:40, work:40, rest:45,
+        desc:"Finir propre sans allonger la séance.",
+        steps:["Ligne droite.","Bassin neutre.","Respire."],
+        mistakes:["Bassin qui s’effondre","Apnée","Nuque cassée"] }
+    ]
+  },
+
+  SU8: {
+    name: "Summer SU8 — Full body runner",
+    warmup: [
+      { id:"WU-SU8-1", name:"Tapis de course léger", icon:"wu_cardio_lowimpact", todo:"3 min", seconds:180, desc:"Montée progressive." },
+      { id:"WU-SU8-2", name:"Mobilité hanches", icon:"wu_hip_mobility", todo:"75 s", seconds:75, desc:"Ouvre les hanches." },
+      { id:"WU-SU8-3", name:"Mobilité épaules", icon:"wu_shoulder", todo:"60 s", seconds:60, desc:"Prépare la poussée." },
+      { id:"WU-SU8-4", name:"Hip hinge léger", icon:"wu_hip_hinge", todo:"1×10", seconds:45, desc:"Place bien la chaîne postérieure." }
+    ],
+    cooldown: [
+      { id:"CD-SU8-1", name:"Respiration / relâchement", icon:"wu_breath_core", todo:"2 min", seconds:120, desc:"Retour au calme complet." },
+      { id:"CD-SU8-2", name:"Mobilité hanches", icon:"wu_hip_mobility", todo:"75 s", seconds:75, desc:"Relâche les appuis." },
+      { id:"CD-SU8-3", name:"Ouverture T-spine", icon:"wu_tspine_open", todo:"60 s", seconds:60, desc:"Respiration ample." }
+    ],
+    items: [
+      { id:"SU8-1", name:"Landmine squat", icon:"landminesquat", muscle:"Jambes + tronc", sets:3, reps:"10", work:45, rest:90,
+        desc:"Version jambe modérée, sans te cramer pour la course.",
+        steps:["Buste gainé.","Descends propre.","Pousse fort au sol."],
+        mistakes:["Genoux qui rentrent","Dos rond","Trop lourd"] },
+
+      { id:"SU8-2", name:"Landmine press", icon:"landminepress", muscle:"Épaules + haut pec", sets:3, reps:"10", work:45, rest:75,
+        desc:"Pressing stable.",
+        steps:["Pousse en diagonale.","Reste gainé.","Retour contrôlé."],
+        mistakes:["Cambrure","Rotation","Épaule qui monte"] },
+
+      { id:"SU8-3", name:"Rowing landmine", icon:"landminerow", muscle:"Dos", sets:3, reps:"10", work:45, rest:75,
+        desc:"Complément dos équilibré.",
+        steps:["Hinge propre.","Tire vers le torse.","Pause 1s."],
+        mistakes:["Élan","Dos rond","Trapèzes dominants"] },
+
+      { id:"SU8-4", name:"Kettlebell swing", icon:"swing", muscle:"Puissance hanche", sets:3, reps:"15", work:45, rest:75,
+        desc:"Transfert athlétique utile.",
+        steps:["Hinge.","Explose les hanches.","Contrôle le retour."],
+        mistakes:["Squat","Bras dominants","Dos rond"] },
+
+      { id:"SU8-5", name:"Gainage latéral", icon:"sideplank", muscle:"Obliques", sets:3, reps:"30 s / côté", type:"time", seconds:30, work:30, rest:45,
+        desc:"Stabilité latérale utile en course.",
+        steps:["Coude sous épaule.","Hanches hautes.","Respire."],
+        mistakes:["Hanches basses","Apnée","Épaule mal placée"] },
+
+      { id:"SU8-6", name:"Hollow hold", icon:"hollow_hold", muscle:"Core", sets:3, reps:"30 s", type:"time", seconds:30, work:30, rest:45,
+        desc:"Travail de verrouillage global du tronc.",
+        steps:["Bas du dos collé.","Bras/jambes tendus selon niveau.","Respire court."],
+        mistakes:["Dos creusé","Trop ambitieux","Blocage respiratoire"] }
+    ]
+  },
+
 
 
   RUN_WU: {
