@@ -513,7 +513,20 @@ window.SESSIONS = {
       { id:"H4-6", name:"Poulie triceps (bonus)", icon:"cabletri", muscle:"Triceps", sets:2, reps:"12–15", work:45, rest:45 }
     ]
   },
+},
 
+// ===============================
+// SUMMER intégré dans HOCKEY
+// ===============================
+
+H5: SU1,
+H6: SU2,
+H7: SU3,
+H8: SU4,
+H9: SU5,
+H10: SU6,
+H11: SU7,
+H12: SU8,
   /* =====================
      SUMMER — HAUT DU CORPS + COURSE (8 séances)
      Objectif : esthétique haut du corps + transfert running
