@@ -901,3 +901,39 @@ html[data-theme="light"] .etLogoWordmark{
 #homeHistorySection {
   display: none !important;
 }
+
+/* =========================
+   Home - AI Program Card Background
+========================= */
+#homeAIProgramBtn{
+  position: relative;
+  overflow: hidden;
+}
+
+#homeAIProgramBtn::before{
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("images/workout-programm1.jpg");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.25; /* ajuste entre 0.2 et 0.4 */
+  z-index: 0;
+}
+
+#homeAIProgramBtn *{
+  position: relative;
+  z-index: 1;
+}
+
+#homeAIProgramBtn::after{
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(0,0,0,0.6),
+    rgba(0,0,0,0.2)
+  );
+  z-index: 0;
+}
