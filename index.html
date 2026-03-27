@@ -10084,6 +10084,37 @@ function openProfileEntrySafe(){
     }).join("");
   };
 
+  // =========================
+  // Back from workout program detail
+  // =========================
+  window.bindWorkoutProgramBack = function bindWorkoutProgramBack(){
+    const btn = document.getElementById("btnBackFromProgram");
+    if(!btn || btn.dataset.bound === "1") return;
+
+    btn.dataset.bound = "1";
+    btn.addEventListener("click", function(){
+      try{
+        if(typeof window.showScreen === "function"){
+          window.showScreen("workouts");
+        }else{
+          const screenProgram = document.getElementById("screenWorkoutProgram");
+          const screenWorkouts = document.getElementById("screenWorkouts");
+          if(screenProgram) screenProgram.classList.remove("active");
+          if(screenWorkouts) screenWorkouts.classList.add("active");
+        }
+
+        requestAnimationFrame(() => {
+          try{ window.renderWorkoutsScreen?.(); }catch(e){}
+        });
+      }catch(e){
+        console.warn("btnBackFromProgram error:", e);
+      }
+    });
+  };
+
+  // bind immédiat
+  window.bindWorkoutProgramBack();
+
 // =========================
 // AI Screen (toggle + submit) — V4 (aligné Home IA V2)
 // =========================
@@ -10736,6 +10767,8 @@ window.renderAIScreen = function renderAIScreen(){
         <pre style="white-space:pre-wrap; font-size:12px; opacity:.8; margin-top:8px;">${esc(String(e?.message || e))}</pre>
       `;
     }
+
+    try{ window.bindWorkoutProgramBack?.(); }catch(e){}
   };
 })();
 
