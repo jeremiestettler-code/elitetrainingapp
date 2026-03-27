@@ -9427,42 +9427,62 @@ function getWeekNumber(d){
 ====================================================== */
 
 function initHomePremiumButtons(){
-
   const trending = document.getElementById("homeTrendingBtn");
   const ai = document.getElementById("homeAIProgramBtn");
   const stats = document.getElementById("homeStatsBtn");
   const trophies = document.getElementById("homeTrophiesBtn");
 
-  if(trending){
+  if(trending && !trending.dataset.bound){
+    trending.dataset.bound = "1";
     trending.addEventListener("click", ()=>{
-      const legacy = document.getElementById("homeLegacy");
-      if(legacy) legacy.scrollIntoView({behavior:"smooth"});
+      try{
+        if(typeof showScreen === "function") showScreen("sessions");
+        else if(typeof window.showScreen === "function") window.showScreen("sessions");
+
+        if(typeof setBottomNavActive === "function") setBottomNavActive("sessions");
+        setTimeout(()=>{ try{ window.renderWorkoutsScreen?.(); }catch(e){} }, 0);
+      }catch(e){
+        console.warn("homeTrendingBtn error:", e);
+      }
     });
   }
 
-  if(ai){
+  if(ai && !ai.dataset.bound){
+    ai.dataset.bound = "1";
     ai.addEventListener("click", ()=>{
-      const btn = document.getElementById("btnCreateSession");
-      if(btn) btn.click();
+      try{
+        if(typeof showScreen === "function") showScreen("ai");
+        else if(typeof window.showScreen === "function") window.showScreen("ai");
+
+        if(typeof setBottomNavActive === "function") setBottomNavActive("ai");
+        setTimeout(()=>{ try{ window.renderAIScreen?.(); }catch(e){} }, 0);
+      }catch(e){
+        console.warn("homeAIProgramBtn error:", e);
+      }
     });
   }
 
-  if(stats){
+  if(stats && !stats.dataset.bound){
+    stats.dataset.bound = "1";
     stats.addEventListener("click", ()=>{
-      if(typeof openHistory === "function") openHistory();
+      try{
+        if(typeof showScreen === "function") showScreen("history");
+        else if(typeof window.showScreen === "function") window.showScreen("history");
+      }catch(e){
+        console.warn("homeStatsBtn error:", e);
+      }
     });
   }
 
-  if(trophies){
+  if(trophies && !trophies.dataset.bound){
+    trophies.dataset.bound = "1";
     trophies.addEventListener("click", ()=>{
-      if(typeof window.openHistory === "function") window.openHistory();
-      setTimeout(()=>{
-        const sec = document.getElementById("trophySection");
-        if(sec){
-          sec.style.display = "";
-          sec.scrollIntoView({behavior:"smooth", block:"start"});
-        }
-      }, 200);
+      try{
+        if(typeof showScreen === "function") showScreen("history");
+        else if(typeof window.showScreen === "function") window.showScreen("history");
+      }catch(e){
+        console.warn("homeTrophiesBtn error:", e);
+      }
     });
   }
 }

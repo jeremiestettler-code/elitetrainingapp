@@ -895,3 +895,8 @@ html[data-theme="light"] .etLogoWordmark{
   border-color: rgba(99,102,241,.55);
 }
 .switch input:checked + .slider:before{ transform:translate(20px,-50%); }
+
+#aiCardWrapper,
+#sessionList {
+  display: none !important;
+}
