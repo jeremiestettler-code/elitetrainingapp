@@ -926,80 +926,101 @@ html[data-theme="light"] .etLogoWordmark{
   z-index: 1;
 }
 
+/* =========================
+   HOME DASHBOARD
+========================= */
 .homeDashboard{
   display:grid;
   gap:14px;
-  margin:16px 0 20px;
+  margin:0 0 16px;
 }
 
 .homeDashCard{
   position:relative;
   overflow:hidden;
-  border-radius:20px;
+  border-radius:22px;
   padding:18px;
   background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
-  border:1px solid rgba(255,255,255,.08);
-  box-shadow:0 8px 30px rgba(0,0,0,.18);
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow:0 10px 30px rgba(0,0,0,.22);
+}
+
+[data-theme="light"] .homeDashCard{
+  background:linear-gradient(180deg, rgba(10,20,40,.04), rgba(10,20,40,.02));
+  border-color:rgba(10,20,40,.10);
+  box-shadow:0 10px 26px rgba(10,20,40,.10);
 }
 
 .homeHeroCard{
-  min-height:140px;
+  min-height:150px;
   display:flex;
   flex-direction:column;
   justify-content:flex-end;
   background:
-    linear-gradient(135deg, rgba(0,0,0,.45), rgba(0,0,0,.15)),
+    linear-gradient(135deg, rgba(0,0,0,.52), rgba(0,0,0,.18)),
     url("images/workout-programm1.jpg") center/cover no-repeat;
 }
 
 .homeHeroEyebrow{
   font-size:12px;
-  opacity:.75;
-  margin-bottom:6px;
+  font-weight:900;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  opacity:.78;
+  margin-bottom:8px;
 }
 
 .homeHeroTitle{
   font-size:28px;
-  line-height:1.05;
-  font-weight:800;
-  margin:0 0 6px;
+  line-height:1.02;
+  font-weight:950;
+  letter-spacing:-.4px;
+  margin:0 0 8px;
 }
 
 .homeHeroText{
   font-size:14px;
-  opacity:.9;
+  line-height:1.35;
+  opacity:.92;
   margin:0;
 }
 
-.homeStatsGrid{
+.homeDashboard .homeStatsGrid{
   display:grid;
   grid-template-columns:repeat(3, 1fr);
-  gap:12px;
+  gap:10px;
 }
 
-.homeStatCard{
+.homeDashboard .homeStatCard{
   border-radius:18px;
   padding:14px 12px;
   background:rgba(255,255,255,.05);
-  border:1px solid rgba(255,255,255,.08);
-  text-align:left;
+  border:1px solid rgba(255,255,255,.10);
+}
+
+[data-theme="light"] .homeDashboard .homeStatCard{
+  background:rgba(10,20,40,.03);
+  border-color:rgba(10,20,40,.10);
 }
 
 .homeStatValue{
   font-size:24px;
-  font-weight:800;
+  font-weight:950;
   line-height:1;
+  letter-spacing:-.35px;
   margin-bottom:6px;
 }
 
 .homeStatLabel{
   font-size:12px;
-  opacity:.72;
+  line-height:1.2;
+  opacity:.75;
+  font-weight:800;
 }
 
 .homeContinueTop{
   display:flex;
-  align-items:center;
+  align-items:flex-start;
   justify-content:space-between;
   gap:12px;
   margin-bottom:10px;
@@ -1007,14 +1028,15 @@ html[data-theme="light"] .etLogoWordmark{
 
 .homeContinueTitle{
   font-size:18px;
-  font-weight:700;
+  font-weight:950;
+  letter-spacing:-.2px;
   margin:0;
 }
 
 .homeContinueMeta{
   font-size:13px;
-  opacity:.75;
-  margin:0;
+  opacity:.76;
+  margin:4px 0 0;
 }
 
 .homeContinueMain{
@@ -1026,24 +1048,33 @@ html[data-theme="light"] .etLogoWordmark{
 
 .homeContinueName{
   font-size:20px;
-  font-weight:800;
-  line-height:1.1;
+  font-weight:950;
+  line-height:1.08;
+  letter-spacing:-.25px;
   margin:0 0 6px;
 }
 
 .homeContinueSub{
   font-size:13px;
-  opacity:.8;
+  opacity:.82;
   margin:0;
 }
 
 .homeContinueBtn{
   appearance:none;
   border:none;
-  border-radius:14px;
+  border-radius:16px;
   padding:12px 16px;
-  font-weight:700;
+  min-width:110px;
+  font-weight:900;
   cursor:pointer;
+  color:#061224;
+  background:linear-gradient(135deg, var(--accent), var(--accent2));
+  box-shadow:0 8px 22px rgba(0,140,255,.22);
+}
+
+.homeContinueBtn:active{
+  transform:translateY(1px);
 }
 
 @media (max-width: 640px){
