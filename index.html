@@ -11058,6 +11058,16 @@ window.saveEliteProfile = async function saveEliteProfile(patch){
   return window.eliteProfile;
 };
 
+// =========================
+// Hide Home History Card
+// =========================
+(function(){
+  const historyCard = document.getElementById("btnHistory")?.closest(".card");
+  if(historyCard){
+    historyCard.style.display = "none";
+  }
+})();
+
 </script>
 </body>
 </html>
