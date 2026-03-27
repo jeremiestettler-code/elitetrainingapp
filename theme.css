@@ -925,3 +925,129 @@ html[data-theme="light"] .etLogoWordmark{
   position: relative;
   z-index: 1;
 }
+
+.homeDashboard{
+  display:grid;
+  gap:14px;
+  margin:16px 0 20px;
+}
+
+.homeDashCard{
+  position:relative;
+  overflow:hidden;
+  border-radius:20px;
+  padding:18px;
+  background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:0 8px 30px rgba(0,0,0,.18);
+}
+
+.homeHeroCard{
+  min-height:140px;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+  background:
+    linear-gradient(135deg, rgba(0,0,0,.45), rgba(0,0,0,.15)),
+    url("images/workout-programm1.jpg") center/cover no-repeat;
+}
+
+.homeHeroEyebrow{
+  font-size:12px;
+  opacity:.75;
+  margin-bottom:6px;
+}
+
+.homeHeroTitle{
+  font-size:28px;
+  line-height:1.05;
+  font-weight:800;
+  margin:0 0 6px;
+}
+
+.homeHeroText{
+  font-size:14px;
+  opacity:.9;
+  margin:0;
+}
+
+.homeStatsGrid{
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:12px;
+}
+
+.homeStatCard{
+  border-radius:18px;
+  padding:14px 12px;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.08);
+  text-align:left;
+}
+
+.homeStatValue{
+  font-size:24px;
+  font-weight:800;
+  line-height:1;
+  margin-bottom:6px;
+}
+
+.homeStatLabel{
+  font-size:12px;
+  opacity:.72;
+}
+
+.homeContinueTop{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:10px;
+}
+
+.homeContinueTitle{
+  font-size:18px;
+  font-weight:700;
+  margin:0;
+}
+
+.homeContinueMeta{
+  font-size:13px;
+  opacity:.75;
+  margin:0;
+}
+
+.homeContinueMain{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.homeContinueName{
+  font-size:20px;
+  font-weight:800;
+  line-height:1.1;
+  margin:0 0 6px;
+}
+
+.homeContinueSub{
+  font-size:13px;
+  opacity:.8;
+  margin:0;
+}
+
+.homeContinueBtn{
+  appearance:none;
+  border:none;
+  border-radius:14px;
+  padding:12px 16px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+@media (max-width: 640px){
+  .homeHeroTitle{ font-size:24px; }
+  .homeStatValue{ font-size:20px; }
+  .homeContinueName{ font-size:18px; }
+}
