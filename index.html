@@ -9928,7 +9928,7 @@ function openProfileEntrySafe(){
 
 /* =========================
    WORKOUTS (single source)
-   - Trending (static + dynamique pour Hockey)
+   - Trending (dynamic)
    - AI Sessions: CUSTOM_* (from window.SESSIONS via reloadCustomSessionsIntoSESSIONS)
    - AI Programs: list from Firestore users/{uid}/programs (si connecté)
    + Detail screen: #screenWorkoutProgram
@@ -9972,6 +9972,62 @@ function openProfileEntrySafe(){
       });
   }
 
+  function getDynamicRunningSessions(){
+    const S = window.SESSIONS || {};
+
+    return Object.keys(S)
+      .filter(k => /^RUN(?:_|[A-Z]|\d)/i.test(String(k)))
+      .sort((a, b) => String(a).localeCompare(String(b), undefined, { numeric:true }))
+      .map(k => {
+        const meta = S[k] || {};
+        const rawName = String(meta.name || k).trim();
+
+        let blurb = rawName
+          .replace(/^Running\s+—\s*/i, "")
+          .replace(/^Échauffement course\s+—\s*/i, "")
+          .trim();
+
+        if(!blurb) blurb = rawName || k;
+
+        return {
+          id: k,
+          blurb
+        };
+      });
+  }
+
+  function getDynamicCompleteSessions(){
+    const S = window.SESSIONS || {};
+
+    return Object.keys(S)
+      .filter(k => /^[ABCD]\d+$/i.test(String(k)))
+      .sort((a, b) => {
+        const ga = String(a).charAt(0).toUpperCase();
+        const gb = String(b).charAt(0).toUpperCase();
+        if(ga !== gb) return ga.localeCompare(gb);
+
+        const na = Number(String(a).replace(/[^\d]/g, "")) || 0;
+        const nb = Number(String(b).replace(/[^\d]/g, "")) || 0;
+        return na - nb;
+      })
+      .map(k => {
+        const meta = S[k] || {};
+        const rawName = String(meta.name || k).trim();
+
+        let blurb = rawName
+          .replace(/^Séance\s+[ABCD]\d+\s+—\s*/i, "")
+          .replace(/^[ABCD]\d+\s+—\s*/i, "")
+          .trim();
+
+        if(!blurb) blurb = rawName || k;
+
+        return {
+          id: k,
+          blurb
+        };
+      });
+  }
+
   // ===== Trending packs =====
   window.WORKOUT_CATALOG = {
     trending: [
@@ -9989,25 +10045,18 @@ function openProfileEntrySafe(){
         title:"Running workout",
         subtitle:"Trending",
         image:"images/workout_running.jpg",
-        sessions: [
-          { id:"RUN_WU", blurb:"Échauffement course : activation + mobilité." }
-        ]
+        get sessions(){
+          return getDynamicRunningSessions();
+        }
       },
       {
         id:"COMPLETE",
         title:"Séances complètes",
         subtitle:"Trending",
         image:"images/workout_programme.jpg",
-        sessions: [
-          { id:"A1", blurb:"Pecs / Triceps (Force)" },
-          { id:"A2", blurb:"Pecs / Triceps (Volume)" },
-          { id:"B1", blurb:"Dos / Biceps (Épaisseur)" },
-          { id:"B2", blurb:"Dos / Biceps (Contrôle)" },
-          { id:"C1", blurb:"Épaules (Force)" },
-          { id:"C2", blurb:"Épaules (Volume + stabilité)" },
-          { id:"D1", blurb:"Bras (Lourd)" },
-          { id:"D2", blurb:"Bras + Métabolique" }
-        ]
+        get sessions(){
+          return getDynamicCompleteSessions();
+        }
       }
     ]
   };
