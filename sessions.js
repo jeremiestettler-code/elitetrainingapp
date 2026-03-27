@@ -516,11 +516,11 @@ window.SESSIONS = {
   },
 
 /* =====================
-   SUMMER — intégré après H4
+   HOCKEY — FORCE + PHYSIQUE (séances 5 à 12)
    ===================== */
 
   H5: {
-    name: "H5 — Push fondation",
+    name: "Hockey H5 — Push fondation",
     warmup: [
       { id:"WU-H5-1", name:"Rameur léger", icon:"wu_cardio_lowimpact", todo:"2 min", seconds:120, desc:"Monte doucement la température corporelle." },
       { id:"WU-H5-2", name:"Mobilité épaules", icon:"wu_shoulder", todo:"2 min", seconds:120, desc:"Cercles d’épaules + ouverture thoracique." },
@@ -543,7 +543,7 @@ window.SESSIONS = {
   },
 
   H6: {
-    name: "H6 — Pull fondation",
+    name: "Hockey H6 — Pull fondation",
     warmup: [
       { id:"WU-H6-1", name:"Rameur léger", icon:"wu_cardio_lowimpact", todo:"2 min", seconds:120, desc:"Progressif." },
       { id:"WU-H6-2", name:"Row élastique", icon:"wu_rowband", todo:"2×12", seconds:60, desc:"Active les omoplates." },
@@ -566,7 +566,7 @@ window.SESSIONS = {
   },
 
   H7: {
-    name: "H7 — Push intensification",
+    name: "Hockey H7 — Push intensification",
     warmup: [
       { id:"WU-H7-1", name:"Tapis de course léger", icon:"wu_cardio_lowimpact", todo:"2 min", seconds:120, desc:"Très facile." },
       { id:"WU-H7-2", name:"Mobilité épaules", icon:"wu_shoulder", todo:"90 s", seconds:90, desc:"Prépare le pressing." },
@@ -589,7 +589,7 @@ window.SESSIONS = {
   },
 
   H8: {
-    name: "H8 — Pull intensification",
+    name: "Hockey H8 — Pull intensification",
     warmup: [
       { id:"WU-H8-1", name:"Rameur léger", icon:"wu_cardio_lowimpact", todo:"2 min", seconds:120, desc:"Cardio progressif." },
       { id:"WU-H8-2", name:"Row élastique", icon:"wu_rowband", todo:"2×12", seconds:60, desc:"Active les dorsaux." },
@@ -612,7 +612,7 @@ window.SESSIONS = {
   },
 
   H9: {
-    name: "H9 — Spécial course",
+    name: "Hockey H9 — Spécial course",
     warmup: [
       { id:"WU-H9-1", name:"Rameur ou tapis léger", icon:"wu_cardio_lowimpact", todo:"3 min", seconds:180, desc:"Très progressif." },
       { id:"WU-H9-2", name:"Mobilité hanches", icon:"wu_hip_mobility", todo:"90 s", seconds:90, desc:"Ouvertures contrôlées." },
@@ -635,7 +635,7 @@ window.SESSIONS = {
   },
 
   H10: {
-    name: "H10 — Haut du corps volume",
+    name: "Hockey H10 — Haut du corps volume",
     warmup: [
       { id:"WU-H10-1", name:"Rameur léger", icon:"wu_cardio_lowimpact", todo:"2 min", seconds:120, desc:"Mise en route." },
       { id:"WU-H10-2", name:"Mobilité épaules", icon:"wu_shoulder", todo:"90 s", seconds:90, desc:"Épaules libres." },
@@ -658,7 +658,7 @@ window.SESSIONS = {
   },
 
   H11: {
-    name: "H11 — Haut du corps rapide",
+    name: "Hockey H11 — Haut du corps rapide",
     warmup: [
       { id:"WU-H11-1", name:"Tapis ou rameur léger", icon:"wu_cardio_lowimpact", todo:"2 min", seconds:120, desc:"Rapide mais progressif." },
       { id:"WU-H11-2", name:"Mobilité épaules", icon:"wu_shoulder", todo:"60 s", seconds:60, desc:"Prépare le haut du corps." },
@@ -679,7 +679,7 @@ window.SESSIONS = {
   },
 
   H12: {
-    name: "H12 — Full body runner",
+    name: "Hockey H12 — Full body runner",
     warmup: [
       { id:"WU-H12-1", name:"Tapis de course léger", icon:"wu_cardio_lowimpact", todo:"3 min", seconds:180, desc:"Montée progressive." },
       { id:"WU-H12-2", name:"Mobilité hanches", icon:"wu_hip_mobility", todo:"75 s", seconds:75, desc:"Ouvre les hanches." },
