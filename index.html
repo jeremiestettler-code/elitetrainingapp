@@ -10084,7 +10084,7 @@ function openProfileEntrySafe(){
     }).join("");
   };
 
-   // =========================
+  // =========================
   // Back from workout program detail
   // =========================
   window.bindWorkoutProgramBack = function bindWorkoutProgramBack(){
@@ -10094,17 +10094,13 @@ function openProfileEntrySafe(){
     btn.dataset.bound = "1";
     btn.addEventListener("click", function(){
       try{
-        // Clé correcte de l'écran = "sessions"
-        if(typeof showScreen === "function"){
-          showScreen("sessions");
-        }else if(typeof window.showScreen === "function"){
-          window.showScreen("sessions");
+        if(typeof window.showScreen === "function"){
+          window.showScreen("workouts");
         }else{
           const screenProgram = document.getElementById("screenWorkoutProgram");
           const screenWorkouts = document.getElementById("screenWorkouts");
           if(screenProgram) screenProgram.classList.remove("active");
           if(screenWorkouts) screenWorkouts.classList.add("active");
-          document.body.classList.remove("inWorkout");
         }
 
         requestAnimationFrame(() => {
@@ -10627,7 +10623,7 @@ window.renderAIScreen = function renderAIScreen(){
           ${item.subtitle ? `<div class="wCardSub">${esc(item.subtitle)}</div>` : ``}
         </div>
         <div class="wCardCta">
-          <span class="wBadge">${esc(item.badge || item.title || "")}</span>
+          <span class="wBadge">${esc(item.badge || item.badge || "")}</span>
           <span class="wBtn">Play</span>
         </div>
       </div>
