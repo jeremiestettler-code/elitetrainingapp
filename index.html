@@ -10666,6 +10666,35 @@ window.renderAIScreen = function renderAIScreen(){
       return Number.isFinite(t) ? t : 0;
     }
 
+  function getDynamicHockeySessions(){
+    const S = window.SESSIONS || {};
+
+    return Object.keys(S)
+      .filter(k => /^H\d+$/i.test(String(k)))
+      .sort((a, b) => {
+        const na = Number(String(a).replace(/[^\d]/g, "")) || 0;
+        const nb = Number(String(b).replace(/[^\d]/g, "")) || 0;
+        return na - nb;
+      })
+      .map(k => {
+        const meta = S[k] || {};
+        const rawName = String(meta.name || k).trim();
+
+        // enlève le préfixe "Hockey H5 — " ou "H5 — " pour le blurb
+        let blurb = rawName
+          .replace(/^Hockey\s+H\d+\s+—\s*/i, "")
+          .replace(/^H\d+\s+—\s*/i, "")
+          .trim();
+
+        if(!blurb) blurb = rawName || k;
+
+        return {
+          id: k,
+          blurb
+        };
+      });
+  }
+
     // Trending
     hostT.innerHTML = "";
     (window.WORKOUT_CATALOG?.trending || []).forEach(t=>{
