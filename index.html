@@ -11068,12 +11068,28 @@ window.saveEliteProfile = async function saveEliteProfile(patch){
   }
 })();
 // =========================
-// Hide Settings Button
+// Hide Settings Button (robuste)
 // =========================
-(function(){
+function hideSettingsBtn(){
   const btn = document.getElementById("btnSettings");
   if(btn){
     btn.style.display = "none";
+  }
+}
+
+// run initial
+hideSettingsBtn();
+
+// run après chaque render home
+(function(){
+  const _updateHome = window.updateHomePremiumUI;
+
+  if(typeof _updateHome === "function"){
+    window.updateHomePremiumUI = function(){
+      const r = _updateHome.apply(this, arguments);
+      hideSettingsBtn();
+      return r;
+    };
   }
 })();
 
