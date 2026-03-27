@@ -4157,7 +4157,7 @@ function scoreExerciseForGoal(e, goal){
 }
 
 function mockGenerateSession(goalText, minutes, constraints){
-  const lib = window.AI_EXERCISE_LIBRARY || window.EXERCISE_LIBRARY;
+  const lib = window.EXERCISE_LIBRARY;
   if(!lib || !lib.items?.length) throw new Error("EXERCISE_LIBRARY non prête.");
 
   const goal = String(goalText||"").trim();
@@ -4250,8 +4250,8 @@ async function generateSessionWithAI({ goalText, minutes, constraints }){
     else payload.minutes = Math.max(10, Math.min(120, Math.round(payload.minutes)));
   }
 
-  // --- Helper: enrich entries with name/icon from AI_EXERCISE_LIBRARY (fallback EXERCISE_LIBRARY) ---
-  const lib = window.AI_EXERCISE_LIBRARY || window.EXERCISE_LIBRARY;
+  // --- Helper: enrich entries with name/icon from EXERCISE_LIBRARY ---
+  const lib = window.EXERCISE_LIBRARY;
   function enrichEntry(e){
     const id = String(e?.id || "");
     const ref = lib?.byId?.[id] || null;
@@ -4926,7 +4926,6 @@ if (ml && usedMin) {
     const promptEl = $("aiPrompt");
     const txt = promptEl ? promptEl.value : "";
     const parsed = aiParsePrompt(txt);
-    const mergedConstraints = mergeEquipmentConstraintsForAI(parsed.constraints || {});
 
     if(!parsed.goalText || !parsed.goalText.trim()){
       alert("Écris un objectif (ex: prise de masse 4 semaines, 3 séances/semaine, haltères).");
@@ -9985,6 +9984,42 @@ function openProfileEntrySafe(){
         ]
       }
     ]
+  };
+
+  // =========================
+  // Open static trending workout pack
+  // =========================
+  window.openWorkoutProgram = function openWorkoutProgram(programId){
+    try{
+      const packs = Array.isArray(window.WORKOUT_CATALOG?.trending)
+        ? window.WORKOUT_CATALOG.trending
+        : [];
+
+      const pack = packs.find(p => String(p?.id || "") === String(programId || ""));
+      if(!pack){
+        return notify("Programme introuvable.");
+      }
+
+      const list = Array.isArray(pack.sessions)
+        ? pack.sessions.map(s => ({
+            id: String(s?.id || "").trim(),
+            blurb: String(s?.blurb || "").trim()
+          })).filter(s => s.id)
+        : [];
+
+      if(!list.length){
+        return notify("Aucune séance dans ce programme.");
+      }
+
+      _setProgramScreen({
+        title: String(pack.title || "Workout"),
+        subtitle: String(pack.subtitle || "Trending"),
+        sessions: list
+      });
+    }catch(e){
+      console.warn("openWorkoutProgram error:", e);
+      notify("Impossible d’ouvrir ce programme.");
+    }
   };
 
   // =========================
