@@ -10084,7 +10084,7 @@ function openProfileEntrySafe(){
     }).join("");
   };
 
-  // =========================
+   // =========================
   // Back from workout program detail
   // =========================
   window.bindWorkoutProgramBack = function bindWorkoutProgramBack(){
@@ -10094,13 +10094,17 @@ function openProfileEntrySafe(){
     btn.dataset.bound = "1";
     btn.addEventListener("click", function(){
       try{
-        if(typeof window.showScreen === "function"){
-          window.showScreen("workouts");
+        // Clé correcte de l'écran = "sessions"
+        if(typeof showScreen === "function"){
+          showScreen("sessions");
+        }else if(typeof window.showScreen === "function"){
+          window.showScreen("sessions");
         }else{
           const screenProgram = document.getElementById("screenWorkoutProgram");
           const screenWorkouts = document.getElementById("screenWorkouts");
           if(screenProgram) screenProgram.classList.remove("active");
           if(screenWorkouts) screenWorkouts.classList.add("active");
+          document.body.classList.remove("inWorkout");
         }
 
         requestAnimationFrame(() => {
@@ -10623,7 +10627,7 @@ window.renderAIScreen = function renderAIScreen(){
           ${item.subtitle ? `<div class="wCardSub">${esc(item.subtitle)}</div>` : ``}
         </div>
         <div class="wCardCta">
-          <span class="wBadge">${esc(item.badge || item.badge || "")}</span>
+          <span class="wBadge">${esc(item.badge || "")}</span>
           <span class="wBtn">Play</span>
         </div>
       </div>
@@ -10665,7 +10669,15 @@ window.renderAIScreen = function renderAIScreen(){
     // Trending
     hostT.innerHTML = "";
     (window.WORKOUT_CATALOG?.trending || []).forEach(t=>{
-      hostT.appendChild(makeCard(t, ()=>window.openWorkoutProgram(t.id)));
+      const sessionsCount = Array.isArray(t.sessions) ? t.sessions.length : 0;
+
+      hostT.appendChild(makeCard(
+        {
+          ...t,
+          badge: sessionsCount > 1 ? `${sessionsCount} séances` : `${sessionsCount} séance`
+        },
+        ()=>window.openWorkoutProgram(t.id)
+      ));
     });
 
     // AI sessions
@@ -10686,7 +10698,7 @@ window.renderAIScreen = function renderAIScreen(){
             title:`Séances AI (${customKeys.length})`,
             subtitle:"Tes séances créées",
             image:"images/workout_ai.jpg",
-            badge:"AI"
+            badge: customKeys.length > 1 ? `${customKeys.length} séances` : `${customKeys.length} séance`
           },
           ()=>window.openAISessionsPack()
         ));
@@ -10729,19 +10741,28 @@ window.renderAIScreen = function renderAIScreen(){
       const programs = docs
         .sort((a,b)=>getCreatedAtValue(b) - getCreatedAtValue(a))
         .slice(0, 10)
-        .map((data, index)=>({
-          programId: data.id,
-          title: String(
-            data.title ||
-            data.goalText ||
-            data.goal ||
-            data.name ||
-            `Programme AI ${index + 1}`
-          ).trim(),
-          subtitle: `${Number(data.weeks || 0) || "?"} sem • ${Number(data.sessionsPerWeek || data.daysPerWeek || data.plan?.daysPerWeek || 0) || "?"}/sem`,
-          image: getProgramImageByIndex(index + 1),
-          badge: "Programme"
-        }));
+        .map((data, index)=>{
+          const sessionsCount =
+            (Array.isArray(data.sessions) && data.sessions.length) ||
+            (Array.isArray(data.plan?.sessions) && data.plan.sessions.length) ||
+            (Array.isArray(data.generatedSessions) && data.generatedSessions.length) ||
+            ((Number(data.weeks || 0) || 0) * (Number(data.sessionsPerWeek || data.daysPerWeek || data.plan?.daysPerWeek || 0) || 0)) ||
+            0;
+
+          return {
+            programId: data.id,
+            title: String(
+              data.title ||
+              data.goalText ||
+              data.goal ||
+              data.name ||
+              `Programme AI ${index + 1}`
+            ).trim(),
+            subtitle: `${Number(data.weeks || 0) || "?"} sem • ${Number(data.sessionsPerWeek || data.daysPerWeek || data.plan?.daysPerWeek || 0) || "?"}/sem`,
+            image: getProgramImageByIndex(index + 1),
+            badge: sessionsCount > 1 ? `${sessionsCount} séances` : `${sessionsCount} séance`
+          };
+        });
 
       console.log("[WORKOUTS] AI programs mapped:", programs.length, programs);
 
