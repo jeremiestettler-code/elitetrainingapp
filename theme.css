@@ -897,6 +897,7 @@ html[data-theme="light"] .etLogoWordmark{
 .switch input:checked + .slider:before{ transform:translate(20px,-50%); }
 
 #aiCardWrapper,
-#sessionList {
+#sessionList,
+#homeHistorySection {
   display: none !important;
 }
