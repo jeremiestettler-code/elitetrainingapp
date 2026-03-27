@@ -9928,7 +9928,7 @@ function openProfileEntrySafe(){
 
 /* =========================
    WORKOUTS (single source)
-   - Trending (static)
+   - Trending (static + dynamique pour Hockey)
    - AI Sessions: CUSTOM_* (from window.SESSIONS via reloadCustomSessionsIntoSESSIONS)
    - AI Programs: list from Firestore users/{uid}/programs (si connecté)
    + Detail screen: #screenWorkoutProgram
@@ -9938,12 +9938,41 @@ function openProfileEntrySafe(){
   function esc(s){
     return (s||"").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]));
   }
+
   function notify(msg){
     if(typeof window.showToast === "function") window.showToast(msg);
     else alert(msg);
   }
 
-  // ===== Trending packs (static) =====
+  function getDynamicHockeySessions(){
+    const S = window.SESSIONS || {};
+
+    return Object.keys(S)
+      .filter(k => /^H\d+$/i.test(String(k)))
+      .sort((a, b) => {
+        const na = Number(String(a).replace(/[^\d]/g, "")) || 0;
+        const nb = Number(String(b).replace(/[^\d]/g, "")) || 0;
+        return na - nb;
+      })
+      .map(k => {
+        const meta = S[k] || {};
+        const rawName = String(meta.name || k).trim();
+
+        let blurb = rawName
+          .replace(/^Hockey\s+H\d+\s+—\s*/i, "")
+          .replace(/^H\d+\s+—\s*/i, "")
+          .trim();
+
+        if(!blurb) blurb = rawName || k;
+
+        return {
+          id: k,
+          blurb
+        };
+      });
+  }
+
+  // ===== Trending packs =====
   window.WORKOUT_CATALOG = {
     trending: [
       {
@@ -9951,12 +9980,9 @@ function openProfileEntrySafe(){
         title:"Hockey workout",
         subtitle:"Trending",
         image:"images/workout_hockey.jpg",
-        sessions: [
-          { id:"H1", blurb:"Unilatéral + stabilité + bras." },
-          { id:"H2", blurb:"Force bas du corps + tronc." },
-          { id:"H3", blurb:"Haut du corps + puissance." },
-          { id:"H4", blurb:"Conditioning + gainage." }
-        ]
+        get sessions(){
+          return getDynamicHockeySessions();
+        }
       },
       {
         id:"RUNNING",
@@ -9987,7 +10013,7 @@ function openProfileEntrySafe(){
   };
 
   // =========================
-  // Open static trending workout pack
+  // Open trending workout pack
   // =========================
   window.openWorkoutProgram = function openWorkoutProgram(programId){
     try{
@@ -10000,8 +10026,9 @@ function openProfileEntrySafe(){
         return notify("Programme introuvable.");
       }
 
-      const list = Array.isArray(pack.sessions)
-        ? pack.sessions.map(s => ({
+      const rawSessions = pack.sessions;
+      const list = Array.isArray(rawSessions)
+        ? rawSessions.map(s => ({
             id: String(s?.id || "").trim(),
             blurb: String(s?.blurb || "").trim()
           })).filter(s => s.id)
@@ -10036,7 +10063,6 @@ function openProfileEntrySafe(){
     if(typeof window.showScreen === "function") window.showScreen("workoutProgram");
     window.scrollTo({ top: 0, behavior: "smooth" });
 
-    // ✅ timing-proof render
     requestAnimationFrame(()=>{ try{ window.renderWorkoutProgramScreen?.(); }catch(e){} });
   }
 
@@ -10084,7 +10110,7 @@ function openProfileEntrySafe(){
     }).join("");
   };
 
-   // =========================
+  // =========================
   // Back from workout program detail
   // =========================
   window.bindWorkoutProgramBack = function bindWorkoutProgramBack(){
@@ -10094,7 +10120,6 @@ function openProfileEntrySafe(){
     btn.dataset.bound = "1";
     btn.addEventListener("click", function(){
       try{
-        // Clé correcte de l'écran = "sessions"
         if(typeof showScreen === "function"){
           showScreen("sessions");
         }else if(typeof window.showScreen === "function"){
@@ -10116,272 +10141,262 @@ function openProfileEntrySafe(){
     });
   };
 
-  // bind immédiat
   window.bindWorkoutProgramBack();
 
-// =========================
-// AI Screen (toggle + submit) — V4 (aligné Home IA V2)
-// =========================
-window.renderAIScreen = function renderAIScreen(){
-  const t = document.getElementById("aiModeToggle");
-  const single = document.getElementById("aiSingleWrap");
-  const prog = document.getElementById("aiProgramWrap");
-  if(!t || !single || !prog) return;
+  // =========================
+  // AI Screen (toggle + submit)
+  // =========================
+  window.renderAIScreen = function renderAIScreen(){
+    const t = document.getElementById("aiModeToggle");
+    const single = document.getElementById("aiSingleWrap");
+    const prog = document.getElementById("aiProgramWrap");
+    if(!t || !single || !prog) return;
 
-  const isProgram = !!t.checked;
-  single.style.display = isProgram ? "none" : "";
-  prog.style.display = isProgram ? "" : "none";
-};
+    const isProgram = !!t.checked;
+    single.style.display = isProgram ? "none" : "";
+    prog.style.display = isProgram ? "" : "none";
+  };
 
-(function initAIScreenOnceV4(){
-  if(window.__aiScreenBoundV4) return;
-  window.__aiScreenBoundV4 = true;
+  (function initAIScreenOnceV4(){
+    if(window.__aiScreenBoundV4) return;
+    window.__aiScreenBoundV4 = true;
 
-  const t = document.getElementById("aiModeToggle");
-  const btn = document.getElementById("btnAIStart");
+    const t = document.getElementById("aiModeToggle");
+    const btn = document.getElementById("btnAIStart");
 
-  function toast(msg){
-    if(typeof window.showToast === "function") window.showToast(msg);
-    else alert(msg);
-  }
-  function setBusy(on){
-    if(!btn) return;
-    btn.disabled = !!on;
-    btn.classList.toggle("loading", !!on);
-    btn.textContent = on ? "Génération..." : "Générer";
-  }
+    function toast(msg){
+      if(typeof window.showToast === "function") window.showToast(msg);
+      else alert(msg);
+    }
 
-  async function withTimeout(promise, ms){
-    let to;
-    const timeout = new Promise((_, rej)=>{
-      to = setTimeout(()=>rej(new Error("Timeout IA ("+ms+"ms)")), ms);
-    });
-    try{ return await Promise.race([promise, timeout]); }
-    finally{ clearTimeout(to); }
-  }
+    function setBusy(on){
+      if(!btn) return;
+      btn.disabled = !!on;
+      btn.classList.toggle("loading", !!on);
+      btn.textContent = on ? "Génération..." : "Générer";
+    }
 
-  function buildConstraintsFromProfile(){
-    const profile = window.eliteProfile || window.firestoreProfile || {};
-    return {
-      equipment: Array.isArray(profile.equipment) ? profile.equipment : [],
-      level: profile.level || "",
-      goal: profile.goal || "",
-      sex: profile.sex || "",
-      dob: profile.dob || ""
-    };
-  }
-
-  // --------- Programme: même logique que HOME (btnAIProgram) ----------
-            async function createProgramViaBackend({ goalText, weeks, sessionsPerWeek, minutesPerSession, constraints }){
-    if(!window.AI_PROGRAM_URL) throw new Error("AI_PROGRAM_URL manquant.");
-
-    const u =
-      ((typeof currentUser !== "undefined" && currentUser) ? currentUser : null) ||
-      (window.currentUser || null);
-
-    if(!u) throw new Error("Non connecté.");
-
-    const token = await u.getIdToken();
-    const libraryCompact = (typeof buildLibraryCompact === "function") ? buildLibraryCompact() : [];
-
-    const ac = new AbortController();
-    const kill = setTimeout(()=>ac.abort(), 240000);
-
-    let res, raw, data;
-    try{
-      res = await fetch(window.AI_PROGRAM_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type":"application/json",
-          "Authorization":"Bearer " + token
-        },
-        body: JSON.stringify({
-          goalText,
-          weeks: Number(weeks || 4) || 4,
-          sessionsPerWeek: Number(sessionsPerWeek || 3) || 3,
-          minutesPerSession: Number(minutesPerSession || 45) || 45,
-          constraints: constraints || {},
-          libraryCompact,
-          recentIds: []
-        }),
-        signal: ac.signal
+    async function withTimeout(promise, ms){
+      let to;
+      const timeout = new Promise((_, rej)=>{
+        to = setTimeout(()=>rej(new Error("Timeout IA ("+ms+"ms)")), ms);
       });
-    }catch(e){
-      if(e?.name === "AbortError") throw new Error("IA trop lente (240s). Réessaie.");
-      throw e;
-    }finally{
-      clearTimeout(kill);
+      try{ return await Promise.race([promise, timeout]); }
+      finally{ clearTimeout(to); }
     }
 
-    raw = await res.text();
-    data = null;
-    try{ data = JSON.parse(raw); }catch(e){}
-
-    const backendError = String(data?.error || raw || ("HTTP " + res.status)).trim();
-    const tolerateUnknownIds = /unknown exercise ids/i.test(backendError);
-
-    if(res.ok && data?.ok){
+    function buildConstraintsFromProfile(){
+      const profile = window.eliteProfile || window.firestoreProfile || {};
       return {
-        ...(data || {}),
-        softWarning: null,
-        programId: data?.programId || null
+        equipment: Array.isArray(profile.equipment) ? profile.equipment : [],
+        level: profile.level || "",
+        goal: profile.goal || "",
+        sex: profile.sex || "",
+        dob: profile.dob || ""
       };
     }
 
-    if(tolerateUnknownIds){
-      console.warn("[AI PROGRAM] backend warning tolerated:", backendError);
-      return {
-        ok: true,
-        softWarning: backendError,
-        recoveredFromBackendWarning: true,
-        programId: data?.programId || null
-      };
+    async function createProgramViaBackend({ goalText, weeks, sessionsPerWeek, minutesPerSession, constraints }){
+      if(!window.AI_PROGRAM_URL) throw new Error("AI_PROGRAM_URL manquant.");
+
+      const u =
+        ((typeof currentUser !== "undefined" && currentUser) ? currentUser : null) ||
+        (window.currentUser || null);
+
+      if(!u) throw new Error("Non connecté.");
+
+      const token = await u.getIdToken();
+      const libraryCompact = (typeof buildLibraryCompact === "function") ? buildLibraryCompact() : [];
+
+      const ac = new AbortController();
+      const kill = setTimeout(()=>ac.abort(), 240000);
+
+      let res, raw, data;
+      try{
+        res = await fetch(window.AI_PROGRAM_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type":"application/json",
+            "Authorization":"Bearer " + token
+          },
+          body: JSON.stringify({
+            goalText,
+            weeks: Number(weeks || 4) || 4,
+            sessionsPerWeek: Number(sessionsPerWeek || 3) || 3,
+            minutesPerSession: Number(minutesPerSession || 45) || 45,
+            constraints: constraints || {},
+            libraryCompact,
+            recentIds: []
+          }),
+          signal: ac.signal
+        });
+      }catch(e){
+        if(e?.name === "AbortError") throw new Error("IA trop lente (240s). Réessaie.");
+        throw e;
+      }finally{
+        clearTimeout(kill);
+      }
+
+      raw = await res.text();
+      data = null;
+      try{ data = JSON.parse(raw); }catch(e){}
+
+      const backendError = String(data?.error || raw || ("HTTP " + res.status)).trim();
+      const tolerateUnknownIds = /unknown exercise ids/i.test(backendError);
+
+      if(res.ok && data?.ok){
+        return {
+          ...(data || {}),
+          softWarning: null,
+          programId: data?.programId || null
+        };
+      }
+
+      if(tolerateUnknownIds){
+        console.warn("[AI PROGRAM] backend warning tolerated:", backendError);
+        return {
+          ok: true,
+          softWarning: backendError,
+          recoveredFromBackendWarning: true,
+          programId: data?.programId || null
+        };
+      }
+
+      throw new Error(backendError);
     }
 
-    throw new Error(backendError);
-  }
+    t?.addEventListener("change", ()=>window.renderAIScreen?.());
 
-  // Bind toggle
-  t?.addEventListener("change", ()=>window.renderAIScreen?.());
+    btn?.addEventListener("click", async ()=>{
+      const goalText = String(document.getElementById("aiGoalText")?.value || "").trim();
+      const isProgram = !!document.getElementById("aiModeToggle")?.checked;
 
-  // Bind generate
-  btn?.addEventListener("click", async ()=>{
-    const goalText = String(document.getElementById("aiGoalText")?.value || "").trim();
-    const isProgram = !!document.getElementById("aiModeToggle")?.checked;
-
-    if(!goalText){
-      toast("Indique un objectif.");
-      return;
-    }
-
-    const constraints = buildConstraintsFromProfile();
-
-    try{
-      setBusy(true);
-
-      // =====================
-      // SÉANCE UNIQUE (calée Home)
-      // =====================
-      if(!isProgram){
-        const minutes = Number(document.getElementById("aiSingleMinutes")?.value || 45) || 45;
-
-        if(typeof window.generateSessionWithAI !== "function"){
-          toast("generateSessionWithAI() introuvable.");
-          return;
-        }
-
-        if(typeof window.saveAISessionToFirestore !== "function"){
-  toast("saveAISessionToFirestore() introuvable.");
-          return;
-        }
-
-        console.log("[AI] generate session…", { goalText, minutes, constraints });
-
-        const session = await withTimeout(
-          window.generateSessionWithAI({ goalText, minutes, constraints }),
-          1000000
-        );
-        session.goalText = goalText;
-
-        await withTimeout(window.saveAISessionToFirestore(session), 1000000);
-
-        toast("✅ Séance IA créée");
-
-        if(typeof window.showScreen === "function") window.showScreen("sessions");
-        if(typeof setBottomNavActive === "function") setBottomNavActive("sessions");
-        setTimeout(()=>{ try{ window.renderWorkoutsScreen?.(); }catch(e){} }, 0);
+      if(!goalText){
+        toast("Indique un objectif.");
         return;
       }
 
-       // =====================
-      // PROGRAMME (calé Home + reloadProgramsIntoSESSIONS)
-      // =====================
-      const weeks = Number(document.getElementById("aiWeeks")?.value || 4) || 4;
-      const perWeek = Number(document.getElementById("aiPerWeek")?.value || 3) || 3;
-      const minutes = Number(document.getElementById("aiProgramMinutes")?.value || 45) || 45;
-
-      console.log("[AI] generate program…", { goalText, weeks, perWeek, minutes, constraints });
-
-      const programResult = await withTimeout(
-        createProgramViaBackend({
-          goalText,
-          weeks,
-          sessionsPerWeek: perWeek,
-          minutesPerSession: minutes,
-          constraints
-        }),
-        240000
-      );
-
-      if(typeof window.reloadProgramsIntoSESSIONS === "function"){
-        await window.reloadProgramsIntoSESSIONS();
-      }else if(typeof reloadProgramsIntoSESSIONS === "function"){
-        await reloadProgramsIntoSESSIONS();
-      }
-
-      if(programResult?.softWarning){
-        toast("✅ Programme créé (avec ajustements IA)");
-      }else{
-        toast("✅ Programme IA créé");
-      }
-
-      if(typeof window.showScreen === "function") window.showScreen("sessions");
-      if(typeof setBottomNavActive === "function") setBottomNavActive("sessions");
-
-      await new Promise(r => requestAnimationFrame(r));
-
-      if(typeof window.renderWorkoutsScreen === "function"){
-        await window.renderWorkoutsScreen();
-      }
+      const constraints = buildConstraintsFromProfile();
 
       try{
-        const _db = (typeof db !== "undefined") ? db : window.db;
-        const _user = (typeof currentUser !== "undefined") ? currentUser : window.currentUser;
-        const _getDocs = (typeof getDocs !== "undefined") ? getDocs : window.fsGetDocs;
-        const _collection = (typeof collection !== "undefined") ? collection : window.fsCollection;
+        setBusy(true);
 
-        if(_db && _user?.uid && _getDocs && _collection){
-          const snap = await _getDocs(_collection(_db, "users", _user.uid, "programs"));
-          const docs = snap.docs
-            .map(d => ({ id: d.id, ...(d.data() || {}) }))
-            .sort((a,b)=>{
-              const av = (typeof a.createdAt?.toMillis === "function")
-                ? a.createdAt.toMillis()
-                : ((a.createdAt?.seconds || 0) * 1000);
-              const bv = (typeof b.createdAt?.toMillis === "function")
-                ? b.createdAt.toMillis()
-                : ((b.createdAt?.seconds || 0) * 1000);
-              return bv - av;
-            });
+        if(!isProgram){
+          const minutes = Number(document.getElementById("aiSingleMinutes")?.value || 45) || 45;
 
-          const latestProgramId = programResult?.programId || docs[0]?.id || null;
-
-          if(latestProgramId && typeof window.openAIProgram === "function"){
-            await window.openAIProgram(latestProgramId);
+          if(typeof window.generateSessionWithAI !== "function"){
+            toast("generateSessionWithAI() introuvable.");
+            return;
           }
+
+          if(typeof window.saveAISessionToFirestore !== "function"){
+            toast("saveAISessionToFirestore() introuvable.");
+            return;
+          }
+
+          console.log("[AI] generate session…", { goalText, minutes, constraints });
+
+          const session = await withTimeout(
+            window.generateSessionWithAI({ goalText, minutes, constraints }),
+            1000000
+          );
+          session.goalText = goalText;
+
+          await withTimeout(window.saveAISessionToFirestore(session), 1000000);
+
+          toast("✅ Séance IA créée");
+
+          if(typeof window.showScreen === "function") window.showScreen("sessions");
+          if(typeof setBottomNavActive === "function") setBottomNavActive("sessions");
+          setTimeout(()=>{ try{ window.renderWorkoutsScreen?.(); }catch(e){} }, 0);
+          return;
         }
+
+        const weeks = Number(document.getElementById("aiWeeks")?.value || 4) || 4;
+        const perWeek = Number(document.getElementById("aiPerWeek")?.value || 3) || 3;
+        const minutes = Number(document.getElementById("aiProgramMinutes")?.value || 45) || 45;
+
+        console.log("[AI] generate program…", { goalText, weeks, perWeek, minutes, constraints });
+
+        const programResult = await withTimeout(
+          createProgramViaBackend({
+            goalText,
+            weeks,
+            sessionsPerWeek: perWeek,
+            minutesPerSession: minutes,
+            constraints
+          }),
+          240000
+        );
+
+        if(typeof window.reloadProgramsIntoSESSIONS === "function"){
+          await window.reloadProgramsIntoSESSIONS();
+        }else if(typeof reloadProgramsIntoSESSIONS === "function"){
+          await reloadProgramsIntoSESSIONS();
+        }
+
+        if(programResult?.softWarning){
+          toast("✅ Programme créé (avec ajustements IA)");
+        }else{
+          toast("✅ Programme IA créé");
+        }
+
+        if(typeof window.showScreen === "function") window.showScreen("sessions");
+        if(typeof setBottomNavActive === "function") setBottomNavActive("sessions");
+
+        await new Promise(r => requestAnimationFrame(r));
+
+        if(typeof window.renderWorkoutsScreen === "function"){
+          await window.renderWorkoutsScreen();
+        }
+
+        try{
+          const _db = (typeof db !== "undefined") ? db : window.db;
+          const _user = (typeof currentUser !== "undefined") ? currentUser : window.currentUser;
+          const _getDocs = (typeof getDocs !== "undefined") ? getDocs : window.fsGetDocs;
+          const _collection = (typeof collection !== "undefined") ? collection : window.fsCollection;
+
+          if(_db && _user?.uid && _getDocs && _collection){
+            const snap = await _getDocs(_collection(_db, "users", _user.uid, "programs"));
+            const docs = snap.docs
+              .map(d => ({ id: d.id, ...(d.data() || {}) }))
+              .sort((a,b)=>{
+                const av = (typeof a.createdAt?.toMillis === "function")
+                  ? a.createdAt.toMillis()
+                  : ((a.createdAt?.seconds || 0) * 1000);
+                const bv = (typeof b.createdAt?.toMillis === "function")
+                  ? b.createdAt.toMillis()
+                  : ((b.createdAt?.seconds || 0) * 1000);
+                return bv - av;
+              });
+
+            const latestProgramId = programResult?.programId || docs[0]?.id || null;
+
+            if(latestProgramId && typeof window.openAIProgram === "function"){
+              await window.openAIProgram(latestProgramId);
+            }
+          }
+        }catch(e){
+          console.warn("[AI] post-create open latest program failed:", e);
+        }
+
       }catch(e){
-        console.warn("[AI] post-create open latest program failed:", e);
+        console.warn("[AI] error", e);
+        toast("Erreur IA : " + (e?.message || e));
+      }finally{
+        setBusy(false);
       }
+    });
 
-    }catch(e){
-      console.warn("[AI] error", e);
-      toast("Erreur IA : " + (e?.message || e));
-    }finally{
-      setBusy(false);
-    }
-  });
-
-  // first render
-  setTimeout(()=>{ try{ window.renderAIScreen?.(); }catch(e){} }, 0);
-})();
+    setTimeout(()=>{ try{ window.renderAIScreen?.(); }catch(e){} }, 0);
+  })();
 
   // Bind back + play once
   (function bindProgramScreenOnce(){
     if(window.__wpBoundOnce) return;
     window.__wpBoundOnce = true;
 
-        document.getElementById("wpSessionList")?.addEventListener("click", (e)=>{
+    document.getElementById("wpSessionList")?.addEventListener("click", (e)=>{
       const btn = e.target.closest("[data-play]");
       if(!btn) return;
 
@@ -10410,7 +10425,7 @@ window.renderAIScreen = function renderAIScreen(){
   // =========================
   // AI packs
   // =========================
-    window.openAISessionsPack = async function openAISessionsPack(){
+  window.openAISessionsPack = async function openAISessionsPack(){
     try{
       if(typeof window.reloadCustomSessionsIntoSESSIONS === "function"){
         await window.reloadCustomSessionsIntoSESSIONS();
@@ -10427,7 +10442,7 @@ window.renderAIScreen = function renderAIScreen(){
     }
   };
 
-   window.openAIProgram = async function openAIProgram(programId){
+  window.openAIProgram = async function openAIProgram(programId){
     try{
       const _db = (typeof db !== "undefined") ? db : window.db;
       const _user = (typeof currentUser !== "undefined") ? currentUser : window.currentUser;
@@ -10466,7 +10481,7 @@ window.renderAIScreen = function renderAIScreen(){
         return wa - wb;
       });
 
-                  const list = [];
+      const list = [];
       const sessionsForMerge = {};
       const LIB = window.EXERCISE_LIBRARY || {};
       const BY_ID = LIB.byId || {};
@@ -10554,7 +10569,7 @@ window.renderAIScreen = function renderAIScreen(){
 
           const sid = `PROG_${programId}__W${weekNumber}_S${num}`;
 
-                    sessionsForMerge[sid] = {
+          sessionsForMerge[sid] = {
             name: String(sessionObj.name || data.title || `Week ${weekNumber} - Séance ${num}`),
             warmup: Array.isArray(sessionObj.warmup)
               ? sessionObj.warmup.map(x => enrichProgramEntry(x, "warmup"))
@@ -10666,35 +10681,6 @@ window.renderAIScreen = function renderAIScreen(){
       return Number.isFinite(t) ? t : 0;
     }
 
-  function getDynamicHockeySessions(){
-    const S = window.SESSIONS || {};
-
-    return Object.keys(S)
-      .filter(k => /^H\d+$/i.test(String(k)))
-      .sort((a, b) => {
-        const na = Number(String(a).replace(/[^\d]/g, "")) || 0;
-        const nb = Number(String(b).replace(/[^\d]/g, "")) || 0;
-        return na - nb;
-      })
-      .map(k => {
-        const meta = S[k] || {};
-        const rawName = String(meta.name || k).trim();
-
-        // enlève le préfixe "Hockey H5 — " ou "H5 — " pour le blurb
-        let blurb = rawName
-          .replace(/^Hockey\s+H\d+\s+—\s*/i, "")
-          .replace(/^H\d+\s+—\s*/i, "")
-          .trim();
-
-        if(!blurb) blurb = rawName || k;
-
-        return {
-          id: k,
-          blurb
-        };
-      });
-  }
-
     // Trending
     hostT.innerHTML = "";
     (window.WORKOUT_CATALOG?.trending || []).forEach(t=>{
@@ -10756,6 +10742,7 @@ window.renderAIScreen = function renderAIScreen(){
 
       if(!_db || !_user?.uid || !_getDocs || !_collection){
         hostAIP.innerHTML = `<div class="muted small">Erreur chargement programmes AI.</div>`;
+        try{ window.bindWorkoutProgramBack?.(); }catch(e){}
         return;
       }
 
