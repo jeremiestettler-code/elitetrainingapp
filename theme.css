@@ -557,6 +557,9 @@ html[data-theme="light"] .etLogoWordmark{
   margin-bottom: 2px;
 }
 
+.wCardSub { display: none; 
+}
+
 .workoutsGrid{
   display:flex;
   flex-direction:column;
