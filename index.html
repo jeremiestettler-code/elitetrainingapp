@@ -2372,16 +2372,6 @@ html[data-profile-edit="1"] .profileEditOnly{ display:block; }
 ========================= -->
 <div class="homePremium">
 
-  <!-- ✅ INPUT OBJECTIF -->
-  <div class="homeInlineInputWrapper">
-    <input 
-      type="text" 
-      id="goalInput"
-      class="homeInlineInput"
-      placeholder="Quel est ton objectif ? (ex: prise de masse haut du corps)"
-    />
-  </div>
-
   <div class="homeCards2">
     <button class="homeTile homeTilePrimary" id="homeTrendingBtn" type="button">
       <div class="homeTileTitle">Trending<br/>Workout</div>
@@ -7699,10 +7689,11 @@ await reloadProgramsIntoSESSIONS();
 /* ===== FIN A2-SAFE ===== */
         loadCoachMode();
         renderHome();
-        showScreen("home");
-        // Rafraîchit la Home premium une fois l'utilisateur dispo (nom + stats)
+showScreen("home");
+// Rafraîchit la Home premium une fois l'utilisateur dispo (nom + stats)
 setTimeout(()=>{ 
-  if(window.updateHomePremiumUI) window.updateHomePremiumUI(); 
+  if(window.updateHomePremiumUI) window.updateHomePremiumUI();
+  if(window.renderHomeDashboard) window.renderHomeDashboard();
 }, 50);
         try{ startProfileWizardIfNeeded(user.uid); }catch(e){}
       }catch(e){
@@ -9410,6 +9401,60 @@ function updateHomePremiumUI(){
 // Expose pour que le module Firebase puisse rafraîchir après login
 window.updateHomePremiumUI = updateHomePremiumUI;
 
+window.renderHomeDashboard = function(){
+
+  const hero = document.getElementById("homeHeroCard");
+  const stats = document.getElementById("homeStatsGrid");
+  const cont = document.getElementById("homeContinueCard");
+
+  if(!hero || !stats || !cont) return;
+
+  const history = JSON.parse(localStorage.getItem("workout_history") || "[]");
+
+  const last = history[history.length - 1] || null;
+
+  if(last){
+    hero.innerHTML = `
+      <div class="homeHeroEyebrow">Reprendre</div>
+      <div class="homeHeroTitle">${last.name || "Séance"}</div>
+      <button class="homeContinueBtn" onclick="startSession('${last.id}')">
+        Reprendre
+      </button>
+    `;
+  }else{
+    hero.innerHTML = `
+      <div class="homeHeroEyebrow">Bienvenue</div>
+      <div class="homeHeroTitle">Commence ta première séance</div>
+    `;
+  }
+
+  const now = Date.now();
+  const week = 7 * 24 * 60 * 60 * 1000;
+  const weekCount = history.filter(h => now - (h.date || 0) < week).length;
+
+  stats.innerHTML = `
+    <div class="homeStat">
+      <div class="homeStatVal">${weekCount}</div>
+      <div class="homeStatLbl">Cette semaine</div>
+    </div>
+    <div class="homeStat">
+      <div class="homeStatVal">${history.length}</div>
+      <div class="homeStatLbl">Total</div>
+    </div>
+    <div class="homeStat">
+      <div class="homeStatVal">🔥</div>
+      <div class="homeStatLbl">Streak</div>
+    </div>
+  `;
+
+  cont.innerHTML = `
+    <div class="homeContinueTitle">Continuer</div>
+    <button class="homeContinueBtn" onclick="showScreen('sessions')">
+      Voir les séances
+    </button>
+  `;
+};
+
 /* ======================================================
    WEEKLY STREAK
 ====================================================== */
@@ -10738,6 +10783,44 @@ function openProfileEntrySafe(){
     return card;
   }
 
+window.renderHomeDashboard = function(){
+
+const hero = document.getElementById("homeHeroCard");
+const stats = document.getElementById("homeStatsGrid");
+const cont = document.getElementById("homeContinueCard");
+
+if(!hero || !stats || !cont) return;
+
+const history = JSON.parse(localStorage.getItem("workout_history") || "[]");
+
+// ===== LAST SESSION
+const last = history[history.length - 1] || null;
+
+if(last){
+hero.innerHTML = `       <div class="homeHeroEyebrow">Reprendre</div>       <div class="homeHeroTitle">${last.name || "Séance"}</div>       <button class="homeContinueBtn" onclick="startSession('${last.id}')">
+        Reprendre       </button>
+    `;
+}else{
+hero.innerHTML = `       <div class="homeHeroEyebrow">Bienvenue</div>       <div class="homeHeroTitle">Commence ta première séance</div>
+    `;
+}
+
+// ===== STATS
+const now = Date.now();
+const week = 7 * 24 * 60 * 60 * 1000;
+
+const weekCount = history.filter(h => now - (h.date || 0) < week).length;
+
+stats.innerHTML = `     <div class="homeStat">       <div class="homeStatVal">${weekCount}</div>       <div class="homeStatLbl">Cette semaine</div>     </div>     <div class="homeStat">       <div class="homeStatVal">${history.length}</div>       <div class="homeStatLbl">Total</div>     </div>     <div class="homeStat">       <div class="homeStatVal">🔥</div>       <div class="homeStatLbl">Streak</div>     </div>
+  `;
+
+// ===== CONTINUE
+cont.innerHTML = `     <div class="homeContinueTitle">Continuer</div>     <button class="homeContinueBtn" onclick="showScreen('sessions')">
+      Voir les séances     </button>
+  `;
+};
+
+
   // =========================
   // Render main workouts screen
   // =========================
@@ -10983,10 +11066,13 @@ window.syncBottomNavVisibility = syncBottomNavVisibility;
     const r = _showScreen(name);
     const n = String(name || "").toLowerCase();
 
-    if(n === "home"){
-      setBottomNavActive("home");
-      setTimeout(()=>{ try{ updateHomePremiumUI?.(); }catch(e){} }, 50);
-    }
+  if(n === "home"){
+  setBottomNavActive("home");
+  setTimeout(()=>{
+    try{ updateHomePremiumUI?.(); }catch(e){}
+    try{ window.renderHomeDashboard?.(); }catch(e){}
+  }, 50);
+}
 
     if(n === "sessions"){
       setBottomNavActive("sessions");
